@@ -13,8 +13,10 @@ import { MockTaskStore } from '@test/helpers';
 
 // Mock modules first - with factory functions to ensure fresh instances
 vi.mock('@lib/task-manager', () => {
+  const MockTaskManager = vi.fn();
+  MockTaskManager.create = vi.fn();
   return {
-    TaskManager: vi.fn()
+    TaskManager: MockTaskManager
   };
 });
 
@@ -36,6 +38,7 @@ import { printOutput, printError, formatTask } from '@lib/output';
 
 // Get mocked functions
 const mockedTaskManager = vi.mocked(TaskManager);
+const mockedTaskManagerCreate = mockedTaskManager.create;
 const mockedPrintOutput = vi.mocked(printOutput);
 const mockedPrintError = vi.mocked(printError);
 const mockedFormatTask = vi.mocked(formatTask);
@@ -180,6 +183,9 @@ describe('Show Command', () => {
 
     // Setup constructor mock
     mockedTaskManager.mockImplementation(() => mockTaskManagerInstance as unknown as TaskManager);
+    
+    // Setup static create method
+    mockedTaskManagerCreate.mockResolvedValue(mockTaskManagerInstance as unknown as TaskManager);
 
     // Setup TaskManager get method to use MockTaskStore
     mockTaskManagerInstance.get.mockImplementation(async (id: number) => {
