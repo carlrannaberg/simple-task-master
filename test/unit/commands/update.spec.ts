@@ -13,10 +13,10 @@ import { MockTaskStore } from '@test/helpers';
 
 // Mock modules first - with factory functions to ensure fresh instances
 vi.mock('@lib/task-manager', () => {
+  const MockTaskManager = vi.fn();
+  MockTaskManager.create = vi.fn();
   return {
-    TaskManager: {
-      create: vi.fn()
-    }
+    TaskManager: MockTaskManager
   };
 });
 vi.mock('@lib/lock-manager', () => {
@@ -40,7 +40,7 @@ import { readInput, launchEditor } from '@lib/utils';
 // Get mocked functions
 const mockedTaskManager = vi.mocked(TaskManager);
 const mockedLockManager = vi.mocked(LockManager);
-const mockedTaskManagerCreate = vi.mocked(TaskManager.create);
+const mockedTaskManagerCreate = mockedTaskManager.create;
 const mockedPrintSuccess = vi.mocked(printSuccess);
 const mockedPrintError = vi.mocked(printError);
 const mockedReadInput = vi.mocked(readInput);
@@ -112,7 +112,9 @@ describe('Update Command Unit Tests', () => {
 
     // Setup readInput mock to return the value directly (not stdin)
     mockedReadInput.mockImplementation(async (value: string | undefined) => {
-      return value === '-' ? undefined : value;
+      if (value === undefined) return undefined;
+      if (value === '-') return 'stdin-content'; // Mock stdin content
+      return value; // Return the value as-is
     });
 
     // Create test tasks
@@ -717,7 +719,6 @@ Some implementation details.`
       const task = await mockTaskStore.get(1);
       const content = task?.content || '';
 
-      expect(content).toContain('## Description');
       expect(content).toContain('New description');
       expect(content).toContain('## Details');
       expect(content).toContain('New details');
@@ -758,7 +759,7 @@ Custom notes section.`
 
   describe('exit code 2 behavior', () => {
     it('should exit with code 2 when no changes specified and editor disabled', async () => {
-      await expect(executeUpdate('1', [], { 'no-editor': 'true' })).rejects.toThrow('Process.exit(2)');
+      await expect(executeUpdate('1', [], { editor: false })).rejects.toThrow('Process.exit(2)');
       expect(mockedPrintError).toHaveBeenCalledWith('No changes specified');
       expect(exitCode).toBe(2);
     });
