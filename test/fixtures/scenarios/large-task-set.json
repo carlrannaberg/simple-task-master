@@ -1,0 +1,10 @@
+{
+  "description": "Large task set for performance testing",
+  "taskCount": 100,
+  "taskTemplate": {
+    "titlePrefix": "Performance Test Task",
+    "tags": ["performance", "test"],
+    "statuses": ["pending", "in-progress", "done"],
+    "contentTemplate": "# Performance Test Task {id}\n\nThis is a test task created for performance testing purposes.\n\n## Details\n- Task ID: {id}\n- Created for testing performance with large datasets\n- Contains standard markdown content\n\n## Checklist\n- [ ] First item\n- [ ] Second item\n- [ ] Third item"
+  }
+}

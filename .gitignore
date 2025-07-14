@@ -3,10 +3,13 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+package-lock.json
 
 # Logs
 logs/
 *.log
+coverage/
+.nyc_output/
 
 # OS
 .DS_Store
@@ -29,6 +32,8 @@ Thumbs.db
 .cache/
 
 # Build artifacts
+dist/
+*.tsbuildinfo
 tsconfig.tsbuildinfo
 .eslintcache
 
@@ -37,9 +42,6 @@ tsconfig.tsbuildinfo
 
 # Claude settings
 .claude/settings.local.json
-
-# Specifications folder
-/specs/
 
 logs
 dev-debug.log
@@ -54,6 +56,10 @@ dev-debug.log
 *.sln
 *.sw?
 # OS specific
+
+# Simple Task Master - User tasks are git-ignored
+.simple-task-master/tasks/
+.simple-task-master/lock
 
 # Task files
 tasks.json

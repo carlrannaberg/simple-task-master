@@ -1,0 +1,57 @@
+[
+  {
+    "schema": 1,
+    "id": 1,
+    "title": "Implement user authentication",
+    "status": "in-progress",
+    "created": "2024-01-15T10:00:00.000Z",
+    "updated": "2024-01-16T14:30:00.000Z",
+    "tags": ["backend", "security", "auth"],
+    "dependencies": [],
+    "content": "# User Authentication Implementation\n\nImplement a comprehensive user authentication system with the following features:\n\n## Requirements\n- [ ] JWT token-based authentication\n- [ ] Password hashing with bcrypt\n- [ ] Login/logout endpoints\n- [ ] Protected route middleware\n- [ ] Refresh token mechanism\n\n## Technical Notes\n- Use express-session for session management\n- Implement rate limiting for login attempts\n- Add proper error handling and validation\n\n## Testing\n- Unit tests for auth middleware\n- Integration tests for auth endpoints\n- E2E tests for complete auth flow"
+  },
+  {
+    "schema": 1,
+    "id": 2,
+    "title": "Design database schema",
+    "status": "done",
+    "created": "2024-01-10T09:00:00.000Z",
+    "updated": "2024-01-12T16:45:00.000Z",
+    "tags": ["database", "design", "backend"],
+    "dependencies": [],
+    "content": "# Database Schema Design\n\n## Tables\n\n### Users\n- id (PRIMARY KEY)\n- email (UNIQUE)\n- password_hash\n- created_at\n- updated_at\n- is_active\n\n### Tasks\n- id (PRIMARY KEY)\n- user_id (FOREIGN KEY)\n- title\n- description\n- status\n- priority\n- due_date\n- created_at\n- updated_at\n\n### Categories\n- id (PRIMARY KEY)\n- name\n- color\n- user_id (FOREIGN KEY)\n\n## Relationships\n- Users have many Tasks\n- Users have many Categories\n- Tasks belong to Categories\n\n## Indexes\n- user_id on tasks table\n- status on tasks table\n- email on users table"
+  },
+  {
+    "schema": 1,
+    "id": 3,
+    "title": "Set up CI/CD pipeline",
+    "status": "pending",
+    "created": "2024-01-20T11:00:00.000Z",
+    "updated": "2024-01-20T11:00:00.000Z",
+    "tags": ["devops", "ci-cd", "automation"],
+    "dependencies": [1, 2],
+    "content": "# CI/CD Pipeline Setup\n\nSet up a comprehensive CI/CD pipeline using GitHub Actions.\n\n## Pipeline Stages\n\n### Build\n- Install dependencies\n- Build the application\n- Generate production assets\n\n### Test\n- Run unit tests\n- Run integration tests\n- Generate coverage reports\n- Run security scans\n\n### Deploy\n- Deploy to staging environment\n- Run smoke tests\n- Deploy to production (manual approval)\n- Post-deployment verification\n\n## Requirements\n- Automatic deployment to staging on merge to develop\n- Manual approval for production deployment\n- Rollback mechanism\n- Notification system for deployments"
+  },
+  {
+    "schema": 1,
+    "id": 4,
+    "title": "Write API documentation",
+    "status": "pending",
+    "created": "2024-01-22T13:30:00.000Z",
+    "updated": "2024-01-22T13:30:00.000Z",
+    "tags": ["documentation", "api", "backend"],
+    "dependencies": [1],
+    "content": "# API Documentation\n\nCreate comprehensive API documentation using OpenAPI/Swagger.\n\n## Endpoints to Document\n\n### Authentication\n- POST /auth/login\n- POST /auth/logout\n- POST /auth/refresh\n- GET /auth/me\n\n### Tasks\n- GET /tasks\n- POST /tasks\n- GET /tasks/:id\n- PUT /tasks/:id\n- DELETE /tasks/:id\n\n### Categories\n- GET /categories\n- POST /categories\n- PUT /categories/:id\n- DELETE /categories/:id\n\n## Documentation Features\n- Interactive API explorer\n- Request/response examples\n- Error response documentation\n- Authentication flow examples\n- Rate limiting information"
+  },
+  {
+    "schema": 1,
+    "id": 5,
+    "title": "Implement frontend components",
+    "status": "in-progress",
+    "created": "2024-01-18T14:00:00.000Z",
+    "updated": "2024-01-23T10:15:00.000Z",
+    "tags": ["frontend", "react", "ui"],
+    "dependencies": [2],
+    "content": "# Frontend Components Implementation\n\nDevelop React components for the task management interface.\n\n## Components\n\n### TaskList\n- Display list of tasks\n- Filtering and sorting\n- Pagination support\n- Drag and drop reordering\n\n### TaskCard\n- Task summary display\n- Status indicators\n- Action buttons\n- Tag display\n\n### TaskForm\n- Create/edit task form\n- Form validation\n- Rich text editor for description\n- Tag autocomplete\n\n### CategoryFilter\n- Category selection\n- Multi-select support\n- Color-coded categories\n\n## Technical Requirements\n- TypeScript for type safety\n- Responsive design\n- Accessibility compliance\n- Unit tests with React Testing Library"
+  }
+]

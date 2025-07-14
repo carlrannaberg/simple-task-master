@@ -1,0 +1,257 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }} with Node.js ${{ matrix.node-version }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        node-version: [18.x, 20.x, 22.x]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Lint code
+        run: npm run lint
+
+      - name: Check code formatting
+        run: npm run format:check
+
+      - name: Build project
+        run: npm run build
+
+      - name: Run unit tests
+        run: npm run test:unit
+
+      - name: Run integration tests
+        run: npm run test:integration
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+
+      - name: Generate test coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage to Codecov
+        if: matrix.os == 'ubuntu-latest' && matrix.node-version == '20.x'
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage/lcov.info
+          fail_ci_if_error: false
+
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run security audit
+        run: npm audit --audit-level=moderate
+
+      - name: Check for known vulnerabilities
+        run: npx audit-ci --config ./audit-ci.json || true
+
+  cli-validation:
+    name: CLI Binary Validation
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies and build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Test CLI installation
+        run: |
+          # Test local installation
+          npm link
+
+      - name: Validate CLI commands
+        run: |
+          # Test basic CLI functionality
+          mkdir -p /tmp/stm-test
+          cd /tmp/stm-test
+
+          # Test version
+          stm --version
+
+          # Test help
+          stm --help
+
+          # Test init command
+          stm init
+
+          # Verify directory structure
+          test -d .simple-task-master
+          test -f .simple-task-master/config.json
+          test -d .simple-task-master/tasks
+
+          # Test add command
+          stm add "Test task" --tags=test --priority=medium
+
+          # Test list command
+          stm list
+          stm list --format=json
+
+          # Test show command
+          stm show 1
+
+          # Test update command
+          stm update 1 --status=in-progress
+
+          # Test grep command
+          stm grep "Test"
+
+          # Test export command
+          stm export --format=json
+
+          # Cleanup
+          cd /
+          rm -rf /tmp/stm-test
+
+      - name: Test npx usage
+        run: |
+          mkdir -p /tmp/stm-npx-test
+          cd /tmp/stm-npx-test
+
+          # Note: This would normally test with npx simple-task-master
+          # but since we're testing the local version, we'll use the linked binary
+          stm init
+          stm add "NPX test task"
+          stm list --format=json
+
+          # Cleanup
+          cd /
+          rm -rf /tmp/stm-npx-test
+
+  package-validation:
+    name: Package Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build package
+        run: npm run build
+
+      - name: Validate package structure
+        run: |
+          # Check that all required files exist
+          test -f package.json
+          test -f README.md
+          test -f CHANGELOG.md
+          test -f bin/stm
+          test -d dist
+          test -f dist/index.js
+
+      - name: Test package creation
+        run: |
+          # Create package without publishing
+          npm pack
+
+      - name: Validate package contents
+        run: |
+          # Extract and check package contents
+          tar -tzf simple-task-master-*.tgz | head -20
+
+          # Verify binary is executable
+          tar -xzf simple-task-master-*.tgz
+          test -x package/bin/stm
+
+  compatibility:
+    name: Compatibility Tests
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [18.0.0, 18.x, 20.x, 22.x]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test minimum Node.js compatibility
+        run: |
+          node --version
+          npm --version
+
+      - name: Build and test basic functionality
+        run: |
+          npm run build
+
+          # Test that the CLI can start
+          node bin/stm --version
+          node bin/stm --help
