@@ -73,7 +73,7 @@ describe(
         operationsPerSecond: 1000 / averageTime,
         memoryUsageStart: memoryStart,
         memoryUsageEnd: memoryEnd,
-        totalOperations: iterations,
+        totalOperations: iterations
       };
     };
 
@@ -102,14 +102,14 @@ describe(
         return {
           testName,
           metrics,
-          success: true,
+          success: true
         };
       } catch (error) {
         return {
           testName,
           metrics: {} as PerformanceMetrics,
           success: false,
-          details: { error: error instanceof Error ? error.message : String(error) },
+          details: { error: error instanceof Error ? error.message : String(error) }
         };
       }
     };
@@ -124,7 +124,7 @@ describe(
             await taskManager.create({
               title: `Performance Test Task ${++taskCounter}`,
               content: 'Performance test content',
-              tags: ['performance', 'test'],
+              tags: ['performance', 'test']
             });
           },
           50,
@@ -143,7 +143,7 @@ describe(
               taskManager.create({
                 title: `Bulk Task ${Date.now()}-${i}`,
                 content: `Bulk content ${i}`,
-                tags: ['bulk', 'performance'],
+                tags: ['bulk', 'performance']
               })
             );
             await Promise.all(promises);
@@ -164,7 +164,7 @@ describe(
               workspace.addTask({
                 title: `Concurrent Task ${Date.now()}-${i}`,
                 content: `Concurrent content ${i}`,
-                tags: ['concurrent', 'performance'],
+                tags: ['concurrent', 'performance']
               })
             );
             await Promise.all(promises);
@@ -193,10 +193,10 @@ describe(
                 `batch-${batch}`,
                 `category-${taskIndex % 5}`,
                 'large-dataset',
-                'performance-test',
+                'performance-test'
               ],
               status:
-                taskIndex % 3 === 0 ? 'done' : taskIndex % 3 === 1 ? 'in-progress' : 'pending',
+                taskIndex % 3 === 0 ? 'done' : taskIndex % 3 === 1 ? 'in-progress' : 'pending'
             });
           });
           batches.push(Promise.all(batchPromises));
@@ -254,7 +254,7 @@ describe(
           async () => {
             await taskManager.list({
               status: 'in-progress',
-              tags: ['performance-test'],
+              tags: ['performance-test']
             });
           },
           20,
@@ -275,7 +275,7 @@ describe(
           async () => {
             await cliRunner.addTask(`CLI Performance Task ${++taskCounter}`, {
               content: 'CLI performance test content',
-              tags: ['cli', 'performance'],
+              tags: ['cli', 'performance']
             });
           },
           20,
@@ -292,7 +292,7 @@ describe(
           await taskManager.create({
             title: `CLI List Test Task ${i}`,
             content: `Content ${i}`,
-            tags: ['cli-list-test'],
+            tags: ['cli-list-test']
           });
         }
 
@@ -315,7 +315,7 @@ describe(
           await taskManager.create({
             title: `Export Test Task ${i}`,
             content: `Export content ${i}`,
-            tags: ['export-test'],
+            tags: ['export-test']
           });
         }
 
@@ -342,7 +342,7 @@ describe(
           await taskManager.create({
             title: `Memory Test Task ${i}`,
             content: `Memory test content ${i} with some additional text to increase memory usage`,
-            tags: [`batch-${Math.floor(i / 10)}`, 'memory-test'],
+            tags: [`batch-${Math.floor(i / 10)}`, 'memory-test']
           });
 
           // Force garbage collection every 50 tasks if available
@@ -382,7 +382,7 @@ describe(
               taskManager.create({
                 title: `Rapid Task ${Date.now()}-${i}`,
                 content: `Rapid content ${i}`,
-                tags: ['rapid', 'memory-test'],
+                tags: ['rapid', 'memory-test']
               })
             );
             await Promise.all(promises);
@@ -424,13 +424,13 @@ describe(
             ...Array.from({ length: 5 }, (_, i) =>
               workspace.addTask({
                 title: `Concurrent Load Task ${Date.now()}-${i}`,
-                content: `Load test content ${i}`,
+                content: `Load test content ${i}`
               })
             ),
             // List operations
             ...Array.from({ length: 3 }, () => workspace.listTasks()),
             // Stats operations
-            ...Array.from({ length: 2 }, () => workspace.getStats()),
+            ...Array.from({ length: 2 }, () => workspace.getStats())
           ];
 
           await Promise.all(operations);
@@ -452,7 +452,7 @@ describe(
             const task = await taskManager.create({
               title: `File System Test ${Date.now()}`,
               content: 'File system performance test',
-              tags: ['filesystem'],
+              tags: ['filesystem']
             });
 
             // Read task (reads file)
@@ -460,7 +460,7 @@ describe(
 
             // Update task (writes file again)
             await taskManager.update(task.id, {
-              content: 'Updated content for file system test',
+              content: 'Updated content for file system test'
             });
           },
           25,
@@ -479,7 +479,7 @@ describe(
           const task = await taskManager.create({
             title: `Scaling Test Task ${i}`,
             content: `Scaling test content ${i}`,
-            tags: ['scaling-test'],
+            tags: ['scaling-test']
           });
           tasks.push(task);
         }
@@ -511,7 +511,7 @@ describe(
               await taskManager.create({
                 title: `Baseline Task ${Date.now()}`,
                 content: 'Baseline test',
-                tags: ['baseline'],
+                tags: ['baseline']
               });
             },
             30

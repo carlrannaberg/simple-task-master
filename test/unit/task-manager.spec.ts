@@ -10,7 +10,7 @@ describe('TaskManager', () => {
   beforeEach(async () => {
     workspace = await TestWorkspace.create();
     taskManager = new TaskManager({
-      tasksDir: workspace.tasksDirectory,
+      tasksDir: workspace.tasksDirectory
     });
   });
 
@@ -42,7 +42,7 @@ describe('TaskManager', () => {
       expect(task).toMatchTaskPartially({
         title: 'Test Task',
         tags: ['tag1', 'tag2'],
-        status: 'in-progress',
+        status: 'in-progress'
       });
       expect(task).toHaveValidTimestamps();
 
@@ -70,7 +70,7 @@ describe('TaskManager', () => {
       await expect(
         taskManager.create({
           title: 'Test',
-          content: longContent,
+          content: longContent
         })
       ).rejects.toThrow('Content exceeds maximum length');
     });
@@ -101,7 +101,7 @@ describe('TaskManager', () => {
     it('should retrieve existing task', async () => {
       const created = await taskManager.create({
         title: 'Test Task',
-        content: 'Test content',
+        content: 'Test content'
       });
 
       const retrieved = await taskManager.get(created.id);
@@ -121,19 +121,19 @@ describe('TaskManager', () => {
       await taskManager.create({
         title: 'Pending Task',
         tags: ['frontend'],
-        status: 'pending',
+        status: 'pending'
       });
 
       await taskManager.create({
         title: 'In Progress Task',
         tags: ['backend'],
-        status: 'in-progress',
+        status: 'in-progress'
       });
 
       await taskManager.create({
         title: 'Done Task',
         tags: ['frontend', 'testing'],
-        status: 'done',
+        status: 'done'
       });
     });
 
@@ -171,7 +171,7 @@ describe('TaskManager', () => {
     it('should search in title and content', async () => {
       await taskManager.create({
         title: 'Frontend Development',
-        content: 'React components implementation',
+        content: 'React components implementation'
       });
 
       const titleResults = await taskManager.list({ search: 'Frontend' });
@@ -201,7 +201,7 @@ describe('TaskManager', () => {
         title: 'Original Title',
         content: 'Original content',
         tags: ['original'],
-        status: 'pending',
+        status: 'pending'
       });
     });
 
@@ -209,7 +209,7 @@ describe('TaskManager', () => {
       const updated = await taskManager.update(existingTask.id, {
         title: 'Updated Title',
         status: 'in-progress',
-        tags: ['updated', 'modified'],
+        tags: ['updated', 'modified']
       });
 
       expect(updated).toHaveTitle('Updated Title');
@@ -221,7 +221,7 @@ describe('TaskManager', () => {
 
     it('should update content', async () => {
       const updated = await taskManager.update(existingTask.id, {
-        content: 'Updated content',
+        content: 'Updated content'
       });
 
       const retrieved = await taskManager.get(updated.id);
@@ -230,12 +230,12 @@ describe('TaskManager', () => {
 
     it('should handle filename changes when title changes', async () => {
       await taskManager.update(existingTask.id, {
-        title: 'Completely New Title',
+        title: 'Completely New Title'
       });
 
       const files = await workspace.listFiles('.simple-task-master/tasks');
       expect(files).toHaveTaskCount(1);
-      
+
       const taskFiles = files.filter(f => f.endsWith('.md'));
       expect(taskFiles[0]).toMatch(/1-completely-new-title\.md/);
     });
@@ -335,7 +335,7 @@ describe('TaskManager', () => {
       await expect(
         taskManager.create({
           title: 'Large Task',
-          content: largeContent,
+          content: largeContent
         })
       ).rejects.toThrow(/Content exceeds maximum length|exceeds maximum size/);
     });
@@ -366,7 +366,7 @@ describe('TaskManager', () => {
 
     it('should handle missing task directory', async () => {
       const customTaskManager = new TaskManager({
-        tasksDir: '/non/existent/directory/tasks',
+        tasksDir: '/non/existent/directory/tasks'
       });
 
       const tasks = await customTaskManager.list();
@@ -411,23 +411,23 @@ describe('TaskManager', () => {
           taskManager.create({
             title: `Pending Task ${i}`,
             status: 'pending',
-            tags: ['backend', 'api'],
+            tags: ['backend', 'api']
           })
         ),
         ...Array.from({ length: 30 }, (_, i) =>
           taskManager.create({
             title: `Done Task ${i}`,
             status: 'done',
-            tags: ['frontend', 'ui'],
+            tags: ['frontend', 'ui']
           })
         ),
         ...Array.from({ length: 20 }, (_, i) =>
           taskManager.create({
             title: `In Progress Task ${i}`,
             status: 'in-progress',
-            tags: ['devops'],
+            tags: ['devops']
           })
-        ),
+        )
       ]);
 
       // Test filtering performance
@@ -453,7 +453,7 @@ describe('TaskManager', () => {
         'Another-Task_with/weird\\chars',
         'Task with åcçèñts',
         'UPPERCASE task',
-        'task with "quotes" and <brackets>',
+        'task with "quotes" and <brackets>'
       ];
 
       for (const title of specialTitles) {
@@ -523,7 +523,7 @@ console.log('code blocks');
 
       const task = await taskManager.create({
         title: 'Markdown Task',
-        content: markdownContent,
+        content: markdownContent
       });
 
       const retrieved = await taskManager.get(task.id);
@@ -533,12 +533,12 @@ console.log('code blocks');
     it('should handle empty and whitespace-only content', async () => {
       const task1 = await taskManager.create({
         title: 'Empty Content',
-        content: '',
+        content: ''
       });
 
       const task2 = await taskManager.create({
         title: 'Whitespace Content',
-        content: '   \n\t   \n   ',
+        content: '   \n\t   \n   '
       });
 
       // Content is stored in the file, check via get()
@@ -551,7 +551,7 @@ console.log('code blocks');
     it('should handle tags with various formats', async () => {
       const task = await taskManager.create({
         title: 'Tagged Task',
-        tags: ['frontend', 'urgent', 'bug-fix', 'v2.0', 'API_Update'],
+        tags: ['frontend', 'urgent', 'bug-fix', 'v2.0', 'API_Update']
       });
 
       expect(task.tags).toEqual(['frontend', 'urgent', 'bug-fix', 'v2.0', 'API_Update']);
@@ -566,7 +566,7 @@ console.log('code blocks');
 
       const task3 = await taskManager.create({
         title: 'Multi-Dependent Task',
-        dependencies: [task1.id, task2.id],
+        dependencies: [task1.id, task2.id]
       });
 
       expect(task3.dependencies).toEqual([task1.id, task2.id]);
@@ -594,7 +594,7 @@ console.log('code blocks');
         created: new Date().toISOString(),
         updated: new Date().toISOString(),
         tags: [],
-        dependencies: [],
+        dependencies: []
       };
 
       await workspace.writeFile(
@@ -642,7 +642,7 @@ Future task content`
 
       const updatePromises = [
         taskManager.update(task1.id, { title: 'Updated Task 1' }),
-        taskManager.update(task2.id, { title: 'Updated Task 2' }),
+        taskManager.update(task2.id, { title: 'Updated Task 2' })
       ];
 
       const [updated1, updated2] = await Promise.all(updatePromises);
@@ -656,7 +656,7 @@ Future task content`
         taskManager.create({ title: 'Create 1' }),
         taskManager.create({ title: 'Create 2' }),
         taskManager.list(),
-        taskManager.create({ title: 'Create 3' }),
+        taskManager.create({ title: 'Create 3' })
       ];
 
       const results = await Promise.all(operations);
@@ -674,7 +674,7 @@ describe('TaskManager - Isolated Tests', () => {
   it('should work in isolated temp directory', async () => {
     await testIsolation.inTempDir(async (tempDir) => {
       const taskManager = new TaskManager({
-        tasksDir: `${tempDir}/.simple-task-master/tasks`,
+        tasksDir: `${tempDir}/.simple-task-master/tasks`
       });
 
       // Should handle missing directory gracefully
@@ -691,7 +691,7 @@ describe('TaskManager - Isolated Tests', () => {
     await testIsolation.withEnv({ NODE_ENV: 'production' }, async () => {
       const workspace = await TestWorkspace.create();
       const taskManager = new TaskManager({
-        tasksDir: workspace.tasksDirectory,
+        tasksDir: workspace.tasksDirectory
       });
 
       try {

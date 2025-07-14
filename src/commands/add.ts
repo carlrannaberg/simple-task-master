@@ -68,7 +68,7 @@ async function addTask(
       content: options.description || '',
       status: status as 'pending' | 'in-progress' | 'done',
       tags,
-      dependencies,
+      dependencies
     };
 
     // Create the task (TaskManager handles locking internally)

@@ -3,7 +3,7 @@ import type {
   TaskCreateInput,
   TaskUpdateInput,
   TaskListFilters,
-  TaskStatus,
+  TaskStatus
 } from '@lib/types';
 import { NotFoundError } from '@lib/errors';
 
@@ -28,7 +28,7 @@ export class MockTaskStore {
       updated: now,
       tags: input.tags ?? [],
       dependencies: input.dependencies ?? [],
-      content: input.content,
+      content: input.content
     };
 
     this.tasks.set(task.id, task);
@@ -62,7 +62,7 @@ export class MockTaskStore {
       tags: updates.tags ?? existing.tags,
       dependencies: updates.dependencies ?? existing.dependencies,
       content: updates.content ?? existing.content,
-      updated: new Date().toISOString(),
+      updated: new Date().toISOString()
     };
 
     this.tasks.set(id, updated);
@@ -171,7 +171,7 @@ export class MockTaskStore {
         title: `${prefix} ${i}`,
         content: `This is test task number ${i}`,
         tags: [`tag${i % 3}`, 'test'],
-        status: i % 3 === 0 ? 'done' : i % 3 === 1 ? 'in-progress' : 'pending',
+        status: i % 3 === 0 ? 'done' : i % 3 === 1 ? 'in-progress' : 'pending'
       });
       tasks.push(task);
     }
@@ -198,7 +198,7 @@ export class MockTaskStore {
       inProgress: tasks.filter((t) => t.status === 'in-progress').length,
       done: tasks.filter((t) => t.status === 'done').length,
       withTags: tasks.filter((t) => t.tags.length > 0).length,
-      withContent: tasks.filter((t) => t.content && t.content.length > 0).length,
+      withContent: tasks.filter((t) => t.content && t.content.length > 0).length
     };
   }
 
@@ -209,7 +209,7 @@ export class MockTaskStore {
     const promises = Array.from({ length: count }, (_, i) =>
       this.create({
         title: `Concurrent Task ${i + 1}`,
-        content: `Created concurrently: ${i + 1}`,
+        content: `Created concurrently: ${i + 1}`
       })
     );
 

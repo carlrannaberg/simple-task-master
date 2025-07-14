@@ -23,13 +23,13 @@ describe(
         // Add multiple tasks
         const { taskId: _id1 } = await cliRunner.addTask('First Task', {
           content: 'First task content',
-          tags: ['urgent', 'work'],
+          tags: ['urgent', 'work']
         });
 
         const { taskId: _id2 } = await cliRunner.addTask('Second Task', {
           content: 'Second task content',
           tags: ['personal'],
-          status: 'in-progress',
+          status: 'in-progress'
         });
 
         // List all tasks
@@ -49,7 +49,7 @@ describe(
         // Add task
         const { taskId } = await cliRunner.addTask('Task to Update', {
           content: 'Original content',
-          status: 'pending',
+          status: 'pending'
         });
 
         // Update task
@@ -57,7 +57,7 @@ describe(
           title: 'Updated Task Title',
           content: 'Updated content with more details',
           status: 'in-progress',
-          tags: ['updated', 'important'],
+          tags: ['updated', 'important']
         });
 
         // Show updated task
@@ -77,19 +77,19 @@ describe(
         await cliRunner.addTask('Frontend Work', {
           content: 'React component development',
           tags: ['frontend', 'react', 'urgent'],
-          status: 'in-progress',
+          status: 'in-progress'
         });
 
         await cliRunner.addTask('Backend API', {
           content: 'REST API implementation',
           tags: ['backend', 'api'],
-          status: 'pending',
+          status: 'pending'
         });
 
         await cliRunner.addTask('Documentation', {
           content: 'Update project documentation',
           tags: ['docs', 'maintenance'],
-          status: 'done',
+          status: 'done'
         });
 
         // Test status filtering
@@ -113,22 +113,22 @@ describe(
         // Create tasks with searchable content
         await cliRunner.addTask('User Authentication', {
           content: 'Implement OAuth 2.0 authentication system with JWT tokens',
-          tags: ['auth', 'security'],
+          tags: ['auth', 'security']
         });
 
         await cliRunner.addTask('Database Schema', {
           content: 'Design user tables and authentication relationships',
-          tags: ['database', 'schema'],
+          tags: ['database', 'schema']
         });
 
         await cliRunner.addTask('API Documentation', {
           content: 'Document authentication endpoints and JWT usage',
-          tags: ['docs', 'api'],
+          tags: ['docs', 'api']
         });
 
         // Test grep functionality
         const grepResult = await cliRunner.grepTasks('authentication', {
-          ignoreCase: true,
+          ignoreCase: true
         });
 
         expect(grepResult.exitCode).toBe(0);
@@ -159,8 +159,8 @@ describe(
               '--description',
               'Initialize new project',
               '--tags',
-              'setup,project',
-            ],
+              'setup,project'
+            ]
           },
           { args: ['list', '--status', 'pending'] },
           {
@@ -170,12 +170,12 @@ describe(
               '--status',
               'in-progress',
               '--description',
-              'Project setup in progress',
-            ],
+              'Project setup in progress'
+            ]
           },
           { args: ['show', '1'] },
           { args: ['update', '1', '--status', 'done'] },
-          { args: ['list', '--status', 'done'] },
+          { args: ['list', '--status', 'done'] }
         ];
 
         const results = await cliRunner.runSequence(commands);
@@ -199,12 +199,12 @@ describe(
           'Build REST API',
           'Create Frontend Components',
           'Write Tests',
-          'Deploy to Production',
+          'Deploy to Production'
         ];
 
         // Batch create tasks
         const createCommands = taskTitles.map((title) => ({
-          args: ['add', title, '--tags', 'project,batch', '--status', 'pending'],
+          args: ['add', title, '--tags', 'project,batch', '--status', 'pending']
         }));
 
         const createResults = await cliRunner.runSequence(createCommands);
@@ -217,7 +217,7 @@ describe(
         const updateCommands = [
           { args: ['update', '1', '--status', 'in-progress'] },
           { args: ['update', '2', '--status', 'in-progress'] },
-          { args: ['update', '3', '--status', 'done'] },
+          { args: ['update', '3', '--status', 'done'] }
         ];
 
         const updateResults = await cliRunner.runSequence(updateCommands);
@@ -244,7 +244,7 @@ describe(
           { args: ['show', '1'] }, // Should succeed
           { args: ['update', '999', '--title', 'Non-existent'] }, // Should fail
           { args: ['list'] }, // Should succeed after failure
-          { args: ['add', 'Recovery Task', '--description', 'Created after error'] }, // Should succeed
+          { args: ['add', 'Recovery Task', '--description', 'Created after error'] } // Should succeed
         ];
 
         const results = await cliRunner.runSequence(commands);
@@ -271,7 +271,7 @@ describe(
         await cliRunner.addTask('JSON Test Task', {
           content: 'Testing JSON output format',
           tags: ['test', 'json'],
-          status: 'in-progress',
+          status: 'in-progress'
         });
 
         // Test JSON format for list command
@@ -296,7 +296,7 @@ describe(
         await cliRunner.addTask('Format Test', {
           content: 'Content with **markdown** and special chars: !@#$%^&*()',
           tags: ['format', 'test', 'special-chars'],
-          status: 'pending',
+          status: 'pending'
         });
 
         // Test table format (default)
@@ -369,7 +369,7 @@ describe(
 
         const { taskId } = await cliRunner.addTask('Large Content Task', {
           content: largeContent,
-          tags: Array.from({ length: 50 }, (_, i) => `tag-${i}`),
+          tags: Array.from({ length: 50 }, (_, i) => `tag-${i}`)
         });
 
         // Commands should handle large data without issues
@@ -388,7 +388,7 @@ describe(
           cliRunner.addTask(`Performance Test Task ${i + 1}`, {
             content: `Content for performance test task ${i + 1}`,
             tags: [`batch-${Math.floor(i / 10)}`, 'performance'],
-            status: i % 3 === 0 ? 'done' : i % 3 === 1 ? 'in-progress' : 'pending',
+            status: i % 3 === 0 ? 'done' : i % 3 === 1 ? 'in-progress' : 'pending'
           })
         );
 
@@ -407,7 +407,7 @@ describe(
       it.skip('should handle rapid consecutive commands', async () => {
         const commandPromises = Array.from({ length: 20 }, (_, i) =>
           cliRunner.addTask(`Rapid Task ${i + 1}`, {
-            content: `Rapid creation test ${i + 1}`,
+            content: `Rapid creation test ${i + 1}`
           })
         );
 
@@ -443,7 +443,7 @@ Content with:
 
         const { taskId } = await cliRunner.addTask(specialTitle, {
           content: specialContent,
-          tags: ['special-chars', 'unicode', 'json-test'],
+          tags: ['special-chars', 'unicode', 'json-test']
         });
 
         // Verify task was created correctly
@@ -463,7 +463,7 @@ Content with:
         try {
           const { taskId } = await cliRunner.addTask(longTitle, {
             content: longContent,
-            tags: longTags,
+            tags: longTags
           });
 
           // If creation succeeds, verify task
@@ -479,7 +479,7 @@ Content with:
       it('should handle corrupted workspace gracefully', async () => {
         // Create valid task first
         const { taskId: _taskId } = await cliRunner.addTask('Valid Task', {
-          content: 'This task is valid',
+          content: 'This task is valid'
         });
 
         // Corrupt the task file
@@ -495,7 +495,7 @@ Content with:
 
         // Should still be able to create new tasks
         const newTaskResult = await cliRunner.addTask('New Task After Corruption', {
-          content: 'This should work',
+          content: 'This should work'
         });
         expect(newTaskResult.result.exitCode).toBe(0);
       });

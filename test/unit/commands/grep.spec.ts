@@ -1,11 +1,12 @@
 /**
  * Grep command unit tests
- * 
+ *
  * These tests directly test the grep command action function
  * with properly mocked dependencies.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi, MockedFunction } from 'vitest';
+import type { MockedFunction } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import type { Task } from '@lib/types';
 import { ValidationError, FileSystemError, ConfigurationError } from '@lib/errors';
 import { MockTaskStore } from '@test/helpers';
@@ -62,37 +63,37 @@ describe('Grep Command', () => {
   beforeEach(async () => {
     // Reset all mocks
     vi.clearAllMocks();
-    
+
     // Clear command options state
     grepCommand.options.forEach(option => {
       delete (grepCommand as Record<string, unknown>)[option.long.replace('--', '')];
     });
-    
+
     // Reset captured output
     capturedOutput = '';
     capturedError = '';
 
     // Create mock task store
     mockTaskStore = new MockTaskStore();
-    
+
     // Create mock task manager instance
     mockTaskManagerInstance = {
       list: vi.fn(),
       get: vi.fn()
     };
-    
+
     // Setup TaskManager mock
     mockedTaskManager.mockImplementation(() => mockTaskManagerInstance as TaskManager);
-    
+
     // Setup output mocks
     mockedPrintOutput.mockImplementation((output: string) => {
       capturedOutput += output;
     });
-    
+
     mockedPrintError.mockImplementation((error: string) => {
       capturedError += error;
     });
-    
+
     // Setup formatTasks mock with comprehensive formatting
     mockedFormatTasks.mockImplementation((tasks: Task[], format = 'ndjson') => {
       if (format === 'ndjson') {
@@ -104,14 +105,14 @@ describe('Grep Command', () => {
       if (format === 'table') {
         const header = 'ID | Title | Status | Tags';
         const separator = '---|-------|--------|-----';
-        const rows = tasks.map(task => 
+        const rows = tasks.map(task =>
           `${task.id} | ${task.title} | ${task.status} | ${task.tags?.join(', ') || ''}`
         );
         return [header, separator, ...rows].join('\n');
       }
       if (format === 'csv') {
         const header = 'id,title,status,tags';
-        const rows = tasks.map(task => 
+        const rows = tasks.map(task =>
           `${task.id},"${task.title}","${task.status}","${task.tags?.join(';') || ''}"`
         );
         return [header, ...rows].join('\n');
@@ -124,7 +125,7 @@ describe('Grep Command', () => {
       }
       return tasks.map(task => JSON.stringify(task)).join('\n');
     });
-    
+
     // Setup test tasks
     await setupTestTasks();
   });
@@ -259,7 +260,7 @@ describe('Grep Command', () => {
 
     it('should return exit code 1 when no matches found', async () => {
       await expect(grepTasks('nonexistent', {})).rejects.toThrow('Process exit called');
-      
+
       expect(mockExit).toHaveBeenCalledWith(1);
       expect(mockedPrintError).toHaveBeenCalledWith('No tasks found matching pattern: nonexistent');
     });
@@ -301,14 +302,14 @@ describe('Grep Command', () => {
       // Test case-sensitive first
       await grepTasks('Use', {});
       const caseSensitiveCall = mockedFormatTasks.mock.calls[0][0];
-      
+
       // Clear mocks and test case-insensitive
       vi.clearAllMocks();
       capturedError = '';
       mockedFormatTasks.mockImplementation((tasks: Task[], format = 'ndjson') => {
         return tasks.map(task => JSON.stringify(task)).join('\n');
       });
-      
+
       await grepTasks('use', { ignoreCase: true });
       const caseInsensitiveCall = mockedFormatTasks.mock.calls[0][0];
 
@@ -343,14 +344,14 @@ describe('Grep Command', () => {
 
     it('should not find title matches when using contentOnly', async () => {
       await expect(grepTasks('Fix', { contentOnly: true })).rejects.toThrow('Process exit called');
-      
+
       expect(mockExit).toHaveBeenCalledWith(1);
       expect(mockedPrintError).toHaveBeenCalledWith('No tasks found matching pattern: Fix');
     });
 
     it('should not find content matches when using titleOnly', async () => {
       await expect(grepTasks('critical', { titleOnly: true })).rejects.toThrow('Process exit called');
-      
+
       expect(mockExit).toHaveBeenCalledWith(1);
       expect(mockedPrintError).toHaveBeenCalledWith('No tasks found matching pattern: critical');
     });
@@ -408,7 +409,7 @@ describe('Grep Command', () => {
 
     it('should handle invalid regex patterns', async () => {
       await expect(grepTasks('[invalid', {})).rejects.toThrow('Process exit called');
-      
+
       expect(mockExit).toHaveBeenCalledWith(1);
       expect(mockedPrintError).toHaveBeenCalledWith('Invalid regular expression: [invalid');
     });
@@ -462,7 +463,7 @@ describe('Grep Command', () => {
 
     it('should reject invalid format', async () => {
       await expect(grepTasks('API', { format: 'invalid' })).rejects.toThrow('Process exit called');
-      
+
       expect(mockExit).toHaveBeenCalledWith(1);
       expect(mockedPrintError).toHaveBeenCalledWith('Invalid format: invalid. Valid formats: ndjson, json, table, csv, yaml');
     });
@@ -480,7 +481,7 @@ describe('Grep Command', () => {
   describe('edge cases and special patterns', () => {
     it('should handle empty pattern', async () => {
       await expect(grepTasks('', {})).rejects.toThrow('Process exit called');
-      
+
       expect(mockExit).toHaveBeenCalledWith(1);
       expect(mockedPrintError).toHaveBeenCalledWith('No tasks found matching pattern: ');
     });
@@ -634,7 +635,7 @@ describe('Grep Command', () => {
 
     it('should handle regex errors gracefully', async () => {
       await expect(grepTasks('[unclosed', {})).rejects.toThrow('Process exit called');
-      
+
       expect(mockExit).toHaveBeenCalledWith(1);
       expect(mockedPrintError).toHaveBeenCalledWith('Invalid regular expression: [unclosed');
     });

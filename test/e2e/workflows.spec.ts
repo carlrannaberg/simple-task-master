@@ -28,7 +28,7 @@ describe(
         const { taskId: taskId1 } = await cliRunner.addTask('Initial Project Task', {
           content: 'Set up the foundation for the project',
           tags: ['project', 'setup', 'foundation'],
-          status: 'pending',
+          status: 'pending'
         });
 
         expect(taskId1).toBe(1);
@@ -37,13 +37,13 @@ describe(
         const { taskId: taskId2 } = await cliRunner.addTask('Database Design', {
           content: 'Design the database schema and relationships',
           tags: ['database', 'design'],
-          status: 'pending',
+          status: 'pending'
         });
 
         const { taskId: taskId3 } = await cliRunner.addTask('Frontend Setup', {
           content: 'Initialize React application with routing',
           tags: ['frontend', 'react', 'setup'],
-          status: 'pending',
+          status: 'pending'
         });
 
         // Step 4: List all tasks to verify creation
@@ -57,7 +57,7 @@ describe(
         // Step 5: Start working on first task (update to in-progress)
         await cliRunner.updateTask(taskId1, {
           status: 'in-progress',
-          content: 'Set up the foundation for the project. Started with project structure setup.',
+          content: 'Set up the foundation for the project. Started with project structure setup.'
         });
 
         // Step 6: Show the updated task
@@ -79,7 +79,7 @@ describe(
         await cliRunner.updateTask(taskId2, {
           status: 'in-progress',
           content:
-            'Design the database schema and relationships. Starting with user authentication tables.',
+            'Design the database schema and relationships. Starting with user authentication tables.'
         });
 
         // Step 9: Verify workflow state
@@ -112,25 +112,25 @@ describe(
         const { taskId: backendId } = await cliRunner.addTask('Backend API Development', {
           content: 'Develop REST API endpoints for user management',
           tags: ['backend', 'api', 'user-management', 'high-priority'],
-          status: 'in-progress',
+          status: 'in-progress'
         });
 
         const { taskId: _frontendId } = await cliRunner.addTask('Frontend Components', {
           content: 'Create reusable UI components for forms',
           tags: ['frontend', 'components', 'ui', 'forms'],
-          status: 'pending',
+          status: 'pending'
         });
 
         const { taskId: testingId } = await cliRunner.addTask('Integration Testing', {
           content: 'Set up automated testing for API endpoints',
           tags: ['testing', 'automation', 'api', 'high-priority'],
-          status: 'pending',
+          status: 'pending'
         });
 
         const { taskId: docsId } = await cliRunner.addTask('API Documentation', {
           content: 'Document all API endpoints with examples',
           tags: ['documentation', 'api', 'examples'],
-          status: 'pending',
+          status: 'pending'
         });
 
         // Workflow: Filter by tags to focus on API-related tasks
@@ -154,21 +154,21 @@ describe(
         // Workflow: Complete backend work and update related tasks
         await cliRunner.updateTask(backendId, {
           status: 'done',
-          content: 'Develop REST API endpoints for user management. Completed all CRUD operations.',
+          content: 'Develop REST API endpoints for user management. Completed all CRUD operations.'
         });
 
         // Start testing now that backend is ready
         await cliRunner.updateTask(testingId, {
           status: 'in-progress',
           content:
-            'Set up automated testing for API endpoints. Backend API is now ready for testing.',
+            'Set up automated testing for API endpoints. Backend API is now ready for testing.'
         });
 
         // Update documentation task with specific details
         await cliRunner.updateTask(docsId, {
           content:
             'Document all API endpoints with examples. Focus on user management endpoints first.',
-          tags: ['documentation', 'api', 'examples', 'user-management'],
+          tags: ['documentation', 'api', 'examples', 'user-management']
         });
 
         // Verify workflow progression
@@ -192,63 +192,63 @@ describe(
         const { taskId: designId } = await cliRunner.addTask('Database Schema Design', {
           content: 'Design the complete database schema',
           tags: ['database', 'design', 'foundation'],
-          status: 'in-progress',
+          status: 'in-progress'
         });
 
         const { taskId: migrationId } = await cliRunner.addTask('Database Migration Scripts', {
           content:
             'Create migration scripts for schema deployment. BLOCKED: Waiting for schema design.',
           tags: ['database', 'migration', 'blocked'],
-          status: 'pending',
+          status: 'pending'
         });
 
         const { taskId: apiId } = await cliRunner.addTask('API Data Layer', {
           content: 'Implement data access layer for API. BLOCKED: Waiting for database setup.',
           tags: ['api', 'data-layer', 'blocked'],
-          status: 'pending',
+          status: 'pending'
         });
 
         const { taskId: frontendId } = await cliRunner.addTask('Frontend Data Integration', {
           content: 'Connect frontend to API endpoints. BLOCKED: Waiting for API completion.',
           tags: ['frontend', 'integration', 'blocked'],
-          status: 'pending',
+          status: 'pending'
         });
 
         // Workflow: Complete design phase
         await cliRunner.updateTask(designId, {
           status: 'done',
-          content: 'Database schema design completed with user, product, and order tables.',
+          content: 'Database schema design completed with user, product, and order tables.'
         });
 
         // Unblock and start migration
         await cliRunner.updateTask(migrationId, {
           status: 'in-progress',
           content: 'Creating migration scripts for schema deployment. Schema design is complete.',
-          tags: ['database', 'migration'], // Remove 'blocked' tag
+          tags: ['database', 'migration'] // Remove 'blocked' tag
         });
 
         // Workflow: Complete migration and unblock API
         await cliRunner.updateTask(migrationId, {
           status: 'done',
-          content: 'Migration scripts completed and tested. Database is ready for development.',
+          content: 'Migration scripts completed and tested. Database is ready for development.'
         });
 
         await cliRunner.updateTask(apiId, {
           status: 'in-progress',
           content: 'Implementing data access layer for API. Database is now available.',
-          tags: ['api', 'data-layer'], // Remove 'blocked' tag
+          tags: ['api', 'data-layer'] // Remove 'blocked' tag
         });
 
         // Workflow: Complete API and unblock frontend
         await cliRunner.updateTask(apiId, {
           status: 'done',
-          content: 'Data access layer implemented with full CRUD operations.',
+          content: 'Data access layer implemented with full CRUD operations.'
         });
 
         await cliRunner.updateTask(frontendId, {
           status: 'in-progress',
           content: 'Connecting frontend to API endpoints. API is now ready.',
-          tags: ['frontend', 'integration'], // Remove 'blocked' tag
+          tags: ['frontend', 'integration'] // Remove 'blocked' tag
         });
 
         // Verify dependency resolution workflow
@@ -279,32 +279,32 @@ describe(
             title: 'User Registration Feature',
             content: 'Implement user registration with email verification',
             tags: ['user-story', 'authentication', 'sprint-1', 'frontend', 'backend'],
-            status: 'pending',
+            status: 'pending'
           },
           {
             title: 'User Login System',
             content: 'Create secure login with session management',
             tags: ['user-story', 'authentication', 'sprint-1', 'backend'],
-            status: 'pending',
+            status: 'pending'
           },
           {
             title: 'Password Reset Flow',
             content: 'Allow users to reset passwords via email',
             tags: ['user-story', 'authentication', 'sprint-1', 'backend', 'email'],
-            status: 'pending',
+            status: 'pending'
           },
           {
             title: 'Unit Tests for Auth',
             content: 'Write comprehensive tests for authentication system',
             tags: ['testing', 'authentication', 'sprint-1'],
-            status: 'pending',
+            status: 'pending'
           },
           {
             title: 'Sprint Demo Preparation',
             content: 'Prepare demo environment and presentation',
             tags: ['demo', 'sprint-1', 'presentation'],
-            status: 'pending',
-          },
+            status: 'pending'
+          }
         ];
 
         // Create all sprint tasks
@@ -318,18 +318,18 @@ describe(
         await cliRunner.updateTask(taskIds[1], {
           status: 'in-progress',
           content:
-            'Create secure login with session management. Starting with backend implementation.',
+            'Create secure login with session management. Starting with backend implementation.'
         });
 
         // Mid-sprint: Complete login, start registration
         await cliRunner.updateTask(taskIds[1], {
           status: 'done',
-          content: 'Secure login system completed with JWT tokens and session management.',
+          content: 'Secure login system completed with JWT tokens and session management.'
         });
 
         await cliRunner.updateTask(taskIds[0], {
           status: 'in-progress',
-          content: 'Implement user registration with email verification. Login system is ready.',
+          content: 'Implement user registration with email verification. Login system is ready.'
         });
 
         // Continue sprint progress
@@ -342,7 +342,7 @@ describe(
         await cliRunner.updateTask(taskIds[3], { status: 'done' });
         await cliRunner.updateTask(taskIds[4], {
           status: 'in-progress',
-          content: 'Preparing demo environment and presentation. All features are complete.',
+          content: 'Preparing demo environment and presentation. All features are complete.'
         });
 
         // Sprint Review: Check completion
@@ -375,7 +375,7 @@ describe(
             content:
               'Users with email addresses longer than 50 characters cannot log in. Error: "Email too long".',
             tags: ['bug', 'critical', 'authentication', 'production'],
-            status: 'pending',
+            status: 'pending'
           }
         );
 
@@ -384,7 +384,7 @@ describe(
           {
             content: 'Login button is misaligned on mobile devices in portrait mode.',
             tags: ['bug', 'minor', 'ui', 'mobile'],
-            status: 'pending',
+            status: 'pending'
           }
         );
 
@@ -393,7 +393,7 @@ describe(
           {
             content: 'Add "Remember Me" functionality to login form for better UX.',
             tags: ['enhancement', 'authentication', 'ux'],
-            status: 'pending',
+            status: 'pending'
           }
         );
 
@@ -402,7 +402,7 @@ describe(
           status: 'in-progress',
           content:
             'CRITICAL BUG: Investigating email length validation. Database field might be too small.',
-          tags: ['bug', 'critical', 'authentication', 'production', 'investigating'],
+          tags: ['bug', 'critical', 'authentication', 'production', 'investigating']
         });
 
         // Investigation and fix
@@ -410,31 +410,31 @@ describe(
           content:
             'CRITICAL BUG FIXED: Increased email field size to 255 characters. Deployed hotfix to production.',
           status: 'done',
-          tags: ['bug', 'critical', 'authentication', 'production', 'fixed', 'deployed'],
+          tags: ['bug', 'critical', 'authentication', 'production', 'fixed', 'deployed']
         });
 
         // Address minor bug
         await cliRunner.updateTask(minorBugId, {
           status: 'in-progress',
-          content: 'Fixing button alignment using flexbox. Testing on various mobile devices.',
+          content: 'Fixing button alignment using flexbox. Testing on various mobile devices.'
         });
 
         await cliRunner.updateTask(minorBugId, {
           status: 'done',
           content: 'Button alignment fixed across all mobile devices. CSS improvements applied.',
-          tags: ['bug', 'minor', 'ui', 'mobile', 'fixed'],
+          tags: ['bug', 'minor', 'ui', 'mobile', 'fixed']
         });
 
         // Implement enhancement
         await cliRunner.updateTask(enhancementId, {
           status: 'in-progress',
-          content: 'Adding remember me functionality with secure token storage.',
+          content: 'Adding remember me functionality with secure token storage.'
         });
 
         await cliRunner.updateTask(enhancementId, {
           status: 'done',
           content: 'Remember me feature implemented with 30-day secure tokens.',
-          tags: ['enhancement', 'authentication', 'ux', 'implemented'],
+          tags: ['enhancement', 'authentication', 'ux', 'implemented']
         });
 
         // Verify bug workflow completion
@@ -458,38 +458,38 @@ describe(
           {
             title: 'Feature Analysis: User Profile Requirements',
             tags: ['analysis', 'user-profile'],
-            content: 'Analyze requirements for user profile management system.',
+            content: 'Analyze requirements for user profile management system.'
           },
           {
             title: 'Design: User Profile UI Mockups',
             tags: ['design', 'ui', 'user-profile'],
-            content: 'Create wireframes and mockups for profile pages.',
+            content: 'Create wireframes and mockups for profile pages.'
           },
           {
             title: 'Backend: User Profile API',
             tags: ['backend', 'api', 'user-profile'],
-            content: 'Implement CRUD APIs for user profile data.',
+            content: 'Implement CRUD APIs for user profile data.'
           },
           {
             title: 'Frontend: Profile Edit Form',
             tags: ['frontend', 'forms', 'user-profile'],
-            content: 'Create reactive form for editing user profiles.',
+            content: 'Create reactive form for editing user profiles.'
           },
           {
             title: 'Frontend: Profile Display Page',
             tags: ['frontend', 'display', 'user-profile'],
-            content: 'Create read-only profile display page.',
+            content: 'Create read-only profile display page.'
           },
           {
             title: 'Testing: Profile Feature Tests',
             tags: ['testing', 'user-profile'],
-            content: 'Write integration tests for profile functionality.',
+            content: 'Write integration tests for profile functionality.'
           },
           {
             title: 'Documentation: Profile API Docs',
             tags: ['documentation', 'api', 'user-profile'],
-            content: 'Document profile API endpoints and usage.',
-          },
+            content: 'Document profile API endpoints and usage.'
+          }
         ];
 
         // Create feature tasks
@@ -498,7 +498,7 @@ describe(
           const { taskId } = await cliRunner.addTask(task.title, {
             content: task.content,
             tags: task.tags,
-            status: 'pending',
+            status: 'pending'
           });
           featureTaskIds.push(taskId);
         }
@@ -507,7 +507,7 @@ describe(
         await cliRunner.updateTask(featureTaskIds[0], {
           status: 'in-progress',
           content:
-            'Analyzing requirements: avatar upload, contact info, preferences, privacy settings.',
+            'Analyzing requirements: avatar upload, contact info, preferences, privacy settings.'
         });
 
         await cliRunner.updateTask(featureTaskIds[0], { status: 'done' });
@@ -517,7 +517,7 @@ describe(
         // Phase 2: Backend Development
         await cliRunner.updateTask(featureTaskIds[2], {
           status: 'in-progress',
-          content: 'Implementing profile CRUD operations with validation and file upload support.',
+          content: 'Implementing profile CRUD operations with validation and file upload support.'
         });
 
         await cliRunner.updateTask(featureTaskIds[2], { status: 'done' });
@@ -528,23 +528,23 @@ describe(
 
         await cliRunner.updateTask(featureTaskIds[3], {
           status: 'done',
-          content: 'Profile edit form completed with validation, avatar upload, and auto-save.',
+          content: 'Profile edit form completed with validation, avatar upload, and auto-save.'
         });
 
         await cliRunner.updateTask(featureTaskIds[4], {
           status: 'done',
-          content: 'Profile display page completed with responsive design and social sharing.',
+          content: 'Profile display page completed with responsive design and social sharing.'
         });
 
         // Phase 4: Quality Assurance
         await cliRunner.updateTask(featureTaskIds[5], {
           status: 'in-progress',
-          content: 'Writing comprehensive tests for profile CRUD, validation, and file uploads.',
+          content: 'Writing comprehensive tests for profile CRUD, validation, and file uploads.'
         });
 
         await cliRunner.updateTask(featureTaskIds[6], {
           status: 'in-progress',
-          content: 'Documenting all profile endpoints with request/response examples.',
+          content: 'Documenting all profile endpoints with request/response examples.'
         });
 
         await cliRunner.updateTask(featureTaskIds[5], { status: 'done' });
@@ -572,7 +572,7 @@ describe(
         // Create initial task
         const { taskId } = await cliRunner.addTask('Concurrent Session Test', {
           content: 'Initial content',
-          status: 'pending',
+          status: 'pending'
         });
 
         // Create two concurrent sessions
@@ -589,12 +589,12 @@ describe(
         // Make different updates from each session
         await session1.updateTask(taskId, {
           content: 'Updated by session 1',
-          tags: ['session-1'],
+          tags: ['session-1']
         });
 
         await session2.updateTask(taskId, {
           status: 'in-progress',
-          tags: ['session-2'],
+          tags: ['session-2']
         });
 
         // Final state should reflect last write (session 2)

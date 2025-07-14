@@ -90,36 +90,36 @@ describe(
       it('should handle interrupted write operations gracefully', async () => {
         const filePath = path.join(tempDir, 'interrupt-test.txt');
         const originalContent = 'This is the original content that should be preserved';
-        
+
         // Write initial content
         await writeFileAtomic(filePath, originalContent);
-        
+
         // Simulate a more realistic power failure scenario
         // by creating orphaned temp files that match write-file-atomic's pattern
         const tempFile1 = `${filePath}.${process.pid}12345`;
         const tempFile2 = `${filePath}.${process.pid}67890`;
-        
+
         // Create orphaned temp files from "previous crashes"
         await fs.writeFile(tempFile1, 'Corrupted partial write 1');
         await fs.writeFile(tempFile2, 'Corrupted partial write 2');
-        
+
         // Verify temp files exist
         await expect(fs.access(tempFile1)).resolves.toBeUndefined();
         await expect(fs.access(tempFile2)).resolves.toBeUndefined();
-        
+
         // Original file should still have original content
         const contentBeforeWrite = await fs.readFile(filePath, 'utf8');
         expect(contentBeforeWrite).toBe(originalContent);
-        
+
         // Do a successful atomic write - should work despite orphaned files
         const finalContent = 'Final content after recovery';
         await writeFileAtomic(filePath, finalContent);
-        
+
         // Verify final content is correct and not corrupted
         const verifyContent = await fs.readFile(filePath, 'utf8');
         expect(verifyContent).toBe(finalContent);
         expect(verifyContent).not.toContain('Corrupted');
-        
+
         // Note: Orphaned temp files from previous processes won't be cleaned up
         // by write-file-atomic - this is expected behavior
       });
@@ -230,7 +230,7 @@ describe(
             // Write failed - verify original content is preserved
             expect(finalContent).toBe('initial content');
             expect(writeError).toBeDefined();
-            
+
             // The error could be EACCES, EPERM, or wrapped in a different error
             // Just verify we got an error and the file wasn't corrupted
             expect(writeError!.message).toBeDefined();
@@ -285,7 +285,7 @@ describe(
           'path\\with\\backslashes',
           'mixed/path\\separators',
           '.hidden/directory',
-          'path with spaces/file.txt',
+          'path with spaces/file.txt'
         ];
 
         for (const testPath of paths) {
@@ -305,7 +305,7 @@ describe(
           './relative-file.txt',
           '../parent-file.txt',
           'current/dir/file.txt',
-          './../mixed/relative.txt',
+          './../mixed/relative.txt'
         ];
 
         for (const relativePath of relativePaths) {
@@ -325,7 +325,7 @@ describe(
           'unicode-ñáñà.txt',
           'emoji-📝.txt',
           'chinese-中文.txt',
-          'spaces and symbols !@#$.txt',
+          'spaces and symbols !@#$.txt'
         ];
 
         for (const specialPath of specialPaths) {
@@ -439,13 +439,13 @@ describe(
 
       it.skip('should recover from partial write scenarios', async () => {
         const filePath = path.join(tempDir, 'partial-write-test.txt');
-        
+
         // Create multiple orphaned temp files with write-file-atomic's pattern
         // These simulate temp files left from previous crashed writes
         const orphanedFiles = [
           `${filePath}.${process.pid - 1}12345`, // From previous process
           `${filePath}.${process.pid}99999`,     // From current process
-          `${filePath}.2840185974`,              // Random murmurhex pattern
+          `${filePath}.2840185974`              // Random murmurhex pattern
         ];
 
         // Create orphaned temp files

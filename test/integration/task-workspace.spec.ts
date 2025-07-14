@@ -17,7 +17,7 @@ describe(
     beforeEach(async () => {
       workspace = await TestWorkspace.create('task-workspace-test-');
       taskManager = new TaskManager({
-        tasksDir: workspace.tasksDirectory,
+        tasksDir: workspace.tasksDirectory
       });
       lockManager = new LockManager(workspace.directory);
     });
@@ -32,7 +32,7 @@ describe(
 
         const task = await taskManager.create({
           title: 'Test Task',
-          content: 'Test content',
+          content: 'Test content'
         });
 
         expect(task.id).toBe(1);
@@ -73,7 +73,7 @@ describe(
         // Create initial task
         const initialTask = await workspace.addTask({
           title: 'Initial Task',
-          content: 'Initial content',
+          content: 'Initial content'
         });
 
         // Simulate concurrent updates
@@ -82,7 +82,7 @@ describe(
           try {
             await taskManager.update(initialTask.id, {
               content: `Updated content ${i + 1}`,
-              tags: [`tag-${i + 1}`],
+              tags: [`tag-${i + 1}`]
             });
           } finally {
             await lockManager.release();
@@ -134,7 +134,7 @@ describe(
         const staleLock = {
           pid: 99999, // Non-existent PID
           command: 'stale command',
-          timestamp: Date.now() - 60000, // 1 minute old
+          timestamp: Date.now() - 60000 // 1 minute old
         };
 
         await fs.writeFile(lockPath, JSON.stringify(staleLock));
@@ -158,7 +158,7 @@ describe(
           title: 'File Structure Test',
           content: 'Test content with **markdown**',
           tags: ['tag1', 'tag2'],
-          status: 'in-progress',
+          status: 'in-progress'
         });
 
         const taskFilePath = path.join(
@@ -196,7 +196,7 @@ describe(
             await expect(
               workspace.addTask({
                 title: 'Permission Test',
-                content: 'Should fail',
+                content: 'Should fail'
               })
             ).rejects.toThrow();
           } finally {
@@ -206,12 +206,11 @@ describe(
         }
       });
 
-
       it('should handle workspace directory structure changes', async () => {
         // Create initial task
         const task = await workspace.addTask({
           title: 'Structure Test',
-          content: 'Initial content',
+          content: 'Initial content'
         });
 
         // Verify task exists
@@ -242,7 +241,7 @@ describe(
         const tasks = await Promise.all([
           workspace.addTask({ title: 'Pending Task', status: 'pending' }),
           workspace.addTask({ title: 'In Progress Task', status: 'in-progress' }),
-          workspace.addTask({ title: 'Done Task', status: 'done' }),
+          workspace.addTask({ title: 'Done Task', status: 'done' })
         ]);
 
         // Verify initial state

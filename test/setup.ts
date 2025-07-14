@@ -85,7 +85,7 @@ function setupTestConsole(): void {
     // eslint-disable-next-line no-console
     info: console.info,
     // eslint-disable-next-line no-console
-    debug: console.debug,
+    debug: console.debug
   };
 
   // Set up quiet mode for tests unless debugging
@@ -190,7 +190,7 @@ export const testEnv = {
    */
   disableConsole(): void {
     setupTestConsole();
-  },
+  }
 };
 
 /**
@@ -249,7 +249,7 @@ export const testIsolation = {
       dateSpy.mockRestore();
       dateConstructorSpy.mockRestore();
     }
-  },
+  }
 };
 
 /**
@@ -310,9 +310,9 @@ export const performance = {
       average: durations.reduce((sum, d) => sum + d, 0) / durations.length,
       min: Math.min(...durations),
       max: Math.max(...durations),
-      median: sorted[Math.floor(sorted.length / 2)],
+      median: sorted[Math.floor(sorted.length / 2)]
     };
-  },
+  }
 };
 
 /**
@@ -356,7 +356,7 @@ export const errorTesting = {
     }
 
     return thrownError;
-  },
+  }
 };
 
 // Export setup utilities for use in tests

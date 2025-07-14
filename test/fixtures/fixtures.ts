@@ -131,7 +131,7 @@ export class TestFixtures {
         .withTitle('Complex Dependencies')
         .withDependencies(1, 3, 5)
         .withTags('complex')
-        .build(),
+        .build()
     ];
   }
 
@@ -174,7 +174,7 @@ export class TestFixtures {
         .withId(6)
         .withTitle('Urgent Bug Fix')
         .withTags('bug', 'urgent', 'hotfix')
-        .build(),
+        .build()
     ];
   }
 
@@ -217,7 +217,7 @@ export class TestFixtures {
         .withTitle('Long Content Task')
         .withContent(longContent)
         .withTags('size-test', 'long')
-        .build(),
+        .build()
     ];
   }
 
@@ -239,7 +239,7 @@ export class TestFixtures {
         )
         .build(),
 
-      TaskBuilder.create().withId(5).withTitle('Task/with\\slashes').build(),
+      TaskBuilder.create().withId(5).withTitle('Task/with\\slashes').build()
     ];
   }
 }

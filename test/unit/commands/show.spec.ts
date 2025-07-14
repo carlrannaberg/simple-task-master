@@ -1,11 +1,12 @@
 /**
  * Show command unit tests
- * 
+ *
  * These tests directly test the show command action function
  * with properly mocked dependencies.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi, MockedFunction } from 'vitest';
+import type { MockedFunction } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import type { Task } from '@lib/types';
 import { ValidationError, NotFoundError, FileSystemError } from '@lib/errors';
 import { MockTaskStore } from '@test/helpers';
@@ -57,7 +58,7 @@ describe('Show Command', () => {
     exitCode = undefined;
     capturedOutput = '';
     capturedError = '';
-    
+
     // Mock process.exit
     process.exit = vi.fn((code?: string | number) => {
       exitCode = typeof code === 'string' ? parseInt(code, 10) : code;
@@ -84,27 +85,27 @@ describe('Show Command', () => {
         lines.push(`status: "${task.status}"`);
         lines.push(`created: "${task.created}"`);
         lines.push(`updated: "${task.updated}"`);
-        
+
         if (task.tags && task.tags.length > 0) {
           lines.push('tags:');
           task.tags.forEach(tag => lines.push(`  - "${tag}"`));
         } else {
           lines.push('tags: []');
         }
-        
+
         if (task.dependencies && task.dependencies.length > 0) {
           lines.push('dependencies:');
           task.dependencies.forEach(dep => lines.push(`  - ${dep}`));
         } else {
           lines.push('dependencies: []');
         }
-        
+
         lines.push('---');
         if (task.content) {
           lines.push('');
           lines.push(task.content);
         }
-        
+
         return lines.join('\n');
       } else if (format === 'json') {
         return JSON.stringify(task, null, 2);
@@ -120,22 +121,22 @@ describe('Show Command', () => {
         lines.push(`- **Status**: ${task.status}`);
         lines.push(`- **Created**: ${new Date(task.created).toLocaleString()}`);
         lines.push(`- **Updated**: ${new Date(task.updated).toLocaleString()}`);
-        
+
         if (task.tags && task.tags.length > 0) {
           lines.push(`- **Tags**: ${task.tags.map(tag => `\`${tag}\``).join(', ')}`);
         }
-        
+
         if (task.dependencies && task.dependencies.length > 0) {
           lines.push(`- **Dependencies**: ${task.dependencies.join(', ')}`);
         }
-        
+
         if (task.content && task.content.trim()) {
           lines.push('');
           lines.push('## Description');
           lines.push('');
           lines.push(task.content);
         }
-        
+
         return lines.join('\n');
       } else if (format === 'table') {
         // Simple table format
@@ -165,7 +166,7 @@ describe('Show Command', () => {
         ].join(',');
         return `${headers}\n${row}`;
       }
-      
+
       return '';
     });
 
@@ -174,12 +175,12 @@ describe('Show Command', () => {
 
     // Create mock instance
     mockTaskManagerInstance = {
-      get: vi.fn(),
+      get: vi.fn()
     };
 
     // Setup constructor mock
     mockedTaskManager.mockImplementation(() => mockTaskManagerInstance as unknown as TaskManager);
-    
+
     // Setup TaskManager get method to use MockTaskStore
     mockTaskManagerInstance.get.mockImplementation(async (id: number) => {
       const task = await mockTaskStore.get(id);
@@ -211,7 +212,7 @@ describe('Show Command', () => {
       content: 'A simple task for testing',
       status: 'pending',
       tags: ['simple', 'test'],
-      dependencies: [],
+      dependencies: []
     });
 
     await mockTaskStore.create({
@@ -232,7 +233,7 @@ console.log('Hello, World!');
 [Link to documentation](https://example.com)`,
       status: 'in-progress',
       tags: ['complex', 'markdown', 'important'],
-      dependencies: [1],
+      dependencies: [1]
     });
 
     await mockTaskStore.create({
@@ -240,14 +241,14 @@ console.log('Hello, World!');
       content: 'Task with émojis 🚀, "quotes", and unicode: 测试',
       status: 'done',
       tags: ['special', 'unicode', 'émojis'],
-      dependencies: [],
+      dependencies: []
     });
 
     await mockTaskStore.create({
       title: 'Empty Content Task',
       status: 'pending',
       tags: [],
-      dependencies: [],
+      dependencies: []
     });
   }
 
@@ -258,12 +259,12 @@ console.log('Hello, World!');
     exitCode = undefined;
     capturedOutput = '';
     capturedError = '';
-    
+
     try {
       // Pass arguments directly to the show command's action handler
       const [id, ...remainingArgs] = args;
       const options: { format?: string } = {};
-      
+
       // Parse options from remaining args
       for (let i = 0; i < remainingArgs.length; i++) {
         if (remainingArgs[i] === '--format' || remainingArgs[i] === '-f') {
@@ -271,7 +272,7 @@ console.log('Hello, World!');
           i++; // Skip the next argument since we've consumed it
         }
       }
-      
+
       // Call the showTask function directly
       await showTask(id, options);
     } catch (error) {
@@ -630,7 +631,7 @@ console.log('Hello, World!');
         content: '',
         status: 'pending',
         tags: [],
-        dependencies: [],
+        dependencies: []
       });
 
       const result = await runShowCommand(['5', '--format', 'json']);
@@ -649,7 +650,7 @@ console.log('Hello, World!');
         content: longContent,
         status: 'pending',
         tags: [],
-        dependencies: [],
+        dependencies: []
       });
 
       const result = await runShowCommand(['5', '--format', 'json']);
@@ -665,7 +666,7 @@ console.log('Hello, World!');
         title: 'Many Tags Task',
         status: 'pending',
         tags: manyTags,
-        dependencies: [],
+        dependencies: []
       });
 
       const result = await runShowCommand(['5', '--format', 'json']);
@@ -682,7 +683,7 @@ console.log('Hello, World!');
           title: `Task ${i}`,
           status: 'done',
           tags: [],
-          dependencies: [],
+          dependencies: []
         });
       }
 
@@ -691,7 +692,7 @@ console.log('Hello, World!');
         title: 'Many Dependencies Task',
         status: 'pending',
         tags: [],
-        dependencies: manyDeps,
+        dependencies: manyDeps
       });
 
       const result = await runShowCommand(['11', '--format', 'json']);
@@ -748,7 +749,7 @@ console.log('Hello, World!');
         content: largeContent,
         status: 'pending',
         tags: [],
-        dependencies: [],
+        dependencies: []
       });
 
       const startTime = Date.now();

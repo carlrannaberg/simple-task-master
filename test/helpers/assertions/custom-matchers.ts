@@ -33,7 +33,7 @@ expect.extend({
     if (pass) {
       return {
         message: () => `expected ${JSON.stringify(received)} not to be a valid task`,
-        pass: true,
+        pass: true
       };
     } else {
       // Provide detailed error information
@@ -72,7 +72,7 @@ expect.extend({
       return {
         message: () =>
           `expected ${JSON.stringify(received)} to be a valid task, but:\n  - ${issues.join('\n  - ')}`,
-        pass: false,
+        pass: false
       };
     }
   },
@@ -84,7 +84,7 @@ expect.extend({
     if (!Array.isArray(received)) {
       return {
         message: () => `expected an array, but received ${typeof received}`,
-        pass: false,
+        pass: false
       };
     }
 
@@ -100,7 +100,7 @@ expect.extend({
 
     return {
       message: () => `expected ${actualCount} tasks, but got ${expected}`,
-      pass,
+      pass
     };
   },
 
@@ -111,7 +111,7 @@ expect.extend({
     if (!isTask(received)) {
       return {
         message: () => `expected a valid task, but received ${JSON.stringify(received)}`,
-        pass: false,
+        pass: false
       };
     }
 
@@ -120,7 +120,7 @@ expect.extend({
     return {
       message: () =>
         `expected task to have status "${expectedStatus}", but got "${received.status}"`,
-      pass,
+      pass
     };
   },
 
@@ -131,7 +131,7 @@ expect.extend({
     if (!isTask(received)) {
       return {
         message: () => `expected a valid task, but received ${JSON.stringify(received)}`,
-        pass: false,
+        pass: false
       };
     }
 
@@ -139,7 +139,7 @@ expect.extend({
 
     return {
       message: () => `expected task to have title "${expectedTitle}", but got "${received.title}"`,
-      pass,
+      pass
     };
   },
 
@@ -150,7 +150,7 @@ expect.extend({
     if (!isTask(received)) {
       return {
         message: () => `expected a valid task, but received ${JSON.stringify(received)}`,
-        pass: false,
+        pass: false
       };
     }
 
@@ -159,7 +159,7 @@ expect.extend({
     return {
       message: () =>
         `expected task to have tags [${expectedTags.join(', ')}], but got [${received.tags.join(', ')}]`,
-      pass: hasAllTags,
+      pass: hasAllTags
     };
   },
 
@@ -170,7 +170,7 @@ expect.extend({
     if (!isTask(received)) {
       return {
         message: () => `expected a valid task, but received ${JSON.stringify(received)}`,
-        pass: false,
+        pass: false
       };
     }
 
@@ -179,7 +179,7 @@ expect.extend({
     return {
       message: () =>
         `expected task to have dependencies [${expectedDeps.join(', ')}], but got [${received.dependencies.join(', ')}]`,
-      pass: hasAllDeps,
+      pass: hasAllDeps
     };
   },
 
@@ -190,7 +190,7 @@ expect.extend({
     if (!isTask(received)) {
       return {
         message: () => `expected a valid task, but received ${JSON.stringify(received)}`,
-        pass: false,
+        pass: false
       };
     }
 
@@ -201,7 +201,7 @@ expect.extend({
     return {
       message: () =>
         `expected task to be created after ${compareDate.toISOString()}, but was created at ${received.created}`,
-      pass,
+      pass
     };
   },
 
@@ -212,7 +212,7 @@ expect.extend({
     if (!isTask(received)) {
       return {
         message: () => `expected a valid task, but received ${JSON.stringify(received)}`,
-        pass: false,
+        pass: false
       };
     }
 
@@ -223,7 +223,7 @@ expect.extend({
     return {
       message: () =>
         `expected task to be updated after ${compareDate.toISOString()}, but was updated at ${received.updated}`,
-      pass,
+      pass
     };
   },
 
@@ -234,7 +234,7 @@ expect.extend({
     if (!isTask(received)) {
       return {
         message: () => `expected a valid task, but received ${JSON.stringify(received)}`,
-        pass: false,
+        pass: false
       };
     }
 
@@ -249,7 +249,7 @@ expect.extend({
       return {
         message: () =>
           `expected task to have valid ISO date strings for created (${received.created}) and updated (${received.updated})`,
-        pass: false,
+        pass: false
       };
     }
 
@@ -257,13 +257,13 @@ expect.extend({
       return {
         message: () =>
           `expected task created date (${received.created}) to be before or equal to updated date (${received.updated})`,
-        pass: false,
+        pass: false
       };
     }
 
     return {
       message: () => 'expected task to have invalid timestamps',
-      pass,
+      pass
     };
   },
 
@@ -274,7 +274,7 @@ expect.extend({
     if (!isTask(received)) {
       return {
         message: () => `expected a valid task, but received ${JSON.stringify(received)}`,
-        pass: false,
+        pass: false
       };
     }
 
@@ -310,9 +310,9 @@ expect.extend({
         pass
           ? `expected task not to match partial task ${JSON.stringify(partialTask)}`
           : `expected task to match partial task, but found mismatches:\n  - ${mismatches.join('\n  - ')}`,
-      pass,
+      pass
     };
-  },
+  }
 });
 
 /**
@@ -348,5 +348,5 @@ export const taskMatchers = {
   /**
    * Expect a task to be done
    */
-  expectDoneTask: (task: unknown) => expect(task).toHaveStatus('done'),
+  expectDoneTask: (task: unknown) => expect(task).toHaveStatus('done')
 };

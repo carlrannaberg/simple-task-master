@@ -19,7 +19,7 @@ export {
   CLITestRunner,
   cliUtils,
   type CLIResult,
-  type CLIRunOptions,
+  type CLIRunOptions
 } from './cli-runner';
 
 // Custom matchers
@@ -31,7 +31,7 @@ export {
   tempUtils,
   globalTempManager,
   temp,
-  type DirectoryStructure,
+  type DirectoryStructure
 } from './temp-utils';
 
 // Test fixtures
@@ -44,5 +44,5 @@ export {
   testEnv,
   testIsolation,
   performance,
-  errorTesting,
+  errorTesting
 } from '../setup';

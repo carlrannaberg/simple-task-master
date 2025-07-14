@@ -13,7 +13,7 @@ import {
   type TaskCreateInput,
   type TaskUpdateInput,
   type TaskListFilters,
-  type TaskManagerConfig,
+  type TaskManagerConfig
 } from './types';
 
 // Default configuration values
@@ -36,16 +36,16 @@ export class TaskManager {
   static async create(config?: Partial<TaskManagerConfig>): Promise<TaskManager> {
     const tasksDir = config?.tasksDir ?? await getTasksDirectory();
     const workspaceRoot = await getWorkspaceRoot();
-    
+
     const fullConfig: Required<TaskManagerConfig> = {
       tasksDir,
       maxTaskSizeBytes: config?.maxTaskSizeBytes ?? DEFAULT_MAX_TASK_SIZE_BYTES,
       maxTitleLength: config?.maxTitleLength ?? DEFAULT_MAX_TITLE_LENGTH,
-      maxDescriptionLength: config?.maxDescriptionLength ?? DEFAULT_MAX_DESCRIPTION_LENGTH,
+      maxDescriptionLength: config?.maxDescriptionLength ?? DEFAULT_MAX_DESCRIPTION_LENGTH
     };
-    
+
     const lockManager = new LockManager(workspaceRoot);
-    
+
     return new TaskManager(fullConfig, lockManager);
   }
 
@@ -62,11 +62,11 @@ export class TaskManager {
     try {
       // Use provided content or empty string
       const content = input.content || '';
-      
+
       // Create task with retry logic for ID conflicts
       const maxRetries = 10;
       let retries = 0;
-      
+
       while (retries < maxRetries) {
         // Generate ID atomically under lock
         const id = await this.generateNextIdLocked();
@@ -75,7 +75,6 @@ export class TaskManager {
         if (typeof id !== 'number' || isNaN(id) || id <= 0) {
           throw new Error(`Invalid ID generated: ${id}`);
         }
-        
 
         // Create task object
         const now = new Date().toISOString();
@@ -87,7 +86,7 @@ export class TaskManager {
           created: now,
           updated: now,
           tags: input.tags ?? [],
-          dependencies: input.dependencies ?? [],
+          dependencies: input.dependencies ?? []
         };
 
         // Create filename
@@ -100,8 +99,8 @@ export class TaskManager {
               ...task,
               _contentMetadata: {
                 wasEmpty: content === '',
-                hadNoTrailingNewline: content.length > 0 && !content.endsWith('\n'),
-              },
+                hadNoTrailingNewline: content.length > 0 && !content.endsWith('\n')
+              }
             }
           : task;
 
@@ -125,7 +124,7 @@ export class TaskManager {
           const existingId = this.extractIdFromFilename(f);
           return existingId === id;
         });
-        
+
         if (idAlreadyExists) {
           // ID collision detected - retry with a new ID
           retries++;
@@ -141,11 +140,11 @@ export class TaskManager {
           const fd = await fs.open(filepath, 'wx'); // 'wx' fails if file exists
           await fd.write(fileContent, 0, 'utf8');
           await fd.close();
-          
+
           // Ensure the file is visible to other processes before we release the lock
           // This prevents race conditions where the next process might not see this file
           await fs.access(filepath); // Verify file exists
-          
+
           // Success! Return the task
           return task;
         } catch (error) {
@@ -161,7 +160,7 @@ export class TaskManager {
           throw error;
         }
       }
-      
+
       throw new Error('Failed to create task: maximum retries exceeded');
     } catch (error) {
       // Re-throw with appropriate error type
@@ -212,7 +211,7 @@ export class TaskManager {
           updated: taskContent.updated,
           tags: taskContent.tags,
           dependencies: taskContent.dependencies,
-          content: taskContent.content,
+          content: taskContent.content
         };
 
         // Apply filters
@@ -265,7 +264,7 @@ export class TaskManager {
         created: currentTask.created,
         updated: new Date().toISOString(),
         tags: updates.tags ?? currentTask.tags,
-        dependencies: updates.dependencies ?? currentTask.dependencies,
+        dependencies: updates.dependencies ?? currentTask.dependencies
       };
 
       // Validate updated task
@@ -285,8 +284,8 @@ export class TaskManager {
             ...updatedTask,
             _contentMetadata: {
               wasEmpty: updatedContent === '',
-              hadNoTrailingNewline: updatedContent.length > 0 && !updatedContent.endsWith('\n'),
-            },
+              hadNoTrailingNewline: updatedContent.length > 0 && !updatedContent.endsWith('\n')
+            }
           }
         : updatedTask;
 
@@ -346,19 +345,19 @@ export class TaskManager {
     // Always scan filesystem to find the highest ID
     return this.generateNextIdFromFilesystem();
   }
-  
+
   private async generateNextIdFromFilesystem(): Promise<number> {
     try {
       const files = await fs.readdir(this.config.tasksDir);
-      
+
       let maxId = 0;
       let maxIdFile: string | null = null;
-      
+
       // First pass: find the highest ID from filenames
       for (const file of files) {
         // Only process .md files
         if (!file.endsWith('.md')) continue;
-        
+
         // Extract ID from filename
         const match = file.match(/^(\d+)-/);
         if (match && match[1]) {
@@ -369,17 +368,17 @@ export class TaskManager {
           }
         }
       }
-      
+
       // If we found files, verify the highest ID file has matching frontmatter
       if (maxIdFile && maxId > 0) {
         try {
           const filepath = path.join(this.config.tasksDir, maxIdFile);
           const task = await this.readTaskFile(filepath);
-          
+
           if (task.id !== maxId) {
             // Frontmatter doesn't match filename - this is a data integrity issue
             console.warn(`Data integrity warning: File ${maxIdFile} has ID ${task.id} in frontmatter but ${maxId} in filename`);
-            
+
             // Fall back to scanning all files to find the true maximum ID
             return this.generateNextIdByFullScan();
           }
@@ -389,7 +388,7 @@ export class TaskManager {
           return this.generateNextIdByFullScan();
         }
       }
-      
+
       return maxId + 1;
     } catch (error) {
       // If directory doesn't exist, start with ID 1
@@ -401,11 +400,11 @@ export class TaskManager {
       );
     }
   }
-  
+
   private async generateNextIdByFullScan(): Promise<number> {
     // Fallback method that reads all files to find the true maximum ID
     const files = await this.findTaskFiles();
-    
+
     let maxId = 0;
     for (const file of files) {
       try {
@@ -419,7 +418,7 @@ export class TaskManager {
         console.warn(`Warning: Could not read file ${file}: ${error}`);
       }
     }
-    
+
     return maxId + 1;
   }
 
@@ -432,7 +431,7 @@ export class TaskManager {
     const slug = slugify(title, {
       lower: true,
       strict: true,
-      trim: true,
+      trim: true
     }).substring(0, 100); // Limit slug length
 
     return slug;
@@ -470,7 +469,7 @@ export class TaskManager {
       // Handle gray-matter's behavior of adding trailing newlines
       // We need to preserve the original content exactly as it was provided
       let preservedContent = content;
-      
+
       // Check if we stored the original content info in metadata
       // If not, we'll need to handle common cases
       if (data._contentMetadata) {
@@ -485,7 +484,7 @@ export class TaskManager {
 
       return {
         ...(data as Task),
-        content: preservedContent,
+        content: preservedContent
       };
     } catch (error) {
       if (error instanceof ValidationError) throw error;

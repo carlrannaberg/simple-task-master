@@ -17,17 +17,17 @@ export class LockManager {
   private readonly LOCK_TIMEOUT_MS = 30000; // 30 seconds default
   private readonly LOCK_CHECK_INTERVAL_MS = 100; // Retry interval
   private readonly MAX_LOCK_RETRIES = 100; // 10 seconds total wait
-  
+
   // Global registry of all LockManager instances to clean up on exit
   private static instances = new Set<LockManager>();
   private static globalCleanupHandlersSetup = false;
 
   constructor(projectRoot: string) {
     this.lockPath = path.join(projectRoot, '.simple-task-master', 'lock');
-    
+
     // Register this instance for cleanup
     LockManager.instances.add(this);
-    
+
     // Set up global cleanup handlers once
     if (!LockManager.globalCleanupHandlersSetup) {
       this.setupGlobalCleanupHandlers();
@@ -45,7 +45,7 @@ export class LockManager {
     const lockData: LockFile = {
       pid: process.pid,
       command: process.argv.join(' '),
-      timestamp: Date.now(),
+      timestamp: Date.now()
     };
 
     let retries = 0;
@@ -161,14 +161,14 @@ export class LockManager {
     try {
       const content = await fs.readFile(this.lockPath, 'utf8');
       const parsed = JSON.parse(content);
-      
+
       // Validate required fields and provide defaults
       const lockFile: LockFile = {
         pid: parsed.pid || 0,
         command: parsed.command || 'unknown',
         timestamp: parsed.timestamp || 0
       };
-      
+
       // If any critical field is missing or invalid, treat as stale
       if (!lockFile.pid || !lockFile.timestamp) {
         return {
@@ -177,12 +177,12 @@ export class LockManager {
           timestamp: 0 // Very old timestamp
         };
       }
-      
+
       return lockFile;
-    } catch (error) {
+    } catch {
       // If we can't parse the file, treat it as stale
       return {
-        pid: 99999, // Non-existent PID  
+        pid: 99999, // Non-existent PID
         command: 'stale-corrupted',
         timestamp: 0 // Very old timestamp
       };
@@ -277,7 +277,7 @@ export class LockManager {
       process.exit(1);
     });
   }
-  
+
   /**
    * Remove this instance from cleanup registry (for testing)
    */

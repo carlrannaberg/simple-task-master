@@ -26,7 +26,7 @@ export const DEFAULT_CONFIG = {
   MAX_LOCK_RETRIES: 50,
 
   /** Schema version */
-  SCHEMA_VERSION: 1,
+  SCHEMA_VERSION: 1
 } as const;
 
 /**
@@ -46,7 +46,7 @@ export const FILE_LIMITS = {
   MAX_TAGS: 50,
 
   /** Maximum number of dependencies per task */
-  MAX_DEPENDENCIES: 100,
+  MAX_DEPENDENCIES: 100
 } as const;
 
 /**
@@ -78,7 +78,7 @@ export const PATHS = {
 
   /** Get full lock file path */
   getLockPath: (projectRoot: string): string =>
-    path.join(projectRoot, PATHS.BASE_DIR, PATHS.LOCK_FILE),
+    path.join(projectRoot, PATHS.BASE_DIR, PATHS.LOCK_FILE)
 } as const;
 
 /**
@@ -116,7 +116,7 @@ export const ERROR_MESSAGES = {
   // Generic errors
   UNKNOWN_ERROR: 'An unknown error occurred',
   PERMISSION_DENIED: 'Permission denied',
-  DISK_FULL: 'Disk space exhausted',
+  DISK_FULL: 'Disk space exhausted'
 } as const;
 
 /**
@@ -130,7 +130,7 @@ export const FILE_PATTERNS = {
   INVALID_FILENAME_CHARS: /[<>:"|?*\x00-\x1f]/g,
 
   /** ISO 8601 timestamp pattern */
-  ISO_8601: /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/,
+  ISO_8601: /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/
 } as const;
 
 /**
@@ -146,8 +146,8 @@ export const CLI = {
     ERROR: 1,
     INVALID_USAGE: 2,
     NOT_FOUND: 3,
-    LOCK_FAILED: 4,
-  },
+    LOCK_FAILED: 4
+  }
 } as const;
 
 /**
@@ -170,7 +170,7 @@ export const OUTPUT_FORMATS = {
   CSV: 'csv',
 
   /** JSON format */
-  JSON: 'json',
+  JSON: 'json'
 } as const;
 
 /**
@@ -179,7 +179,7 @@ export const OUTPUT_FORMATS = {
 export const TASK_STATUS = {
   PENDING: 'pending',
   IN_PROGRESS: 'in-progress',
-  DONE: 'done',
+  DONE: 'done'
 } as const;
 
 /**

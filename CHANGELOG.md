@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Enhanced
+
+- **Enhanced Update Command (`stm update`)**
+  - Added section-specific content editing with `--desc`, `--details`, and `--validation` flags
+  - Implemented stdin support using `-` for piping content into specific sections
+  - Added editor integration that launches when no changes are specified
+  - Introduced flexible key=value assignment syntax for all task properties
+  - Added array operation support with `+=` (add) and `-=` (remove) operators
+  - Enhanced command help text with comprehensive descriptions
+  - Improved workflow integration for CI/CD and testing pipelines
+  - Added support for multi-line content updates via heredoc and piping
+
 ## [0.0.1] - 2024-07-13
 
 ### Added

@@ -44,7 +44,7 @@ export async function runSTM(args: string[], options: CLIRunOptions = {}): Promi
     const child = spawn('node', [stmBin, ...args], {
       cwd,
       env: { ...process.env, ...env },
-      stdio: capture ? ['pipe', 'pipe', 'pipe'] : ['inherit', 'inherit', 'inherit'],
+      stdio: capture ? ['pipe', 'pipe', 'pipe'] : ['inherit', 'inherit', 'inherit']
     });
 
     let stdout = '';
@@ -89,7 +89,7 @@ export async function runSTM(args: string[], options: CLIRunOptions = {}): Promi
         exitCode: code ?? -1,
         command: 'stm',
         args,
-        duration,
+        duration
       };
 
       resolve(result);
@@ -386,7 +386,7 @@ export class CLITestRunner {
       results,
       averageDuration: durations.reduce((sum, d) => sum + d, 0) / durations.length,
       minDuration: Math.min(...durations),
-      maxDuration: Math.max(...durations),
+      maxDuration: Math.max(...durations)
     };
   }
 }
@@ -443,5 +443,5 @@ export const cliUtils = {
    */
   getTaskCount: (listOutput: string): number => {
     return listOutput.split('\n').filter((line) => line.trim()).length;
-  },
+  }
 };

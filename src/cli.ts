@@ -30,7 +30,7 @@ program
   .version(version, '-v, --version', 'display version information')
   .configureHelp({
     sortSubcommands: true,
-    sortOptions: true,
+    sortOptions: true
   });
 
 // Register commands

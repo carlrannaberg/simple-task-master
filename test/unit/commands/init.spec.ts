@@ -24,13 +24,13 @@ vi.mock('@lib/constants', () => {
     PATHS: {
       getBaseDir: (root: string) => path.join(root, '.simple-task-master'),
       getTasksDir: (root: string) => path.join(root, '.simple-task-master', 'tasks'),
-      getConfigPath: (root: string) => path.join(root, '.simple-task-master', 'config.json'),
+      getConfigPath: (root: string) => path.join(root, '.simple-task-master', 'config.json')
     },
     DEFAULT_CONFIG: {
       SCHEMA_VERSION: 1,
       LOCK_TIMEOUT_MS: 30000,
-      MAX_TASK_SIZE_BYTES: 1048576,
-    },
+      MAX_TASK_SIZE_BYTES: 1048576
+    }
   };
 });
 vi.mock('fs/promises', async (importOriginal) => {
@@ -71,14 +71,14 @@ describe('Init Command', () => {
   beforeEach(async () => {
     // Clear all mocks
     vi.clearAllMocks();
-    
+
     // Create temporary directory using actual fs (not mocked)
     tempDir = await mkdtemp(path.join(tmpdir(), 'stm-test-'));
     originalCwd = process.cwd();
-    
+
     // Mock process.cwd to return our temp directory
     vi.spyOn(process, 'cwd').mockReturnValue(tempDir);
-    
+
     // Mock process.exit to prevent tests from exiting
     vi.spyOn(process, 'exit').mockImplementation((code?: number) => {
       throw new Error(`process.exit called with code ${code}`);
@@ -94,7 +94,7 @@ describe('Init Command', () => {
     // Mock LockManager
     mockLockManager = {
       acquire: vi.fn().mockResolvedValue(undefined),
-      release: vi.fn().mockResolvedValue(undefined),
+      release: vi.fn().mockResolvedValue(undefined)
     };
 
     vi.mocked(LockManager).mockImplementation((projectRoot?: string) => {
@@ -171,13 +171,13 @@ describe('Init Command', () => {
       if (directoryState.has(filePath)) {
         return {
           isDirectory: () => true,
-          mode: 0o755,
+          mode: 0o755
         } as fs.Stats;
       }
       if (fileSystemState.has(filePath)) {
         return {
           isDirectory: () => false,
-          mode: 0o644,
+          mode: 0o644
         } as fs.Stats;
       }
       throw new Error(`ENOENT: no such file or directory, stat '${filePath}'`);
@@ -191,7 +191,7 @@ describe('Init Command', () => {
       .exitOverride() // Prevent process.exit
       .configureOutput({
         writeOut: (str) => capturedOutput.push(str.trim()),
-        writeErr: (str) => capturedErrors.push(str.trim()),
+        writeErr: (str) => capturedErrors.push(str.trim())
       });
     program.addCommand(initCommand);
   });
@@ -203,7 +203,7 @@ describe('Init Command', () => {
     } catch (error) {
       // Ignore cleanup errors
     }
-    
+
     vi.restoreAllMocks();
   });
 
@@ -243,14 +243,14 @@ describe('Init Command', () => {
       expect(config).toMatchObject({
         schema: 1,
         lockTimeoutMs: 30000,
-        maxTaskSizeBytes: 1048576,
+        maxTaskSizeBytes: 1048576
       });
     });
 
     it('should handle already initialized repository', async () => {
       // Initialize once
       await program.parseAsync(['node', 'stm', 'init']);
-      
+
       // Clear captured output
       capturedOutput.length = 0;
       capturedWarnings.length = 0;
@@ -280,7 +280,7 @@ describe('Init Command', () => {
       const existingContent = '# Existing content\nnode_modules/\n*.log\n';
       const gitignorePath = path.join(tempDir, '.gitignore');
       fileSystemState.set(gitignorePath, existingContent);
-      
+
       // Also mark gitignore as existing for fileExists check
       vi.mocked(utils.fileExists).mockImplementation(async (filePath: string) => {
         return fileSystemState.has(filePath) || filePath === gitignorePath;
@@ -310,7 +310,7 @@ describe('Init Command', () => {
 `;
       const gitignorePath = path.join(tempDir, '.gitignore');
       fileSystemState.set(gitignorePath, existingContent);
-      
+
       // Also mark gitignore as existing for fileExists check
       vi.mocked(utils.fileExists).mockImplementation(async (filePath: string) => {
         return fileSystemState.has(filePath) || filePath === gitignorePath;
@@ -336,7 +336,7 @@ describe('Init Command', () => {
 `;
       const gitignorePath = path.join(tempDir, '.gitignore');
       fileSystemState.set(gitignorePath, existingContent);
-      
+
       // Also mark gitignore as existing for fileExists check
       vi.mocked(utils.fileExists).mockImplementation(async (filePath: string) => {
         return fileSystemState.has(filePath) || filePath === gitignorePath;
@@ -378,7 +378,7 @@ describe('Init Command', () => {
       vi.mocked(utils.ensureDirectory).mockRejectedValue(new FileSystemError('Permission denied'));
 
       await expect(program.parseAsync(['node', 'stm', 'init'])).rejects.toThrow('process.exit');
-      
+
       expect(capturedErrors).toContain('Permission denied');
     });
 
@@ -393,7 +393,7 @@ describe('Init Command', () => {
       });
 
       await expect(program.parseAsync(['node', 'stm', 'init'])).rejects.toThrow('process.exit');
-      
+
       expect(capturedErrors.some(err => err.includes('EISDIR'))).toBe(true);
     });
 
@@ -402,7 +402,7 @@ describe('Init Command', () => {
       mockLockManager.acquire.mockRejectedValue(lockError);
 
       await expect(program.parseAsync(['node', 'stm', 'init'])).rejects.toThrow('process.exit');
-      
+
       expect(mockLockManager.acquire).toHaveBeenCalledOnce();
     });
 
@@ -411,7 +411,7 @@ describe('Init Command', () => {
       vi.mocked(utils.ensureDirectory).mockRejectedValue(new FileSystemError('Mock error'));
 
       await expect(program.parseAsync(['node', 'stm', 'init'])).rejects.toThrow('process.exit');
-      
+
       expect(mockLockManager.acquire).toHaveBeenCalledOnce();
       expect(mockLockManager.release).toHaveBeenCalledOnce();
     });
@@ -437,7 +437,7 @@ describe('Init Command', () => {
       const nestedDir = path.join(tempDir, 'projects', 'my-project');
       directoryState.add(nestedDir);
       directoryState.add(path.join(tempDir, 'projects'));
-      
+
       // Mock process.cwd to return the nested directory
       vi.mocked(process.cwd).mockReturnValue(nestedDir);
 
@@ -492,7 +492,7 @@ describe('Init Command', () => {
       expect(config).toMatchObject({
         schema: 1,
         lockTimeoutMs: 30000,
-        maxTaskSizeBytes: 1048576,
+        maxTaskSizeBytes: 1048576
       });
     });
   });
@@ -583,7 +583,7 @@ describe('Init Command', () => {
 
     it('should provide relative paths in messages', async () => {
       await program.parseAsync(['node', 'stm', 'init']);
-      
+
       // Clear output for second run
       capturedOutput.length = 0;
       capturedWarnings.length = 0;
@@ -603,7 +603,7 @@ describe('Init Command', () => {
       // Create existing .gitignore
       const gitignorePath = path.join(tempDir, '.gitignore');
       fileSystemState.set(gitignorePath, 'existing\n');
-      
+
       // Also mark gitignore as existing for fileExists check
       vi.mocked(utils.fileExists).mockImplementation(async (filePath: string) => {
         return fileSystemState.has(filePath) || filePath === gitignorePath;

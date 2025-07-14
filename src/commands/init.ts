@@ -41,7 +41,7 @@ async function initializeRepository(): Promise<void> {
     const config: Config = {
       schema: DEFAULT_CONFIG.SCHEMA_VERSION,
       lockTimeoutMs: DEFAULT_CONFIG.LOCK_TIMEOUT_MS,
-      maxTaskSizeBytes: DEFAULT_CONFIG.MAX_TASK_SIZE_BYTES,
+      maxTaskSizeBytes: DEFAULT_CONFIG.MAX_TASK_SIZE_BYTES
     };
 
     await fs.writeFile(configPath, JSON.stringify(config, null, 2), 'utf8');

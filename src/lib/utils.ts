@@ -181,3 +181,148 @@ export async function retry<T>(
 
   throw lastError;
 }
+
+/**
+ * Reads input from stdin with optional timeout
+ */
+export async function readStdin(timeoutMs: number = 30000): Promise<string> {
+  return new Promise((resolve, reject) => {
+    let input = '';
+    let timeoutId: NodeJS.Timeout | null = null;
+    let finished = false;
+
+    const finish = (result?: string | Error): void => {
+      if (finished) return;
+      finished = true;
+
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+
+      // Remove all listeners to clean up
+      process.stdin.removeAllListeners('data');
+      process.stdin.removeAllListeners('end');
+      process.stdin.removeAllListeners('error');
+
+      if (result instanceof Error) {
+        reject(result);
+      } else {
+        resolve(result || input.trim());
+      }
+    };
+
+    // Set up timeout
+    timeoutId = setTimeout(() => {
+      finish(new Error(`Stdin input timeout after ${timeoutMs}ms`));
+    }, timeoutMs);
+
+    // Handle stdin data
+    process.stdin.setEncoding('utf8');
+    process.stdin.on('data', (chunk) => {
+      input += chunk;
+    });
+
+    process.stdin.on('end', () => {
+      finish();
+    });
+
+    process.stdin.on('error', (error) => {
+      finish(new Error(`Failed to read from stdin: ${error.message}`));
+    });
+
+    // Start reading
+    process.stdin.resume();
+  });
+}
+
+/**
+ * Launches an external editor to get user input
+ */
+export async function launchEditor(initialContent: string = ''): Promise<string> {
+  const { spawn } = await import('child_process');
+  const { writeFile, readFile, unlink } = await import('fs/promises');
+  const { join } = await import('path');
+  const { tmpdir } = await import('os');
+
+  // Create a temporary file
+  const tempFile = join(tmpdir(), `stm-edit-${Date.now()}.md`);
+
+  try {
+    // Write initial content to temp file
+    await writeFile(tempFile, initialContent, 'utf8');
+
+    // Determine editor to use
+    const editor = process.env.EDITOR || process.env.VISUAL || 'vi';
+
+    // Launch editor
+    await new Promise<void>((resolve, reject) => {
+      const editorProcess = spawn(editor, [tempFile], {
+        stdio: 'inherit',
+        shell: true
+      });
+
+      editorProcess.on('exit', (code) => {
+        if (code === 0) {
+          resolve();
+        } else {
+          reject(new Error(`Editor exited with code ${code}`));
+        }
+      });
+
+      editorProcess.on('error', (error) => {
+        reject(new Error(`Failed to launch editor: ${error.message}`));
+      });
+    });
+
+    // Read the edited content
+    const content = await readFile(tempFile, 'utf8');
+    return content.trim();
+  } finally {
+    // Clean up temp file
+    try {
+      await unlink(tempFile);
+    } catch {
+      // Ignore cleanup errors
+    }
+  }
+}
+
+/**
+ * Reads input from either a direct value, stdin (if value is "-"), or editor fallback
+ */
+export async function readInput(
+  value: string | undefined,
+  fallbackToEditor: boolean = false,
+  editorPrompt: string = '',
+  stdinTimeoutMs: number = 30000
+): Promise<string | undefined> {
+  // If no value provided and fallback to editor is disabled, return undefined
+  if (value === undefined && !fallbackToEditor) {
+    return undefined;
+  }
+
+  // If value is "-", read from stdin
+  if (value === '-') {
+    try {
+      return await readStdin(stdinTimeoutMs);
+    } catch (error) {
+      if (fallbackToEditor) {
+        // Fallback to editor if stdin fails
+        return await launchEditor(editorPrompt);
+      }
+      throw error;
+    }
+  }
+
+  // If value is provided and not "-", return it directly
+  if (value !== undefined) {
+    return value;
+  }
+
+  // If no value provided but fallback is enabled, launch editor
+  if (fallbackToEditor) {
+    return await launchEditor(editorPrompt);
+  }
+
+  return undefined;
+}

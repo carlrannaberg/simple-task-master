@@ -36,7 +36,7 @@ const REQUIRED_TASK_FIELDS = [
   'created',
   'updated',
   'tags',
-  'dependencies',
+  'dependencies'
 ] as const;
 
 /**
@@ -275,6 +275,6 @@ export function createDefaultConfig(): Config {
   return {
     schema: CURRENT_SCHEMA_VERSION,
     lockTimeoutMs: 30000,
-    maxTaskSizeBytes: 1048576,
+    maxTaskSizeBytes: 1048576
   };
 }

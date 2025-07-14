@@ -44,7 +44,7 @@ describe('Add Command', () => {
       const description = 'This is a detailed task description';
 
       const result = await runSTMSuccess(['add', title, '--description', description], {
-        cwd: workspace.directory,
+        cwd: workspace.directory
       });
 
       // Should output task ID
@@ -67,7 +67,7 @@ describe('Add Command', () => {
       const title = 'In Progress Task';
 
       const result = await runSTMSuccess(['add', title, '--status', 'in-progress'], {
-        cwd: workspace.directory,
+        cwd: workspace.directory
       });
 
       // Should output task ID
@@ -91,7 +91,7 @@ describe('Add Command', () => {
       const tags = 'frontend,urgent,bug-fix';
 
       const result = await runSTMSuccess(['add', title, '--tags', tags], {
-        cwd: workspace.directory,
+        cwd: workspace.directory
       });
 
       // Should output task ID
@@ -118,7 +118,7 @@ describe('Add Command', () => {
       const title = 'Dependent Task';
 
       const result = await runSTMSuccess(['add', title, '--deps', '1,2'], {
-        cwd: workspace.directory,
+        cwd: workspace.directory
       });
 
       // Should output task ID
@@ -165,7 +165,7 @@ describe('Add Command', () => {
         title,
         content: description + '\n', // Content includes newline from markdown storage
         tags: ['feature', 'backend', 'api'],
-        status: 'done',
+        status: 'done'
       });
     });
   });
@@ -180,7 +180,7 @@ describe('Add Command', () => {
 
     it('should reject invalid status', async () => {
       const result = await runSTMFailure(['add', 'Test Task', '--status', 'invalid'], {
-        cwd: workspace.directory,
+        cwd: workspace.directory
       });
 
       expect(result.exitCode).toBe(1);
@@ -189,7 +189,7 @@ describe('Add Command', () => {
 
     it('should handle empty tags gracefully', async () => {
       const result = await runSTMSuccess(['add', 'Test Task', '--tags', ''], {
-        cwd: workspace.directory,
+        cwd: workspace.directory
       });
 
       // Should output task ID
@@ -208,7 +208,7 @@ describe('Add Command', () => {
 
     it('should handle whitespace in tags', async () => {
       const result = await runSTMSuccess(['add', 'Test Task', '--tags', ' tag1 , tag2 , tag3 '], {
-        cwd: workspace.directory,
+        cwd: workspace.directory
       });
 
       // Should output task ID
@@ -227,7 +227,7 @@ describe('Add Command', () => {
 
     it('should reject invalid dependency IDs', async () => {
       const result = await runSTMFailure(['add', 'Test Task', '--deps', 'invalid,123'], {
-        cwd: workspace.directory,
+        cwd: workspace.directory
       });
 
       expect(result.exitCode).toBe(1);
@@ -236,10 +236,10 @@ describe('Add Command', () => {
 
     it('should reject zero or negative dependency IDs', async () => {
       const result1 = await runSTMFailure(['add', 'Test Task', '--deps', '0'], {
-        cwd: workspace.directory,
+        cwd: workspace.directory
       });
       const result2 = await runSTMFailure(['add', 'Test Task', '--deps', '-1'], {
-        cwd: workspace.directory,
+        cwd: workspace.directory
       });
 
       expect(result1.exitCode).toBe(1);
@@ -250,7 +250,7 @@ describe('Add Command', () => {
 
     it('should handle empty dependencies gracefully', async () => {
       const result = await runSTMSuccess(['add', 'Test Task', '--deps', ''], {
-        cwd: workspace.directory,
+        cwd: workspace.directory
       });
 
       // Should output task ID
@@ -273,7 +273,7 @@ describe('Add Command', () => {
       await runSTMSuccess(['add', 'Task 2'], { cwd: workspace.directory });
 
       const result = await runSTMSuccess(['add', 'Test Task', '--deps', ' 1 , 2 '], {
-        cwd: workspace.directory,
+        cwd: workspace.directory
       });
 
       // Should output task ID
@@ -295,7 +295,7 @@ describe('Add Command', () => {
   describe('short option flags', () => {
     it('should accept -d for description', async () => {
       const result = await runSTMSuccess(['add', 'Test Task', '-d', 'Short description'], {
-        cwd: workspace.directory,
+        cwd: workspace.directory
       });
 
       // Should output task ID
@@ -314,7 +314,7 @@ describe('Add Command', () => {
 
     it('should accept -t for tags', async () => {
       const result = await runSTMSuccess(['add', 'Test Task', '-t', 'tag1,tag2'], {
-        cwd: workspace.directory,
+        cwd: workspace.directory
       });
 
       // Should output task ID
@@ -333,7 +333,7 @@ describe('Add Command', () => {
 
     it('should accept -s for status', async () => {
       const result = await runSTMSuccess(['add', 'Test Task', '-s', 'in-progress'], {
-        cwd: workspace.directory,
+        cwd: workspace.directory
       });
 
       // Should output task ID
@@ -356,7 +356,7 @@ describe('Add Command', () => {
       const specialTitles = [
         'Task with émojis 🚀',
         'Task with unicode: 测试',
-        'Task with symbols: @#$%',
+        'Task with symbols: @#$%'
       ];
 
       for (const title of specialTitles) {
@@ -422,7 +422,7 @@ describe('Add Command', () => {
       const longDesc = 'A'.repeat(1000);
 
       const result = await runSTMSuccess(['add', 'Long Desc Task', '--description', longDesc], {
-        cwd: workspace.directory,
+        cwd: workspace.directory
       });
 
       // Should output task ID
@@ -460,7 +460,7 @@ describe('Add Command', () => {
           '--tags',
           'tag1,tag2',
           '--status',
-          'in-progress',
+          'in-progress'
         ],
         { cwd: workspace.directory }
       );

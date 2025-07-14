@@ -6,6 +6,8 @@ import { Command } from 'commander';
 import { TaskManager } from '../lib/task-manager';
 import { printError, printSuccess } from '../lib/output';
 import { ValidationError, FileSystemError, ConfigurationError, NotFoundError } from '../lib/errors';
+import { updateBodySection } from '../lib/markdown-sections';
+import { readInput, launchEditor } from '../lib/utils';
 import type { TaskUpdateInput, TaskStatus } from '../lib/types';
 
 /**
@@ -66,7 +68,7 @@ function validateFieldName(key: string): void {
     'dependencies',
     'desc',
     'details',
-    'validation',
+    'validation'
   ];
   if (!validFields.includes(key)) {
     throw new ValidationError(`Unknown field: ${key}. Valid fields: ${validFields.join(', ')}`);
@@ -137,10 +139,14 @@ async function updateTask(
   assignments: string[],
   options: {
     title?: string;
+    desc?: string;
     description?: string;
+    details?: string;
+    validation?: string;
     status?: string;
     tags?: string;
     deps?: string;
+    editor?: boolean;
   }
 ): Promise<void> {
   try {
@@ -150,6 +156,56 @@ async function updateTask(
     const id = parseInt(idStr, 10);
     if (isNaN(id) || id <= 0) {
       throw new ValidationError(`Invalid task ID: ${idStr}`);
+    }
+
+    // Check if no changes are specified and handle editor fallback
+    const hasChanges = assignments.length > 0 ||
+                      options.title ||
+                      options.desc ||
+                      options.description ||
+                      options.details ||
+                      options.validation ||
+                      options.status ||
+                      options.tags ||
+                      options.deps;
+
+    if (!hasChanges) {
+      // Check if editor is enabled (default true, disabled with --no-editor)
+      if (options.editor !== false) {
+        try {
+          // Launch editor with current task content as initial content
+          const currentTask = await taskManager.get(id);
+          const editorPrompt = `# Edit Task ${id}: ${currentTask.title}\n\n${currentTask.content || ''}`;
+          const editedContent = await launchEditor(editorPrompt);
+
+          // If user didn't change anything, exit without error
+          if (editedContent === editorPrompt) {
+            printError('No changes made');
+            process.exit(2);
+          }
+
+          // Extract the content (remove the title comment)
+          const lines = editedContent.split('\n');
+          const contentStartIndex = lines.findIndex(line => line.trim() !== '' && !line.startsWith('#'));
+          const newContent = contentStartIndex >= 0 ? lines.slice(contentStartIndex).join('\n').trim() : '';
+
+          // Update the task with the new content
+          await taskManager.update(id, { content: newContent });
+          printSuccess(`Updated task ${id}`);
+          return;
+        } catch (error) {
+          if (error instanceof Error) {
+            printError(`Editor failed: ${error.message}`);
+          } else {
+            printError('Failed to launch editor');
+          }
+          process.exit(2);
+        }
+      } else {
+        // Editor is disabled, exit with error
+        printError('No changes specified');
+        process.exit(2);
+      }
     }
 
     // Get current task
@@ -162,8 +218,62 @@ async function updateTask(
     if (options.title !== undefined) {
       updates.title = options.title;
     }
-    if (options.description !== undefined) {
-      updates.content = options.description;
+
+    // Handle body section updates with stdin support
+    let updatedContent = currentTask.content || '';
+    let contentModified = false;
+
+    // Process description option (supports stdin with "-")
+    const descValue = options.desc || options.description;
+    if (descValue !== undefined) {
+      try {
+        const descContent = await readInput(descValue, false, '', 30000);
+        if (descContent !== undefined) {
+          updatedContent = updateBodySection(updatedContent, 'description', descContent);
+          contentModified = true;
+        }
+      } catch (error) {
+        if (error instanceof Error) {
+          throw new ValidationError(`Failed to read description input: ${error.message}`);
+        }
+        throw new ValidationError('Failed to read description input');
+      }
+    }
+
+    // Process details option (supports stdin with "-")
+    if (options.details !== undefined) {
+      try {
+        const detailsContent = await readInput(options.details, false, '', 30000);
+        if (detailsContent !== undefined) {
+          updatedContent = updateBodySection(updatedContent, 'details', detailsContent);
+          contentModified = true;
+        }
+      } catch (error) {
+        if (error instanceof Error) {
+          throw new ValidationError(`Failed to read details input: ${error.message}`);
+        }
+        throw new ValidationError('Failed to read details input');
+      }
+    }
+
+    // Process validation option (supports stdin with "-")
+    if (options.validation !== undefined) {
+      try {
+        const validationContent = await readInput(options.validation, false, '', 30000);
+        if (validationContent !== undefined) {
+          updatedContent = updateBodySection(updatedContent, 'validation', validationContent);
+          contentModified = true;
+        }
+      } catch (error) {
+        if (error instanceof Error) {
+          throw new ValidationError(`Failed to read validation input: ${error.message}`);
+        }
+        throw new ValidationError('Failed to read validation input');
+      }
+    }
+
+    if (contentModified) {
+      updates.content = updatedContent;
     }
     if (options.status !== undefined) {
       if (!['pending', 'in-progress', 'done'].includes(options.status)) {
@@ -193,14 +303,23 @@ async function updateTask(
 
       if (operation === 'set') {
         const parsedValue = parseValue(key, value);
-        
-        // Map field aliases to actual field names
-        let fieldName = key;
-        if (key === 'desc' || key === 'details') {
-          fieldName = 'content';
+
+        // Handle body section fields
+        if (key === 'desc' || key === 'details' || key === 'validation') {
+          if (!contentModified) {
+            updatedContent = currentTask.content || '';
+            contentModified = true;
+          }
+          updatedContent = updateBodySection(updatedContent, key === 'desc' ? 'description' : key, parsedValue as string);
+          updates.content = updatedContent;
+        } else {
+          // Map field aliases to actual field names
+          let fieldName = key;
+          if (key === 'content') {
+            fieldName = 'content';
+          }
+          (updates as Record<string, unknown>)[fieldName] = parsedValue;
         }
-        
-        (updates as Record<string, unknown>)[fieldName] = parsedValue;
       } else if (operation === 'add') {
         // Add to array fields
         if (key === 'tags') {
@@ -306,14 +425,18 @@ async function validateDependencies(
  * Create the update command
  */
 export const updateCommand = new Command('update')
-  .description('Update a task')
+  .description('Update a task with flexible options for metadata, content sections, and editor integration')
   .argument('<id>', 'Task ID')
   .argument('[assignments...]', 'Field assignments (key=value, key+=value, key-=value)')
   .option('-t, --title <title>', 'Update task title')
-  .option('-d, --description <desc>', 'Update task description')
-  .option('-s, --status <status>', 'Update task status')
+  .option('-d, --desc <text>', 'Update description section (use - for stdin)')
+  .option('--description <text>', 'Update description section (use - for stdin, alias for --desc)')
+  .option('--details <text>', 'Update details section (use - for stdin)')
+  .option('--validation <text>', 'Update validation section (use - for stdin)')
+  .option('-s, --status <status>', 'Update task status (pending, in-progress, done)')
   .option('--tags <tags>', 'Set task tags (comma-separated)')
   .option('--deps <dependencies>', 'Set task dependencies (comma-separated IDs)')
+  .option('--no-editor', 'Disable editor fallback when no changes are specified')
   .action(async (id: string, assignments: string[], options) => {
     await updateTask(id, assignments, options);
   });

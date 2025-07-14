@@ -167,36 +167,133 @@ stm show 1 --format=yaml
 
 ### `stm update <id>`
 
-Update an existing task's properties.
+Update an existing task's properties with flexible options for metadata, content sections, and editor integration.
+
+#### Basic Property Updates
 
 ```bash
 # Update status
 stm update 1 --status=done
 
-# Update title
+# Update title  
 stm update 1 --title="New task title"
 
-# Update multiple properties
-stm update 1 --status=in-progress --priority=high --tags=urgent,backend
+# Update tags
+stm update 1 --tags=urgent,backend,security
+```
 
-# Update description
-stm update 1 --description="Updated task description with more details"
+#### Section-Specific Updates
 
-# Update due date
-stm update 1 --due-date="2024-12-25"
+```bash
+# Update description section directly
+stm update 42 --desc "Revised task description with new requirements"
 
-# Remove due date
-stm update 1 --due-date=""
+# Update details section with multi-line content
+stm update 42 --details "## Implementation Notes
+- Use TypeScript for type safety
+- Add comprehensive error handling
+- Include unit tests"
+
+# Update validation section
+stm update 42 --validation "✓ All tests pass
+✓ Code review completed  
+✓ Manual QA approved"
+```
+
+#### Stdin Input Support
+
+```bash
+# Pipe content to description section
+echo "New description from command output" | stm update 42 --desc -
+
+# Pipe test results to validation section
+npm test | stm update 42 --validation -
+
+# Use complex piping with other tools
+curl -s api.example.com/requirements | stm update 42 --details -
+
+# Multi-line input using heredoc
+stm update 42 --validation - << 'EOF'
+✓ Unit tests: 45/45 passing
+✓ Integration tests: 12/12 passing
+✓ Performance benchmarks within limits
+✓ Security scan: no vulnerabilities
+EOF
+```
+
+#### Key=Value Assignment Syntax
+
+```bash
+# Basic assignments
+stm update 42 status=done title="Completed feature implementation"
+
+# Content section assignments  
+stm update 42 desc="Updated description" details="New implementation details"
+
+# Array operations - adding tags
+stm update 42 tags+=security,performance
+
+# Array operations - removing tags
+stm update 42 tags-=deprecated,old
+
+# Multiple mixed operations
+stm update 42 status=in-progress tags+=urgent desc="High priority update"
+```
+
+#### Editor Integration
+
+```bash
+# Open task in editor when no changes specified
+stm update 42
+
+# Disable editor fallback
+stm update 42 --no-editor
+```
+
+#### Combined Usage Examples
+
+```bash
+# Update metadata and add validation results
+stm update 42 status=done --validation "✓ All tests pass
+✓ Manual QA complete"
+
+# Update multiple sections with different input methods
+stm update 42 --desc "Updated requirements" details="$(cat implementation-notes.md)"
+
+# Complex workflow with piped validation
+npm run test:full | stm update 42 status=done --validation -
+
+# Batch update with assignment syntax
+stm update 42 status=in-progress tags+=urgent,hotfix desc="Critical bug fix in progress"
 ```
 
 **Options:**
 
-- `--title, -T <title>`: Update task title
+- `--title, -t <title>`: Update task title
+- `--desc, -d <text>`: Update description section (use `-` for stdin)
+- `--details <text>`: Update details section (use `-` for stdin)  
+- `--validation <text>`: Update validation section (use `-` for stdin)
 - `--status, -s <status>`: Update status (pending, in-progress, done)
-- `--priority, -p <priority>`: Update priority (low, medium, high)
-- `--tags, -t <tags>`: Update tags (comma-separated)
-- `--description, -d <description>`: Update description
-- `--due-date <date>`: Update due date (YYYY-MM-DD)
+- `--tags <tags>`: Set task tags (comma-separated)
+- `--deps <dependencies>`: Set task dependencies (comma-separated IDs)
+- `--no-editor`: Disable editor fallback when no changes are specified
+
+**Assignment Syntax:**
+
+- `key=value`: Set field value
+- `key+=value`: Add to array fields (tags, dependencies)
+- `key-=value`: Remove from array fields (tags, dependencies)
+
+**Valid Fields for Assignments:**
+
+- `title`: Task title
+- `content`: Full task content (markdown body)
+- `status`: Task status (pending, in-progress, done)
+- `tags`: Task tags (comma-separated for arrays)
+- `dependencies`: Task dependencies (comma-separated IDs)
+- `desc`: Description section content
+- `details`: Details section content  
+- `validation`: Validation section content
 
 ### `stm grep <pattern>`
 
@@ -328,11 +425,18 @@ stm list --status=pending --pretty
 # Add a new urgent task
 stm add "Fix critical production bug" --tags=urgent,bugfix --priority=high
 
-# Start working on a task
-stm update 5 --status=in-progress
+# Start working on a task and add implementation notes
+stm update 5 status=in-progress --details "Started debugging the authentication flow"
 
-# Mark task as complete
-stm update 5 --status=done
+# Update progress with detailed validation checks
+stm update 5 --validation - << 'EOF'
+✓ Reproduced the issue locally
+✓ Identified root cause in JWT validation
+⏳ Working on fix implementation
+EOF
+
+# Complete the task with final validation
+npm test | stm update 5 status=done --validation -
 
 # Review completed work
 stm list --status=done --format=table
@@ -346,14 +450,73 @@ stm add "Design user dashboard" --tags=frontend,design --priority=medium
 stm add "Implement user API" --tags=backend,api --priority=high
 stm add "Write unit tests" --tags=testing --priority=medium
 
+# Start working on API implementation with detailed plan
+stm update 2 status=in-progress --details "## Implementation Plan
+- Design REST endpoints
+- Set up authentication middleware  
+- Implement CRUD operations
+- Add input validation"
+
+# Update progress with specific validation criteria
+stm update 2 --validation "## Acceptance Criteria
+- [ ] All endpoints documented in OpenAPI
+- [ ] Authentication tests pass
+- [ ] Error handling implemented
+- [ ] Performance benchmarks met"
+
+# Add urgent tag when priorities change
+stm update 2 tags+=urgent
+
+# Complete with comprehensive validation results
+stm update 2 status=done --validation "## Final Validation
+✓ All endpoints implemented and tested
+✓ API documentation updated
+✓ Security review completed
+✓ Performance tests: avg 45ms response time
+✓ Integration tests: 100% passing"
+
 # Track frontend work
 stm list --tags=frontend --pretty
 
-# Find all high-priority tasks
-stm list --search="priority.*high" --format=table
-
 # Export project status
 stm export --format=csv > project-status.csv
+```
+
+### Advanced Update Patterns
+
+```bash
+# Automated testing workflow with piped results
+npm run test:unit | stm update 15 --validation -
+npm run test:integration | stm update 15 --validation -
+
+# Code review workflow
+stm update 23 --desc "Feature implementation complete" --validation "✓ Code review requested"
+
+# CI/CD integration - update from build results
+if npm run build; then
+  stm update 18 status=done --validation "✓ Build successful: $(date)"
+else
+  stm update 18 --validation "❌ Build failed: $(date)"
+fi
+
+# Multi-step task progression with section updates
+stm update 31 status=in-progress --desc "Starting phase 1: Requirements gathering"
+stm update 31 --details "$(cat requirements.md)"
+stm update 31 --validation "✓ Requirements approved by stakeholders"
+
+# Batch updates with assignment syntax
+stm update 42 status=done tags+=completed,released desc="Feature deployed to production"
+
+# Editor-based updates for complex content
+stm update 55  # Opens editor for detailed content editing
+
+# Dependency management with array operations
+stm update 60 deps+=45,46  # Add dependencies
+stm update 60 deps-=32     # Remove dependency
+
+# Documentation sync from external sources
+curl -s https://api.example.com/spec | stm update 67 --details -
+cat design-notes.md | stm update 67 --desc -
 ```
 
 ### Team Coordination

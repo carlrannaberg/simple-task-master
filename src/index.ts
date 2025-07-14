@@ -19,7 +19,7 @@ export type {
   TaskListFilters,
   TaskManagerConfig,
   Config,
-  LockFile,
+  LockFile
 } from './lib/types';
 
 // Validation functions

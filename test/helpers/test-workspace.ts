@@ -43,7 +43,7 @@ export class TestWorkspace {
     const config = {
       schema: 1,
       lockTimeoutMs: 5000,
-      maxTaskSizeBytes: 1048576,
+      maxTaskSizeBytes: 1048576
     };
 
     await fs.writeFile(path.join(stmDir, 'config.json'), JSON.stringify(config, null, 2), 'utf8');
@@ -91,7 +91,7 @@ export class TestWorkspace {
   private async getTaskManager(): Promise<TaskManager> {
     if (!this.taskManager) {
       this.taskManager = await TaskManager.create({
-        tasksDir: path.join(this.tempDir, '.simple-task-master', 'tasks'),
+        tasksDir: path.join(this.tempDir, '.simple-task-master', 'tasks')
       });
     }
     return this.taskManager;
@@ -236,7 +236,7 @@ export class TestWorkspace {
         title: `${prefix} ${i}`,
         content: `This is test task number ${i}`,
         tags: [`tag${i % 3}`, 'test'],
-        status: i % 3 === 0 ? 'done' : i % 3 === 1 ? 'in-progress' : 'pending',
+        status: i % 3 === 0 ? 'done' : i % 3 === 1 ? 'in-progress' : 'pending'
       });
       tasks.push(task);
     }
@@ -251,7 +251,7 @@ export class TestWorkspace {
     const promises = Array.from({ length: count }, (_, i) =>
       this.addTask({
         title: `Concurrent Task ${i + 1}`,
-        content: `Created concurrently: ${i + 1}`,
+        content: `Created concurrently: ${i + 1}`
       })
     );
 
@@ -276,7 +276,7 @@ export class TestWorkspace {
       pendingTasks: tasks.filter((t) => t.status === 'pending').length,
       inProgressTasks: tasks.filter((t) => t.status === 'in-progress').length,
       doneTasks: tasks.filter((t) => t.status === 'done').length,
-      totalFiles: files.filter((f) => f.endsWith('.md')).length,
+      totalFiles: files.filter((f) => f.endsWith('.md')).length
     };
   }
 }

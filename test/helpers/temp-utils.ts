@@ -179,13 +179,13 @@ export const tempUtils = {
           config || {
             schema: 1,
             lockTimeoutMs: 5000,
-            maxTaskSizeBytes: 1048576,
+            maxTaskSizeBytes: 1048576
           },
           null,
           2
         ),
-        tasks: null,
-      },
+        tasks: null
+      }
     };
 
     return this.withTempDirAndStructure(structure, fn);
@@ -201,13 +201,13 @@ export const tempUtils = {
           {
             schema: 1,
             lockTimeoutMs: 5000,
-            maxTaskSizeBytes: 1048576,
+            maxTaskSizeBytes: 1048576
           },
           null,
           2
         ),
-        tasks: null,
-      },
+        tasks: null
+      }
     };
 
     // Add sample task files
@@ -348,7 +348,7 @@ Task ${i} demonstrates the task file format and structure.
    */
   async removeDir(dirPath: string): Promise<void> {
     await fs.rm(dirPath, { recursive: true, force: true });
-  },
+  }
 };
 
 /**
@@ -389,5 +389,5 @@ export const temp = {
   /**
    * Get count of managed directories
    */
-  count: () => globalTempManager.count(),
+  count: () => globalTempManager.count()
 };

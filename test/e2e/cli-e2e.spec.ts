@@ -25,7 +25,7 @@ describe(
       it('should execute all basic commands successfully', async () => {
         // Test init command (already done by TestWorkspace, verify it worked)
         const listEmptyResult = await runSTMSuccess(['list'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
         expect(listEmptyResult.stdout.trim()).toBe('');
 
@@ -33,7 +33,7 @@ describe(
         const addResult = await runSTMSuccess(
           ['add', 'Test Task', '--description', 'Test content'],
           {
-            cwd: workspace.directory,
+            cwd: workspace.directory
           }
         );
         const taskId = parseInt(addResult.stdout.trim(), 10);
@@ -41,13 +41,13 @@ describe(
 
         // Test list command
         const listResult = await runSTMSuccess(['list'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
         expect(listResult.stdout).toContain('Test Task');
 
         // Test show command
         const showResult = await runSTMSuccess(['show', '1'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
         expect(showResult.stdout).toContain('Test Task');
         expect(showResult.stdout).toContain('Test content');
@@ -56,14 +56,14 @@ describe(
         const updateResult = await runSTMSuccess(
           ['update', '1', '--status', 'in-progress', '--title', 'Updated Test Task'],
           {
-            cwd: workspace.directory,
+            cwd: workspace.directory
           }
         );
         expect(updateResult.exitCode).toBe(0);
 
         // Verify update
         const showUpdatedResult = await runSTMSuccess(['show', '1'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
         expect(showUpdatedResult.stdout).toContain('Updated Test Task');
         expect(showUpdatedResult.stdout).toContain('in-progress');
@@ -87,10 +87,10 @@ with various characters:
             '--tags',
             'special,unicode,complex',
             '--status',
-            'pending',
+            'pending'
           ],
           {
-            cwd: workspace.directory,
+            cwd: workspace.directory
           }
         );
 
@@ -99,7 +99,7 @@ with various characters:
 
         // Verify complex content was stored correctly
         const showResult = await runSTMSuccess(['show', taskId.toString()], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
 
         expect(showResult.stdout).toContain(complexTitle);
@@ -115,7 +115,7 @@ with various characters:
         const addResult = await runSTMSuccess(
           ['add', 'Filesystem Test', '--description', 'Testing file operations'],
           {
-            cwd: workspace.directory,
+            cwd: workspace.directory
           }
         );
 
@@ -151,7 +151,7 @@ with various characters:
         await runSTMSuccess(
           ['update', taskId.toString(), '--description', 'Updated file content'],
           {
-            cwd: workspace.directory,
+            cwd: workspace.directory
           }
         );
 
@@ -168,19 +168,19 @@ with various characters:
         await runSTMSuccess(
           ['add', 'Task 1', '--description', 'First task', '--tags', 'test,export'],
           {
-            cwd: workspace.directory,
+            cwd: workspace.directory
           }
         );
         await runSTMSuccess(['add', 'Task 2', '--description', 'Second task', '--tags', 'test'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
         await runSTMSuccess(['add', 'Task 3', '--description', 'Third task', '--status', 'done'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
 
         // Test JSON list output
         const jsonListResult = await runSTMSuccess(['list', '--format', 'json'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
 
         // JSON format returns a proper JSON array
@@ -203,7 +203,7 @@ with various characters:
         const exportResult = await runSTMSuccess(
           ['export', '--format', 'json', '--output', exportFile],
           {
-            cwd: workspace.directory,
+            cwd: workspace.directory
           }
         );
 
@@ -230,44 +230,44 @@ with various characters:
             'add',
             'Frontend Development',
             '--description',
-            'Implement React components for user interface',
+            'Implement React components for user interface'
           ],
           {
-            cwd: workspace.directory,
+            cwd: workspace.directory
           }
         );
 
         await runSTMSuccess(
           ['add', 'Backend API', '--description', 'Create REST API endpoints for data management'],
           {
-            cwd: workspace.directory,
+            cwd: workspace.directory
           }
         );
 
         await runSTMSuccess(
           ['add', 'Database Schema', '--description', 'Design database tables and relationships'],
           {
-            cwd: workspace.directory,
+            cwd: workspace.directory
           }
         );
 
         // Test basic grep
         const grepResult = await runSTMSuccess(['grep', 'API'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
         expect(grepResult.stdout).toContain('Backend API');
         expect(grepResult.stdout).toContain('REST API endpoints');
 
         // Test case-insensitive grep
         const caseInsensitiveResult = await runSTMSuccess(['grep', 'react', '--ignore-case'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
         expect(caseInsensitiveResult.stdout).toContain('Frontend Development');
         expect(caseInsensitiveResult.stdout).toContain('React components');
 
         // Test grep with ignore-case (context not supported)
         const databaseResult = await runSTMSuccess(['grep', 'database', '--ignore-case'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
         expect(databaseResult.stdout).toContain('Database Schema');
         expect(databaseResult.stdout).toContain('Design database tables');
@@ -278,31 +278,31 @@ with various characters:
       it('should return correct exit codes for successful operations', async () => {
         // Successful add
         const addResult = await runSTM(['add', 'Success Test'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
         expect(addResult.exitCode).toBe(0);
 
         // Successful list
         const listResult = await runSTM(['list'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
         expect(listResult.exitCode).toBe(0);
 
         // Successful show
         const showResult = await runSTM(['show', '1'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
         expect(showResult.exitCode).toBe(0);
 
         // Successful update
         const updateResult = await runSTM(['update', '1', '--status', 'done'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
         expect(updateResult.exitCode).toBe(0);
 
         // Successful export
         const exportResult = await runSTM(['export', '--format', 'json'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
         expect(exportResult.exitCode).toBe(0);
       });
@@ -310,35 +310,35 @@ with various characters:
       it('should return non-zero exit codes for errors', async () => {
         // Invalid command
         const invalidCommandResult = await runSTM(['invalid-command'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
         expect(invalidCommandResult.exitCode).not.toBe(0);
         expect(invalidCommandResult.stderr).toContain('unknown command');
 
         // Missing required argument
         const missingArgResult = await runSTM(['add'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
         expect(missingArgResult.exitCode).not.toBe(0);
         expect(missingArgResult.stderr).toContain('title');
 
         // Non-existent task
         const nonExistentResult = await runSTM(['show', '999'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
         expect(nonExistentResult.exitCode).not.toBe(0);
         expect(nonExistentResult.stderr).toContain('not found');
 
         // Invalid status
         const invalidStatusResult = await runSTM(['add', 'Test', '--status', 'invalid'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
         expect(invalidStatusResult.exitCode).not.toBe(0);
         expect(invalidStatusResult.stderr.toLowerCase()).toContain('status');
 
         // Invalid format
         const invalidFormatResult = await runSTM(['export', '--format', 'invalid'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
         expect(invalidFormatResult.exitCode).not.toBe(0);
         expect(invalidFormatResult.stderr).toContain('format');
@@ -351,7 +351,7 @@ with various characters:
           await fs.chmod(workspace.tasksDirectory, 0o444);
 
           const permissionResult = await runSTM(['add', 'Permission Test'], {
-            cwd: workspace.directory,
+            cwd: workspace.directory
           });
           expect(permissionResult.exitCode).not.toBe(0);
           expect(permissionResult.stderr).toMatch(/permission|access/i);
@@ -366,7 +366,7 @@ with various characters:
         const tempDir = await fs.mkdtemp(path.join(workspace.directory, 'temp-'));
 
         const uninitializedResult = await runSTM(['list'], {
-          cwd: tempDir,
+          cwd: tempDir
         });
         // An uninitialized directory returns exit code 0 with empty output
         // This is actually expected behavior - list returns empty when no tasks exist
@@ -388,7 +388,7 @@ with various characters:
           await runSTMSuccess(
             ['add', `Task ${i + 1}`, '--description', `Content for task ${i + 1}`],
             {
-              cwd: workspace.directory,
+              cwd: workspace.directory
             }
           );
         }
@@ -401,7 +401,7 @@ with various characters:
         // Verify all tasks were created
         const listStartTime = Date.now();
         const listResult = await runSTMSuccess(['list'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
         const listTime = Date.now() - listStartTime;
 
@@ -430,7 +430,7 @@ with various characters:
       it('should handle file corruption gracefully', async () => {
         // Create valid task
         await runSTMSuccess(['add', 'Valid Task', '--description', 'Valid content'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
 
         // Corrupt the task file
@@ -444,7 +444,7 @@ with various characters:
 
         // List should handle corruption gracefully
         const listResult = await runSTM(['list'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
         expect(listResult.exitCode).toBe(0);
         expect(listResult.stdout.trim()).toBe(''); // No valid tasks found
@@ -453,7 +453,7 @@ with various characters:
         const newTaskResult = await runSTMSuccess(
           ['add', 'New Task', '--description', 'After corruption'],
           {
-            cwd: workspace.directory,
+            cwd: workspace.directory
           }
         );
         expect(newTaskResult.exitCode).toBe(0);
@@ -465,7 +465,7 @@ with various characters:
           await runSTMSuccess(
             ['add', `Stress Test Task ${i + 1}`, '--description', `Content ${i + 1}`],
             {
-              cwd: workspace.directory,
+              cwd: workspace.directory
             }
           );
         }
@@ -479,7 +479,7 @@ with various characters:
             return runSTMSuccess(
               ['update', taskId, '--description', `Updated content ${updateIndex}`],
               {
-                cwd: workspace.directory,
+                cwd: workspace.directory
               }
             );
           });
@@ -488,7 +488,7 @@ with various characters:
 
         // Verify final state integrity
         const finalListResult = await runSTMSuccess(['list'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
 
         const taskCount = finalListResult.stdout
@@ -500,7 +500,7 @@ with various characters:
         // Verify all tasks can be shown without errors
         for (let i = 1; i <= 20; i++) {
           const showResult = await runSTMSuccess(['show', i.toString()], {
-            cwd: workspace.directory,
+            cwd: workspace.directory
           });
           expect(showResult.stdout).toContain(`Stress Test Task ${i}`);
         }
@@ -509,12 +509,12 @@ with various characters:
       it('should handle workspace directory changes', async () => {
         // Create task in original location
         await runSTMSuccess(['add', 'Original Task', '--description', 'In original workspace'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
 
         // Verify task exists
         const originalListResult = await runSTMSuccess(['list'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
         expect(originalListResult.stdout).toContain('Original Task');
 
@@ -532,22 +532,22 @@ with various characters:
             } catch (error) {
               console.warn(`Failed to clean up moved workspace: ${error}`);
             }
-          },
+          }
         } as TestWorkspace;
 
         // Verify task still exists in new location
         const movedListResult = await runSTMSuccess(['list'], {
-          cwd: newWorkspaceDir,
+          cwd: newWorkspaceDir
         });
         expect(movedListResult.stdout).toContain('Original Task');
 
         // Should be able to add new tasks in moved location
         await runSTMSuccess(['add', 'New Task in Moved Location', '--description', 'After move'], {
-          cwd: newWorkspaceDir,
+          cwd: newWorkspaceDir
         });
 
         const finalListResult = await runSTMSuccess(['list'], {
-          cwd: newWorkspaceDir,
+          cwd: newWorkspaceDir
         });
         expect(finalListResult.stdout).toContain('Original Task');
         expect(finalListResult.stdout).toContain('New Task in Moved Location');
@@ -562,7 +562,7 @@ with various characters:
           [stmBin, 'add', 'Long Task', '--description', 'Long content'],
           {
             cwd: workspace.directory,
-            stdio: ['pipe', 'pipe', 'pipe'],
+            stdio: ['pipe', 'pipe', 'pipe']
           }
         );
 
@@ -593,7 +593,7 @@ with various characters:
               longProcess.kill('SIGKILL');
               resolve(-1);
             }, 5000)
-          ),
+          )
         ]);
 
         // Process should exit when terminated
@@ -609,7 +609,7 @@ with various characters:
             [stmBin, 'add', `Concurrent Task ${i + 1}`, '--description', `Content ${i + 1}`],
             {
               cwd: workspace.directory,
-              stdio: ['pipe', 'pipe', 'pipe'],
+              stdio: ['pipe', 'pipe', 'pipe']
             }
           )
         );
@@ -652,7 +652,7 @@ with various characters:
 
         // Verify all tasks were created with unique IDs
         const finalListResult = await runSTMSuccess(['list'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
 
         const taskLines = finalListResult.stdout
@@ -681,19 +681,19 @@ with various characters:
         const customEnv = {
           ...process.env,
           NODE_ENV: 'test',
-          STM_CONFIG: 'custom-config',
+          STM_CONFIG: 'custom-config'
         };
 
         const envResult = await runSTM(['add', 'Env Test Task'], {
           cwd: workspace.directory,
-          env: customEnv,
+          env: customEnv
         });
 
         expect(envResult.exitCode).toBe(0);
 
         // Verify task was created normally
         const listResult = await runSTMSuccess(['list'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
         expect(listResult.stdout).toContain('Env Test Task');
       });
@@ -709,25 +709,25 @@ with various characters:
 
         // Add a task from the main directory
         const mainResult = await runSTMSuccess(['add', 'Main Task'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
         expect(mainResult.exitCode).toBe(0);
 
         // STM should work from subdirectory by finding parent workspace
         const subDirResult = await runSTMSuccess(['add', 'Subdir Task'], {
-          cwd: subDir,
+          cwd: subDir
         });
         expect(subDirResult.exitCode).toBe(0);
 
         // STM should work from deeply nested directory
         const deepDirResult = await runSTMSuccess(['add', 'Deep Task'], {
-          cwd: deepDir,
+          cwd: deepDir
         });
         expect(deepDirResult.exitCode).toBe(0);
 
         // List from subdirectory should show all tasks from parent workspace
         const subListResult = await runSTMSuccess(['list'], {
-          cwd: subDir,
+          cwd: subDir
         });
         expect(subListResult.stdout).toContain('Main Task');
         expect(subListResult.stdout).toContain('Subdir Task');
@@ -735,7 +735,7 @@ with various characters:
 
         // List from deeply nested directory should also show all tasks
         const deepListResult = await runSTMSuccess(['list'], {
-          cwd: deepDir,
+          cwd: deepDir
         });
         expect(deepListResult.stdout).toContain('Main Task');
         expect(deepListResult.stdout).toContain('Subdir Task');
@@ -743,7 +743,7 @@ with various characters:
 
         // Main directory should have all tasks
         const mainDirResult = await runSTMSuccess(['list'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
         expect(mainDirResult.stdout).toContain('Main Task');
         expect(mainDirResult.stdout).toContain('Subdir Task');
@@ -752,12 +752,12 @@ with various characters:
         // Test with a directory that has no STM workspace
         const tempDir = await fs.mkdtemp(path.join(workspace.directory, '..', 'temp-'));
         const noWorkspaceResult = await runSTM(['list'], {
-          cwd: tempDir,
+          cwd: tempDir
         });
         // Should fail when no workspace is found
         expect(noWorkspaceResult.exitCode).not.toBe(0);
         expect(noWorkspaceResult.stderr).toContain('No STM workspace found');
-        
+
         // Clean up temp directory
         await fs.rm(tempDir, { recursive: true, force: true });
       });

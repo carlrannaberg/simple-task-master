@@ -56,7 +56,7 @@ describe('LockManager', () => {
       const lockData = {
         pid: 1, // PID 1 is always init/systemd
         command: 'stm add "test"',
-        timestamp: Date.now(),
+        timestamp: Date.now()
       };
       await fs.writeFile(lockPath, JSON.stringify(lockData, null, 2));
 
@@ -71,7 +71,7 @@ describe('LockManager', () => {
       const staleLock = {
         pid: process.pid,
         command: 'stm add "old task"',
-        timestamp: Date.now() - 31000, // 31 seconds old
+        timestamp: Date.now() - 31000 // 31 seconds old
       };
       await fs.writeFile(lockPath, JSON.stringify(staleLock, null, 2));
 
@@ -88,7 +88,7 @@ describe('LockManager', () => {
       const deadProcessLock = {
         pid: 999999, // Very unlikely to exist
         command: 'stm add "dead process task"',
-        timestamp: Date.now() - 1000, // Recent but dead process
+        timestamp: Date.now() - 1000 // Recent but dead process
       };
       await fs.writeFile(lockPath, JSON.stringify(deadProcessLock, null, 2));
 
@@ -124,7 +124,7 @@ describe('LockManager', () => {
       const lockData = {
         pid: process.pid,
         command: 'stm add "test"',
-        timestamp: Date.now(),
+        timestamp: Date.now()
       };
       await fs.writeFile(lockPath, JSON.stringify(lockData, null, 2));
 
@@ -171,7 +171,7 @@ describe('LockManager', () => {
       const lockData = {
         pid: 1, // Different PID
         command: 'stm add "test"',
-        timestamp: Date.now(),
+        timestamp: Date.now()
       };
       await fs.writeFile(lockPath, JSON.stringify(lockData, null, 2));
 
@@ -276,7 +276,7 @@ describe('LockManager', () => {
       const recentLock = {
         pid: 1, // Different process
         command: 'stm add "test"',
-        timestamp: Date.now() - 5000, // 5 seconds old (not stale)
+        timestamp: Date.now() - 5000 // 5 seconds old (not stale)
       };
       await fs.writeFile(lockPath, JSON.stringify(recentLock, null, 2));
 
@@ -299,7 +299,7 @@ describe('LockManager', () => {
       const persistentLock = {
         pid: 1,
         command: 'stm add "test"',
-        timestamp: Date.now(),
+        timestamp: Date.now()
       };
       await fs.writeFile(lockPath, JSON.stringify(persistentLock, null, 2));
 
@@ -331,7 +331,7 @@ describe('LockManager', () => {
         const staleLock = {
           pid: process.pid,
           command: 'stm add "stale task"',
-          timestamp: Date.now() - staleTime,
+          timestamp: Date.now() - staleTime
         };
         await fs.writeFile(lockPath, JSON.stringify(staleLock, null, 2));
 
@@ -356,7 +356,7 @@ describe('LockManager', () => {
         const recentLock = {
           pid: 1, // Different process that should be alive
           command: 'stm add "recent task"',
-          timestamp: Date.now() - recentTime,
+          timestamp: Date.now() - recentTime
         };
         await fs.writeFile(lockPath, JSON.stringify(recentLock, null, 2));
 
@@ -382,7 +382,7 @@ describe('LockManager', () => {
         const deadProcessLock = {
           pid: deadPid,
           command: 'stm add "dead process task"',
-          timestamp: Date.now() - 1000, // Recent but dead process
+          timestamp: Date.now() - 1000 // Recent but dead process
         };
         await fs.writeFile(lockPath, JSON.stringify(deadProcessLock, null, 2));
 
@@ -404,7 +404,7 @@ describe('LockManager', () => {
         { pid: 'invalid', command: 'test', timestamp: Date.now() },
         { pid: -1, command: 'test', timestamp: Date.now() },
         { pid: 0, command: 'test', timestamp: Date.now() },
-        { pid: null, command: 'test', timestamp: Date.now() },
+        { pid: null, command: 'test', timestamp: Date.now() }
       ];
 
       for (const corruptedLock of corruptedLocks) {
@@ -449,7 +449,7 @@ describe('LockManager', () => {
     it.skip('should handle disk full scenarios', async () => {
       // Create a custom lock manager for this test to avoid conflicts
       const diskFullLockManager = new LockManager(testDir);
-      
+
       // Mock fs.open to simulate disk full
       const mockError = new Error('ENOSPC: no space left on device') as NodeJS.ErrnoException;
       mockError.code = 'ENOSPC';
@@ -457,7 +457,7 @@ describe('LockManager', () => {
       // Use mockImplementationOnce to avoid conflicts with other tests
       const originalOpen = fs.open;
       const openSpy = vi.spyOn(fs, 'open');
-      
+
       // Mock just the first call
       openSpy.mockImplementationOnce(() => Promise.reject(mockError));
 
@@ -508,7 +508,7 @@ describe('LockManager', () => {
       if (successes.length > 0) {
         await successes[0].lockManager.release();
       }
-      
+
       // Dispose all lock manager instances created in this test
       lockManagers.forEach(manager => manager.dispose());
     }, 30000); // Increase timeout for concurrent operations
@@ -563,7 +563,7 @@ describe('LockManager', () => {
         { command: 'test' }, // Missing pid and timestamp
         { timestamp: Date.now() }, // Missing pid and command
         { pid: 12345, command: 'test' }, // Missing timestamp
-        { pid: 12345, timestamp: Date.now() }, // Missing command
+        { pid: 12345, timestamp: Date.now() } // Missing command
       ];
 
       for (const incompleteLock of incompleteLocks) {
@@ -591,7 +591,7 @@ describe('LockManager', () => {
         path.join(testDir, 'custom1'),
         path.join(testDir, 'custom2', 'nested'),
         path.join(testDir, 'with spaces'),
-        path.join(testDir, 'with-dashes'),
+        path.join(testDir, 'with-dashes')
       ];
 
       for (const customRoot of customRoots) {

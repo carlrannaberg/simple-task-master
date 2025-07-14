@@ -49,11 +49,11 @@ describe(
                 '--description',
                 `Content from process ${i + 1}`,
                 '--tags',
-                `process-${i + 1},concurrent`,
+                `process-${i + 1},concurrent`
               ],
               {
                 cwd: workspace.directory,
-                stdio: ['pipe', 'pipe', 'pipe'],
+                stdio: ['pipe', 'pipe', 'pipe']
               }
             );
 
@@ -72,7 +72,7 @@ describe(
                 pid: child.pid || -1,
                 exitCode: code ?? -1,
                 stdout: stdout.trim(),
-                stderr: stderr.trim(),
+                stderr: stderr.trim()
               });
             });
 
@@ -113,7 +113,7 @@ describe(
         // Create some initial tasks
         for (let i = 1; i <= 5; i++) {
           await runSTMSuccess(['add', `Read Test Task ${i}`, '--description', `Content ${i}`], {
-            cwd: workspace.directory,
+            cwd: workspace.directory
           });
         }
 
@@ -125,7 +125,7 @@ describe(
           const promise = new Promise<{ exitCode: number; stdout: string }>((resolve, reject) => {
             const child = spawn('node', [stmBin, 'list', '--format', 'json'], {
               cwd: workspace.directory,
-              stdio: ['pipe', 'pipe', 'pipe'],
+              stdio: ['pipe', 'pipe', 'pipe']
             });
 
             let stdout = '';
@@ -167,7 +167,7 @@ describe(
       it('should handle mixed concurrent read/write operations', async () => {
         // Create initial task
         await runSTMSuccess(['add', 'Mixed Test Task', '--description', 'Initial content'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
 
         const operations: Promise<{ type: string; exitCode: number; output: string }>[] = [];
@@ -183,7 +183,7 @@ describe(
                   [stmBin, 'add', `Mixed Task ${i}`, '--description', `Content ${i}`],
                   {
                     cwd: workspace.directory,
-                    stdio: ['pipe', 'pipe', 'pipe'],
+                    stdio: ['pipe', 'pipe', 'pipe']
                   }
                 );
 
@@ -209,7 +209,7 @@ describe(
                   [stmBin, 'update', '1', '--description', `Updated at ${Date.now()}`],
                   {
                     cwd: workspace.directory,
-                    stdio: ['pipe', 'pipe', 'pipe'],
+                    stdio: ['pipe', 'pipe', 'pipe']
                   }
                 );
 
@@ -232,7 +232,7 @@ describe(
               (resolve, reject) => {
                 const child = spawn('node', [stmBin, 'list'], {
                   cwd: workspace.directory,
-                  stdio: ['pipe', 'pipe', 'pipe'],
+                  stdio: ['pipe', 'pipe', 'pipe']
                 });
 
                 let output = '';
@@ -286,7 +286,7 @@ describe(
               [stmBin, 'add', 'Locked Task', '--description', 'Should wait for lock'],
               {
                 cwd: workspace.directory,
-                stdio: ['pipe', 'pipe', 'pipe'],
+                stdio: ['pipe', 'pipe', 'pipe']
               }
             );
 
@@ -332,7 +332,7 @@ describe(
           const startTime = Date.now();
           const child = spawn('node', [stmBin, 'add', 'Timeout Task'], {
             cwd: workspace.directory,
-            stdio: ['pipe', 'pipe', 'pipe'],
+            stdio: ['pipe', 'pipe', 'pipe']
           });
 
           let stderr = '';
@@ -366,7 +366,7 @@ describe(
         const staleLock = {
           pid: 99999, // Non-existent PID
           command: 'stm add stale-task',
-          timestamp: Date.now() - 60000, // 1 minute old
+          timestamp: Date.now() - 60000 // 1 minute old
         };
 
         await fs.writeFile(lockPath, JSON.stringify(staleLock));
@@ -380,7 +380,7 @@ describe(
 
         // Attempt to add task - should clean up stale lock and succeed
         const addResult = await runSTMSuccess(['add', 'After Stale Lock'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
 
         expect(addResult.exitCode).toBe(0);
@@ -397,7 +397,7 @@ describe(
 
         // Should handle corruption and allow operations
         const addResult = await runSTMSuccess(['add', 'After Corrupted Lock'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
 
         expect(addResult.exitCode).toBe(0);
@@ -419,7 +419,7 @@ describe(
               [stmBin, 'add', `Race Test Task ${i}`, '--description', `Content ${i}`],
               {
                 cwd: workspace.directory,
-                stdio: ['pipe', 'pipe', 'pipe'],
+                stdio: ['pipe', 'pipe', 'pipe']
               }
             );
 
@@ -458,10 +458,10 @@ describe(
 
         // Verify all successful IDs are unique (no race conditions)
         const uniqueIds = new Set(taskIds);
-        
+
         // Show debug info before assertion
         console.warn(`Debug: uniqueIds.size = ${uniqueIds.size}, taskIds.length = ${taskIds.length}`);
-        
+
         expect(uniqueIds.size).toBe(taskIds.length);
 
         // Verify sequential numbering for successful tasks (no gaps in successful IDs)
@@ -471,7 +471,7 @@ describe(
         // Verify all successful tasks exist and have correct content
         for (const taskId of taskIds) {
           const showResult = await runSTMSuccess(['show', taskId.toString()], {
-            cwd: workspace.directory,
+            cwd: workspace.directory
           });
           expect(showResult.exitCode).toBe(0);
         }
@@ -482,7 +482,7 @@ describe(
         );
         console.warn(`Task IDs: ${taskIds.sort((a, b) => a - b).join(', ')}`);
         console.warn(`Unique IDs: ${uniqueIds.size}, Total IDs: ${taskIds.length}`);
-        
+
         // Show duplicates
         const idCounts = {};
         taskIds.forEach(id => {
@@ -516,7 +516,7 @@ describe(
                   [stmBin, 'add', `Burst Task ${i}`, '--description', `Burst content ${i}`],
                   {
                     cwd: workspace.directory,
-                    stdio: ['pipe', 'pipe', 'pipe'],
+                    stdio: ['pipe', 'pipe', 'pipe']
                   }
                 );
 
@@ -530,7 +530,7 @@ describe(
               promise = new Promise((resolve) => {
                 const child = spawn('node', [stmBin, 'list'], {
                   cwd: workspace.directory,
-                  stdio: ['pipe', 'pipe', 'pipe'],
+                  stdio: ['pipe', 'pipe', 'pipe']
                 });
 
                 child.on('close', (code) => {
@@ -543,7 +543,7 @@ describe(
               promise = new Promise((resolve) => {
                 const child = spawn('node', [stmBin, 'export', '--format', 'json'], {
                   cwd: workspace.directory,
-                  stdio: ['pipe', 'pipe', 'pipe'],
+                  stdio: ['pipe', 'pipe', 'pipe']
                 });
 
                 child.on('close', (code) => {
@@ -556,7 +556,7 @@ describe(
               promise = new Promise((resolve) => {
                 const child = spawn('node', [stmBin, 'grep', 'Task'], {
                   cwd: workspace.directory,
-                  stdio: ['pipe', 'pipe', 'pipe'],
+                  stdio: ['pipe', 'pipe', 'pipe']
                 });
 
                 child.on('close', (code) => {
@@ -622,7 +622,7 @@ describe(
                 [stmBin, 'add', `Perf Task ${i}`, '--description', `Performance test ${i}`],
                 {
                   cwd: workspace.directory,
-                  stdio: ['pipe', 'pipe', 'pipe'],
+                  stdio: ['pipe', 'pipe', 'pipe']
                 }
               );
 
@@ -633,7 +633,7 @@ describe(
             return new Promise<boolean>((resolve) => {
               const child = spawn('node', [stmBin, 'list'], {
                 cwd: workspace.directory,
-                stdio: ['pipe', 'pipe', 'pipe'],
+                stdio: ['pipe', 'pipe', 'pipe']
               });
 
               child.on('close', (code) => resolve(code === 0));
@@ -665,7 +665,7 @@ describe(
           [stmBin, 'add', 'Interrupted Task', '--description', 'This will be interrupted'],
           {
             cwd: workspace.directory,
-            stdio: ['pipe', 'pipe', 'pipe'],
+            stdio: ['pipe', 'pipe', 'pipe']
           }
         );
 
@@ -680,7 +680,7 @@ describe(
 
         // System should still be functional
         const addResult = await runSTMSuccess(['add', 'Recovery Task'], {
-          cwd: workspace.directory,
+          cwd: workspace.directory
         });
 
         expect(addResult.exitCode).toBe(0);
@@ -705,7 +705,7 @@ describe(
             [stmBin, 'add', `Killed Task ${i}`, '--description', `Content ${i}`],
             {
               cwd: workspace.directory,
-              stdio: ['pipe', 'pipe', 'pipe'],
+              stdio: ['pipe', 'pipe', 'pipe']
             }
           );
 
@@ -741,7 +741,7 @@ describe(
         // All listed tasks should be valid (can be shown without error)
         for (let i = 1; i <= taskLines.length; i++) {
           const showResult = await runSTMSuccess(['show', i.toString()], {
-            cwd: workspace.directory,
+            cwd: workspace.directory
           });
           expect(showResult.exitCode).toBe(0);
         }

@@ -19,7 +19,7 @@ export async function findWorkspaceRoot(startDir?: string): Promise<string | nul
         // Found the .simple-task-master directory
         return currentDir;
       }
-    } catch (error) {
+    } catch {
       // Directory doesn't exist, continue searching
     }
 
@@ -34,7 +34,7 @@ export async function findWorkspaceRoot(startDir?: string): Promise<string | nul
     if (stats.isDirectory()) {
       return root;
     }
-  } catch (error) {
+  } catch {
     // Not found
   }
 

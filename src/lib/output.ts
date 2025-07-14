@@ -154,7 +154,7 @@ export function formatAsTable(tasks: Task[], options: TableOptions = {}): string
     { key: 'title', title: 'Title', width: 30 },
     { key: 'status', title: 'Status', width: 12 },
     { key: 'tags', title: 'Tags', width: 20 },
-    { key: 'updated', title: 'Updated', width: 12 },
+    { key: 'updated', title: 'Updated', width: 12 }
   ];
 
   // Adjust column widths based on maxWidth
@@ -252,7 +252,7 @@ export function formatAsCSV(tasks: Task[]): string {
     'updated',
     'tags',
     'dependencies',
-    'content',
+    'content'
   ];
 
   // Escape CSV values according to RFC 4180
@@ -285,7 +285,7 @@ export function formatAsCSV(tasks: Task[]): string {
       task.updated,
       task.tags?.join(';') || '',
       task.dependencies?.join(';') || '',
-      task.content || '',
+      task.content || ''
     ].map(escapeCsvValue);
 
     rows.push(row.join(','));

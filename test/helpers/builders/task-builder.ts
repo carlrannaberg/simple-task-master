@@ -10,7 +10,7 @@ export class TaskBuilder {
     tags: [],
     dependencies: [],
     created: new Date().toISOString(),
-    updated: new Date().toISOString(),
+    updated: new Date().toISOString()
   };
 
   /**
@@ -145,7 +145,7 @@ export class TaskBuilder {
       updated: new Date().toISOString(),
       tags: [],
       dependencies: [],
-      ...this.task,
+      ...this.task
     } as Task;
   }
 
@@ -158,7 +158,7 @@ export class TaskBuilder {
       content: this.task.content,
       tags: this.task.tags,
       dependencies: this.task.dependencies,
-      status: this.task.status,
+      status: this.task.status
     };
   }
 
@@ -283,7 +283,7 @@ export class TaskFactory {
     return [
       TaskFactory.pending('Pending Task'),
       TaskFactory.inProgress('In Progress Task'),
-      TaskFactory.done('Done Task'),
+      TaskFactory.done('Done Task')
     ];
   }
 
@@ -295,7 +295,7 @@ export class TaskFactory {
       TaskFactory.withTags('Frontend Task', 'frontend', 'ui'),
       TaskFactory.withTags('Backend Task', 'backend', 'api'),
       TaskFactory.withTags('DevOps Task', 'devops', 'deployment'),
-      TaskFactory.withTags('Mixed Task', 'frontend', 'backend', 'urgent'),
+      TaskFactory.withTags('Mixed Task', 'frontend', 'backend', 'urgent')
     ];
   }
 
@@ -307,7 +307,7 @@ export class TaskFactory {
       TaskBuilder.create().withId(1).withTitle('Base Task').build(),
       TaskBuilder.create().withId(2).withTitle('Dependent Task 1').withDependencies(1).build(),
       TaskBuilder.create().withId(3).withTitle('Dependent Task 2').withDependencies(1, 2).build(),
-      TaskBuilder.create().withId(4).withTitle('Independent Task').build(),
+      TaskBuilder.create().withId(4).withTitle('Independent Task').build()
     ];
   }
 
@@ -322,7 +322,7 @@ export class TaskFactory {
     return [
       TaskBuilder.create().withTitle('Recent Task').withTimestamp(now).build(),
       TaskBuilder.create().withTitle('Yesterday Task').withTimestamp(yesterday).build(),
-      TaskBuilder.create().withTitle('Old Task').withTimestamp(lastWeek).build(),
+      TaskBuilder.create().withTitle('Old Task').withTimestamp(lastWeek).build()
     ];
   }
 }

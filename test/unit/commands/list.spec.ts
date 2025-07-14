@@ -21,35 +21,35 @@ describe('List Command', () => {
       title: 'Frontend Development',
       content: 'Build React components',
       status: 'pending',
-      tags: ['frontend', 'react', 'ui'],
+      tags: ['frontend', 'react', 'ui']
     });
 
     await workspace.addTask({
       title: 'Backend API',
       content: 'Implement REST endpoints',
       status: 'in-progress',
-      tags: ['backend', 'api', 'nodejs'],
+      tags: ['backend', 'api', 'nodejs']
     });
 
     await workspace.addTask({
       title: 'Database Schema',
       content: 'Design database tables',
       status: 'done',
-      tags: ['database', 'sql'],
+      tags: ['database', 'sql']
     });
 
     await workspace.addTask({
       title: 'DevOps Pipeline',
       content: 'Set up CI/CD pipeline',
       status: 'pending',
-      tags: ['devops', 'ci-cd'],
+      tags: ['devops', 'ci-cd']
     });
 
     await workspace.addTask({
       title: 'Testing Suite',
       content: 'Write unit and integration tests',
       status: 'in-progress',
-      tags: ['testing', 'quality'],
+      tags: ['testing', 'quality']
     });
   }
 
@@ -77,7 +77,7 @@ describe('List Command', () => {
     it('should handle empty task list', async () => {
       // Create a new workspace with no tasks
       const emptyWorkspace = await TestWorkspace.create();
-      
+
       try {
         const result = await runSTMSuccess(['list'], { cwd: emptyWorkspace.directory });
         expect(result.stdout.trim()).toBe('');
@@ -96,7 +96,7 @@ describe('List Command', () => {
         'Backend API',
         'Database Schema',
         'DevOps Pipeline',
-        'Testing Suite',
+        'Testing Suite'
       ];
 
       tasks.forEach((task, index) => {
@@ -317,7 +317,7 @@ describe('List Command', () => {
         '--tags',
         'backend',
         '--search',
-        'REST',
+        'REST'
       ], { cwd: workspace.directory });
       const lines = result.stdout
         .trim()
@@ -430,12 +430,12 @@ describe('List Command', () => {
   describe('edge cases', () => {
     it('should handle tasks with no content', async () => {
       const edgeCaseWorkspace = await TestWorkspace.create();
-      
+
       try {
         await edgeCaseWorkspace.addTask({
           title: 'No Content Task',
           status: 'pending',
-          tags: [],
+          tags: []
         });
 
         const result = await runSTMSuccess(['list'], { cwd: edgeCaseWorkspace.directory });
@@ -450,11 +450,11 @@ describe('List Command', () => {
 
     it('should handle tasks with no tags', async () => {
       const edgeCaseWorkspace = await TestWorkspace.create();
-      
+
       try {
         await edgeCaseWorkspace.addTask({
           title: 'No Tags Task',
-          status: 'pending',
+          status: 'pending'
         });
 
         const result = await runSTMSuccess(['list'], { cwd: edgeCaseWorkspace.directory });
@@ -469,13 +469,13 @@ describe('List Command', () => {
 
     it('should handle special characters in task data', async () => {
       const edgeCaseWorkspace = await TestWorkspace.create();
-      
+
       try {
         await edgeCaseWorkspace.addTask({
           title: 'Task with newlines and tabs',
           content: 'Content with\nnewlines\tand\ttabs',
           status: 'pending',
-          tags: ['tag-with-dashes', 'tag_with_underscores'],
+          tags: ['tag-with-dashes', 'tag_with_underscores']
         });
 
         const result = await runSTMSuccess(['list'], { cwd: edgeCaseWorkspace.directory });
@@ -501,11 +501,11 @@ describe('List Command', () => {
     it('should handle FileSystemError', async () => {
       // Test with a directory that doesn't have STM initialized
       const uninitialized = await TestWorkspace.create();
-      
+
       try {
         // Remove the .simple-task-master directory to simulate uninitialized state
         await require('fs/promises').rm(uninitialized.stmDirectory, { recursive: true, force: true });
-        
+
         const result = await runSTM(['list'], { cwd: uninitialized.directory });
 
         // Should either fail with exit code 1 or succeed with empty output
@@ -531,7 +531,7 @@ describe('List Command', () => {
   describe('performance', () => {
     it('should handle large numbers of tasks efficiently', async () => {
       const perfWorkspace = await TestWorkspace.create();
-      
+
       try {
         // Create many tasks
         const taskCount = 100; // Reduced for file system operations
@@ -539,7 +539,7 @@ describe('List Command', () => {
           await perfWorkspace.addTask({
             title: `Task ${i}`,
             status: i % 3 === 0 ? 'done' : i % 3 === 1 ? 'in-progress' : 'pending',
-            tags: [`tag${i % 5}`, 'bulk'],
+            tags: [`tag${i % 5}`, 'bulk']
           });
         }
 
@@ -560,7 +560,7 @@ describe('List Command', () => {
 
     it('should efficiently filter large datasets', async () => {
       const perfWorkspace = await TestWorkspace.create();
-      
+
       try {
         // Create many tasks with specific patterns
         const taskCount = 50; // Reduced for file system operations
@@ -568,13 +568,13 @@ describe('List Command', () => {
           await perfWorkspace.addTask({
             title: `Backend Task ${i}`,
             status: 'pending',
-            tags: ['backend', 'api'],
+            tags: ['backend', 'api']
           });
 
           await perfWorkspace.addTask({
             title: `Frontend Task ${i}`,
             status: 'done',
-            tags: ['frontend', 'ui'],
+            tags: ['frontend', 'ui']
           });
         }
 

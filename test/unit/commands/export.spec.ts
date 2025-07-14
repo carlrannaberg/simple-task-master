@@ -23,7 +23,7 @@ describe('Export Command', () => {
       content: 'Build React components for the dashboard',
       status: 'pending',
       tags: ['frontend', 'react', 'dashboard'],
-      dependencies: [],
+      dependencies: []
     });
 
     await workspace.addTask({
@@ -31,7 +31,7 @@ describe('Export Command', () => {
       content: 'Implement REST endpoints for user management',
       status: 'in-progress',
       tags: ['backend', 'api', 'users'],
-      dependencies: [],
+      dependencies: []
     });
 
     await workspace.addTask({
@@ -39,7 +39,7 @@ describe('Export Command', () => {
       content: 'Design and implement database tables',
       status: 'done',
       tags: ['database', 'schema'],
-      dependencies: [1, 2],
+      dependencies: [1, 2]
     });
 
     await workspace.addTask({
@@ -47,7 +47,7 @@ describe('Export Command', () => {
       content: 'Write comprehensive unit and integration tests',
       status: 'pending',
       tags: ['testing', 'quality'],
-      dependencies: [1, 2, 3],
+      dependencies: [1, 2, 3]
     });
 
     await workspace.addTask({
@@ -55,7 +55,7 @@ describe('Export Command', () => {
       content: 'Create API documentation and user guides',
       status: 'in-progress',
       tags: ['docs', 'api'],
-      dependencies: [2],
+      dependencies: [2]
     });
   }
 
@@ -112,7 +112,7 @@ describe('Export Command', () => {
     it('should handle empty task list', async () => {
       // Create a new workspace with no tasks
       const emptyWorkspace = await TestWorkspace.create();
-      
+
       try {
         const result = await runSTMSuccess(['export'], { cwd: emptyWorkspace.directory });
 
@@ -256,7 +256,7 @@ describe('Export Command', () => {
 
       const tasks = JSON.parse(result.stdout);
       expect(tasks.length).toBeGreaterThan(0); // At least one task matches both filters
-      
+
       // All returned tasks should match both filters
       tasks.forEach((task: Record<string, unknown>) => {
         expect(task.status).toBe('in-progress');
@@ -323,7 +323,7 @@ describe('Export Command', () => {
         { format: 'json', ext: '.json' },
         { format: 'csv', ext: '.csv' },
         { format: 'yaml', ext: '.yaml' },
-        { format: 'ndjson', ext: '.ndjson' },
+        { format: 'ndjson', ext: '.ndjson' }
       ];
 
       for (const { format, ext } of formats) {
@@ -396,7 +396,7 @@ describe('Export Command', () => {
         content: 'Content with "quotes", émojis 🚀, and unicode: 测试',
         status: 'pending',
         tags: ['special'],
-        dependencies: [],
+        dependencies: []
       });
 
       const result = await runSTMSuccess(['export', '--format', 'json'], { cwd: workspace.directory });
@@ -417,7 +417,7 @@ describe('Export Command', () => {
         content: 'Line 1\nLine 2\nLine 3',
         status: 'pending',
         tags: [],
-        dependencies: [],
+        dependencies: []
       });
 
       const result = await runSTMSuccess(['export', '--format', 'json'], { cwd: workspace.directory });
@@ -444,7 +444,7 @@ describe('Export Command', () => {
         content: 'Content with\nnewlines and "quotes"',
         status: 'pending',
         tags: ['csv', 'test'],
-        dependencies: [],
+        dependencies: []
       });
 
       const result = await runSTMSuccess(['export', '--format', 'csv'], { cwd: workspace.directory });
@@ -520,7 +520,7 @@ describe('Export Command', () => {
         content: 'Task with no tags or dependencies',
         status: 'pending',
         tags: [],
-        dependencies: [],
+        dependencies: []
       });
 
       const result = await runSTMSuccess(['export', '--format', 'json'], { cwd: workspace.directory });
@@ -550,7 +550,6 @@ describe('Export Command', () => {
       expect(fileExists).toBe(true);
     });
   });
-
 
   describe('command structure', () => {
     it('should have correct command configuration', () => {
@@ -605,7 +604,7 @@ describe('Export Command', () => {
     it('should handle exporting large numbers of tasks efficiently', async () => {
       // Create a separate workspace for performance testing
       const perfWorkspace = await TestWorkspace.create();
-      
+
       try {
         // Create many tasks
         const taskCount = 100; // Reduce for unit tests
@@ -615,7 +614,7 @@ describe('Export Command', () => {
             content: `Content for task ${i}`,
             status: i % 3 === 0 ? 'done' : i % 3 === 1 ? 'in-progress' : 'pending',
             tags: [`tag${i % 5}`],
-            dependencies: [],
+            dependencies: []
           });
         }
 
