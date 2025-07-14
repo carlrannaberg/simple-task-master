@@ -233,7 +233,7 @@ describe(
 
             // The error could be EACCES, EPERM, or wrapped in a different error
             // Just verify we got an error and the file wasn't corrupted
-            expect(writeError!.message).toBeDefined();
+            expect(writeError?.message).toBeDefined();
           }
         } else {
           // On Windows, skip this test

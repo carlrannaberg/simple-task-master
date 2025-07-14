@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { exportCommand } from '@/commands/export';
-import { FileSystemError } from '@lib/errors';
-import { TestWorkspace, runSTM, runSTMSuccess, runSTMFailure } from '@test/helpers';
+// import { FileSystemError } from '@lib/errors'; // Unused for now
+import { TestWorkspace, runSTMSuccess, runSTMFailure } from '@test/helpers';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { spawn } from 'child_process';
+// import { spawn } from 'child_process'; // Unused for now
 import { TestWorkspace } from '@test/helpers/test-workspace';
 import { TaskManager } from '@lib/task-manager';
 import { LockManager } from '@lib/lock-manager';

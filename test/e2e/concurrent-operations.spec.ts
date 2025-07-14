@@ -488,7 +488,7 @@ describe(
         taskIds.forEach(id => {
           idCounts[id] = (idCounts[id] || 0) + 1;
         });
-        const duplicates = Object.entries(idCounts).filter(([id, count]) => count > 1);
+        const duplicates = Object.entries(idCounts).filter(([_id, count]) => count > 1);
         if (duplicates.length > 0) {
           console.warn(`Duplicates found: ${duplicates.map(([id, count]) => `${id}(${count}x)`).join(', ')}`);
         }

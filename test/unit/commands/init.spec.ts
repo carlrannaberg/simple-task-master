@@ -34,7 +34,7 @@ vi.mock('@lib/constants', () => {
   };
 });
 vi.mock('fs/promises', async (importOriginal) => {
-  const actual = await importOriginal() as typeof import('fs/promises');
+  const actual = await importOriginal();
   return {
     ...actual,
     writeFile: vi.fn(),
@@ -56,7 +56,7 @@ import * as fs from 'fs/promises';
 
 describe('Init Command', () => {
   let tempDir: string;
-  let originalCwd: string;
+  let _originalCwd: string;
   let mockLockManager: {
     acquire: Mock;
     release: Mock;

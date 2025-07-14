@@ -5,10 +5,9 @@
  * with properly mocked dependencies.
  */
 
-import type { MockedFunction } from 'vitest';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi, type MockedFunction } from 'vitest';
 import type { Task } from '@lib/types';
-import { ValidationError, FileSystemError, ConfigurationError } from '@lib/errors';
+// import { ValidationError, FileSystemError, ConfigurationError } from '@lib/errors'; // Unused for now
 import { MockTaskStore } from '@test/helpers';
 
 // Mock modules first - with factory functions to ensure fresh instances
@@ -46,7 +45,7 @@ describe('Grep Command', () => {
     list: MockedFunction<() => Promise<Task[]>>;
     get: MockedFunction<(id: number) => Promise<Task>>;
   };
-  let capturedOutput: string = '';
+  let _capturedOutput: string = '';
   let capturedError: string = '';
 
   // Mock process.exit
@@ -55,7 +54,7 @@ describe('Grep Command', () => {
   });
 
   // Mock process.stderr.write
-  const mockStderrWrite = vi.spyOn(process.stderr, 'write').mockImplementation((str) => {
+  const _mockStderrWrite = vi.spyOn(process.stderr, 'write').mockImplementation((str) => {
     capturedError += str;
     return true;
   });
@@ -70,7 +69,7 @@ describe('Grep Command', () => {
     });
 
     // Reset captured output
-    capturedOutput = '';
+    _capturedOutput = '';
     capturedError = '';
 
     // Create mock task store
@@ -87,7 +86,7 @@ describe('Grep Command', () => {
 
     // Setup output mocks
     mockedPrintOutput.mockImplementation((output: string) => {
-      capturedOutput += output;
+      _capturedOutput += output;
     });
 
     mockedPrintError.mockImplementation((error: string) => {
@@ -306,7 +305,7 @@ describe('Grep Command', () => {
       // Clear mocks and test case-insensitive
       vi.clearAllMocks();
       capturedError = '';
-      mockedFormatTasks.mockImplementation((tasks: Task[], format = 'ndjson') => {
+      mockedFormatTasks.mockImplementation((tasks: Task[], _format = 'ndjson') => {
         return tasks.map(task => JSON.stringify(task)).join('\n');
       });
 
