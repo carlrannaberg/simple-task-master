@@ -36,8 +36,16 @@
     "command-line",
     "productivity"
   ],
-  "author": "",
+  "author": "Carl Rannaberg",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/carlrannaberg/simple-task-master.git"
+  },
+  "bugs": {
+    "url": "https://github.com/carlrannaberg/simple-task-master/issues"
+  },
+  "homepage": "https://github.com/carlrannaberg/simple-task-master#readme",
   "dependencies": {
     "commander": "^12.0.0",
     "gray-matter": "^4.0.3",

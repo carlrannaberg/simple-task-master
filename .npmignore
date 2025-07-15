@@ -1,0 +1,57 @@
+# Development files
+test/
+tests/
+*.test.ts
+*.spec.ts
+*.test.js
+*.spec.js
+
+# Source files (we're publishing compiled JS)
+src/
+*.ts
+!*.d.ts
+
+# Configuration files
+.github/
+.claude/
+.simple-task-master/
+test-workspace/
+temp-test/
+specs/
+scripts/
+vitest.*.config.ts
+vitest.*.ts
+tsconfig.json
+tsconfig.*.json
+eslint.config.mjs
+.prettierrc.json
+
+# Build artifacts
+coverage/
+*.log
+*.tgz
+
+# Development dependencies
+node_modules/
+.npm/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation
+AGENT.md
+CHANGELOG.md
+test/README.md
+
+# Keep these files
+!dist/**/*.d.ts
+!dist/**/*.js
+!dist/**/*.js.map
+!dist/**/*.d.ts.map
