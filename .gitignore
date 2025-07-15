@@ -30,6 +30,8 @@ Thumbs.db
 *.tmp
 *.temp
 .cache/
+temp-*/
+test-*/
 
 # Build artifacts
 dist/
