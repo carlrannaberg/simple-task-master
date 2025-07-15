@@ -30,14 +30,14 @@ jobs:
       version: ${{ steps.check.outputs.version }}
     
     steps:
-        - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
+      - name: Checkout repository
+          uses: actions/checkout@v4
+        with:
         fetch-depth: 0
     
       - name: Check if version changed
-      id: check
-      run: |
+        id: check
+        run: |
         # Get current version from package.json
         CURRENT_VERSION=$(node -p "require('./package.json').version")
         echo "Current version: $CURRENT_VERSION"
@@ -59,26 +59,26 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-        - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+          uses: actions/checkout@v4
     
       - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
+        uses: actions/setup-node@v4
+        with:
         node-version: 22.x
         registry-url: 'https://registry.npmjs.org'
     
       - name: Install dependencies
-      run: npm install
+        run: npm install
     
       - name: Run tests
-      run: npm test
+        run: npm test
     
       - name: Build package
-      run: npm run build
+        run: npm run build
     
       - name: Validate build output
-      run: |
+        run: |
         # Check that dist directory exists and contains files
         if [ ! -d "dist" ] || [ -z "$(ls -A dist)" ]; then
           echo "::error::Build output directory 'dist' is empty or missing"
@@ -106,7 +106,7 @@ jobs:
         echo "Build validation passed ✓"
     
       - name: Create release tag
-      run: |
+        run: |
         VERSION=${{ needs.check-version.outputs.version }}
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -114,15 +114,15 @@ jobs:
         git push origin "v$VERSION"
     
       - name: Publish to npm
-      run: npm publish
-      env:
+        run: npm publish
+        env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     
       - name: Create GitHub Release
-      uses: actions/create-release@v1
-      env:
+        uses: actions/create-release@v1
+        env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
+        with:
         tag_name: v${{ needs.check-version.outputs.version }}
         release_name: Release v${{ needs.check-version.outputs.version }}
         body: |
@@ -148,10 +148,10 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-        - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+          uses: actions/checkout@v4
     
       - name: Notify on failure
       if: failure()
-      run: |
+        run: |
         echo "::error::Release failed! Please check the logs and fix any issues."
