@@ -1,6 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { listCommand } from '@/commands/list';
-import { FileSystemError, ValidationError } from '@lib/errors';
 import { TestWorkspace, runSTM, runSTMSuccess, runSTMFailure } from '@test/helpers';
 
 describe('List Command', () => {
@@ -108,7 +107,9 @@ describe('List Command', () => {
 
   describe('status filtering', () => {
     it('should filter by pending status', async () => {
-      const result = await runSTMSuccess(['list', '--status', 'pending'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['list', '--status', 'pending'], {
+        cwd: workspace.directory
+      });
       const lines = result.stdout
         .trim()
         .split('\n')
@@ -122,7 +123,9 @@ describe('List Command', () => {
     });
 
     it('should filter by in-progress status', async () => {
-      const result = await runSTMSuccess(['list', '--status', 'in-progress'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['list', '--status', 'in-progress'], {
+        cwd: workspace.directory
+      });
       const lines = result.stdout
         .trim()
         .split('\n')
@@ -136,7 +139,9 @@ describe('List Command', () => {
     });
 
     it('should filter by done status', async () => {
-      const result = await runSTMSuccess(['list', '--status', 'done'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['list', '--status', 'done'], {
+        cwd: workspace.directory
+      });
       const lines = result.stdout
         .trim()
         .split('\n')
@@ -161,7 +166,9 @@ describe('List Command', () => {
     });
 
     it('should reject invalid status', async () => {
-      const result = await runSTMFailure(['list', '--status', 'invalid'], { cwd: workspace.directory });
+      const result = await runSTMFailure(['list', '--status', 'invalid'], {
+        cwd: workspace.directory
+      });
 
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain('Status must be one of: pending, in-progress, done');
@@ -170,7 +177,9 @@ describe('List Command', () => {
 
   describe('tag filtering', () => {
     it('should filter by single tag', async () => {
-      const result = await runSTMSuccess(['list', '--tags', 'frontend'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['list', '--tags', 'frontend'], {
+        cwd: workspace.directory
+      });
       const lines = result.stdout
         .trim()
         .split('\n')
@@ -183,7 +192,9 @@ describe('List Command', () => {
     });
 
     it('should filter by multiple tags (OR logic)', async () => {
-      const result = await runSTMSuccess(['list', '--tags', 'backend,devops'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['list', '--tags', 'backend,devops'], {
+        cwd: workspace.directory
+      });
       const lines = result.stdout
         .trim()
         .split('\n')
@@ -208,7 +219,9 @@ describe('List Command', () => {
     });
 
     it('should handle whitespace in tag filter', async () => {
-      const result = await runSTMSuccess(['list', '--tags', ' frontend , backend '], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['list', '--tags', ' frontend , backend '], {
+        cwd: workspace.directory
+      });
       const lines = result.stdout
         .trim()
         .split('\n')
@@ -219,7 +232,9 @@ describe('List Command', () => {
     });
 
     it('should return empty for non-existent tag', async () => {
-      const result = await runSTMSuccess(['list', '--tags', 'nonexistent'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['list', '--tags', 'nonexistent'], {
+        cwd: workspace.directory
+      });
 
       expect(result.stdout.trim()).toBe('');
     });
@@ -239,7 +254,9 @@ describe('List Command', () => {
     });
 
     it('should search in task content', async () => {
-      const result = await runSTMSuccess(['list', '--search', 'components'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['list', '--search', 'components'], {
+        cwd: workspace.directory
+      });
       const lines = result.stdout
         .trim()
         .split('\n')
@@ -251,7 +268,9 @@ describe('List Command', () => {
     });
 
     it('should search case-insensitively', async () => {
-      const result = await runSTMSuccess(['list', '--search', 'database'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['list', '--search', 'database'], {
+        cwd: workspace.directory
+      });
       const lines = result.stdout
         .trim()
         .split('\n')
@@ -276,7 +295,9 @@ describe('List Command', () => {
     });
 
     it('should return empty for no matches', async () => {
-      const result = await runSTMSuccess(['list', '--search', 'nomatch'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['list', '--search', 'nomatch'], {
+        cwd: workspace.directory
+      });
 
       expect(result.stdout.trim()).toBe('');
     });
@@ -284,7 +305,9 @@ describe('List Command', () => {
 
   describe('combined filters', () => {
     it('should combine status and tag filters', async () => {
-      const result = await runSTMSuccess(['list', '--status', 'pending', '--tags', 'frontend'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['list', '--status', 'pending', '--tags', 'frontend'], {
+        cwd: workspace.directory
+      });
       const lines = result.stdout
         .trim()
         .split('\n')
@@ -298,7 +321,9 @@ describe('List Command', () => {
     });
 
     it('should combine status and search filters', async () => {
-      const result = await runSTMSuccess(['list', '--status', 'in-progress', '--search', 'API'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['list', '--status', 'in-progress', '--search', 'API'], {
+        cwd: workspace.directory
+      });
       const lines = result.stdout
         .trim()
         .split('\n')
@@ -310,15 +335,10 @@ describe('List Command', () => {
     });
 
     it('should combine all filters', async () => {
-      const result = await runSTMSuccess([
-        'list',
-        '--status',
-        'in-progress',
-        '--tags',
-        'backend',
-        '--search',
-        'REST'
-      ], { cwd: workspace.directory });
+      const result = await runSTMSuccess(
+        ['list', '--status', 'in-progress', '--tags', 'backend', '--search', 'REST'],
+        { cwd: workspace.directory }
+      );
       const lines = result.stdout
         .trim()
         .split('\n')
@@ -330,7 +350,9 @@ describe('List Command', () => {
     });
 
     it('should return empty when filters have no intersection', async () => {
-      const result = await runSTMSuccess(['list', '--status', 'done', '--tags', 'frontend'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['list', '--status', 'done', '--tags', 'frontend'], {
+        cwd: workspace.directory
+      });
 
       expect(result.stdout.trim()).toBe('');
     });
@@ -363,7 +385,9 @@ describe('List Command', () => {
     });
 
     it('should output JSON format', async () => {
-      const result = await runSTMSuccess(['list', '--format', 'json'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['list', '--format', 'json'], {
+        cwd: workspace.directory
+      });
 
       // Should be valid JSON array
       expect(() => JSON.parse(result.stdout)).not.toThrow();
@@ -373,7 +397,9 @@ describe('List Command', () => {
     });
 
     it('should output table format', async () => {
-      const result = await runSTMSuccess(['list', '--format', 'table'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['list', '--format', 'table'], {
+        cwd: workspace.directory
+      });
 
       expect(result.stdout).toContain('ID');
       expect(result.stdout).toContain('Title');
@@ -389,7 +415,9 @@ describe('List Command', () => {
     });
 
     it('should output YAML format', async () => {
-      const result = await runSTMSuccess(['list', '--format', 'yaml'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['list', '--format', 'yaml'], {
+        cwd: workspace.directory
+      });
 
       expect(result.stdout).toContain('- id:');
       expect(result.stdout).toContain('title:');
@@ -410,7 +438,9 @@ describe('List Command', () => {
     });
 
     it('should reject invalid format', async () => {
-      const result = await runSTMFailure(['list', '--format', 'invalid'], { cwd: workspace.directory });
+      const result = await runSTMFailure(['list', '--format', 'invalid'], {
+        cwd: workspace.directory
+      });
 
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain('Invalid format: invalid');
@@ -418,7 +448,9 @@ describe('List Command', () => {
     });
 
     it('should prioritize pretty flag over explicit format', async () => {
-      const result = await runSTMSuccess(['list', '--format', 'json', '--pretty'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['list', '--format', 'json', '--pretty'], {
+        cwd: workspace.directory
+      });
 
       // Should output table format because pretty takes precedence
       expect(result.stdout).toContain('ID');
@@ -492,7 +524,9 @@ describe('List Command', () => {
 
   describe('error handling', () => {
     it('should handle ValidationError', async () => {
-      const result = await runSTMFailure(['list', '--status', 'invalid-status'], { cwd: workspace.directory });
+      const result = await runSTMFailure(['list', '--status', 'invalid-status'], {
+        cwd: workspace.directory
+      });
 
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain('Status must be one of: pending, in-progress, done');
@@ -504,7 +538,10 @@ describe('List Command', () => {
 
       try {
         // Remove the .simple-task-master directory to simulate uninitialized state
-        await require('fs/promises').rm(uninitialized.stmDirectory, { recursive: true, force: true });
+        await require('fs/promises').rm(uninitialized.stmDirectory, {
+          recursive: true,
+          force: true
+        });
 
         const result = await runSTM(['list'], { cwd: uninitialized.directory });
 
@@ -521,7 +558,9 @@ describe('List Command', () => {
     });
 
     it('should handle format validation errors', async () => {
-      const result = await runSTMFailure(['list', '--format', 'invalid-format'], { cwd: workspace.directory });
+      const result = await runSTMFailure(['list', '--format', 'invalid-format'], {
+        cwd: workspace.directory
+      });
 
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain('Invalid format: invalid-format');
@@ -579,7 +618,9 @@ describe('List Command', () => {
         }
 
         const startTime = Date.now();
-        const result = await runSTMSuccess(['list', '--status', 'pending', '--tags', 'backend'], { cwd: perfWorkspace.directory });
+        const result = await runSTMSuccess(['list', '--status', 'pending', '--tags', 'backend'], {
+          cwd: perfWorkspace.directory
+        });
         const duration = Date.now() - startTime;
 
         const lines = result.stdout

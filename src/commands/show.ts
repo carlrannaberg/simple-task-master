@@ -45,8 +45,7 @@ export async function showTask(idStr: string, options: { format?: string }): Pro
       error instanceof ValidationError ||
       error instanceof FileSystemError ||
       error instanceof ConfigurationError ||
-      error instanceof NotFoundError ||
-      error instanceof Error
+      error instanceof NotFoundError
     ) {
       printError(error.message);
       process.exit(error instanceof NotFoundError ? 3 : 1);

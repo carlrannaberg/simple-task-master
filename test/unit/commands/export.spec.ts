@@ -83,7 +83,9 @@ describe('Export Command', () => {
     it('should export to file when output option is provided', async () => {
       const outputFile = path.join(workspace.directory, 'tasks.json');
 
-      const result = await runSTMSuccess(['export', '--output', outputFile], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['export', '--output', outputFile], {
+        cwd: workspace.directory
+      });
 
       expect(result.stderr).toContain('Exported 5 tasks to');
       expect(result.stderr).toContain('tasks.json');
@@ -126,7 +128,9 @@ describe('Export Command', () => {
 
   describe('output formats', () => {
     it('should export in JSON format', async () => {
-      const result = await runSTMSuccess(['export', '--format', 'json'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['export', '--format', 'json'], {
+        cwd: workspace.directory
+      });
 
       expect(() => JSON.parse(result.stdout)).not.toThrow();
       const tasks = JSON.parse(result.stdout);
@@ -135,7 +139,9 @@ describe('Export Command', () => {
     });
 
     it('should export in NDJSON format', async () => {
-      const result = await runSTMSuccess(['export', '--format', 'ndjson'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['export', '--format', 'ndjson'], {
+        cwd: workspace.directory
+      });
 
       const lines = result.stdout.trim().split('\n');
       expect(lines).toHaveLength(5);
@@ -146,7 +152,9 @@ describe('Export Command', () => {
     });
 
     it('should export in CSV format', async () => {
-      const result = await runSTMSuccess(['export', '--format', 'csv'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['export', '--format', 'csv'], {
+        cwd: workspace.directory
+      });
 
       const lines = result.stdout.trim().split('\n');
       expect(lines[0]).toContain('id,title,status'); // CSV header
@@ -158,7 +166,9 @@ describe('Export Command', () => {
     });
 
     it('should export in YAML format', async () => {
-      const result = await runSTMSuccess(['export', '--format', 'yaml'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['export', '--format', 'yaml'], {
+        cwd: workspace.directory
+      });
 
       expect(result.stdout).toContain('- id:');
       expect(result.stdout).toContain('title:');
@@ -167,7 +177,9 @@ describe('Export Command', () => {
     });
 
     it('should export in table format', async () => {
-      const result = await runSTMSuccess(['export', '--format', 'table'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['export', '--format', 'table'], {
+        cwd: workspace.directory
+      });
 
       expect(result.stdout).toContain('ID');
       expect(result.stdout).toContain('Title');
@@ -182,7 +194,9 @@ describe('Export Command', () => {
     });
 
     it('should reject invalid format', async () => {
-      const result = await runSTMFailure(['export', '--format', 'invalid'], { cwd: workspace.directory });
+      const result = await runSTMFailure(['export', '--format', 'invalid'], {
+        cwd: workspace.directory
+      });
 
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain('Invalid format: invalid');
@@ -192,7 +206,9 @@ describe('Export Command', () => {
 
   describe('filtering options', () => {
     it('should filter by status', async () => {
-      const result = await runSTMSuccess(['export', '--status', 'pending'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['export', '--status', 'pending'], {
+        cwd: workspace.directory
+      });
 
       const tasks = JSON.parse(result.stdout);
       expect(tasks).toHaveLength(2); // Tasks 1 and 4 are pending
@@ -214,7 +230,9 @@ describe('Export Command', () => {
     });
 
     it('should filter by multiple tags (OR logic)', async () => {
-      const result = await runSTMSuccess(['export', '--tags', 'frontend,database'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['export', '--tags', 'frontend,database'], {
+        cwd: workspace.directory
+      });
 
       const tasks = JSON.parse(result.stdout);
       expect(tasks).toHaveLength(2); // Tasks 1 (frontend) and 3 (database)
@@ -225,7 +243,9 @@ describe('Export Command', () => {
     });
 
     it('should filter by search pattern', async () => {
-      const result = await runSTMSuccess(['export', '--search', 'API'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['export', '--search', 'API'], {
+        cwd: workspace.directory
+      });
 
       const tasks = JSON.parse(result.stdout);
       expect(tasks).toHaveLength(2); // Tasks with "API" in title or content
@@ -252,7 +272,9 @@ describe('Export Command', () => {
     });
 
     it('should combine multiple filters', async () => {
-      const result = await runSTMSuccess(['export', '--status', 'in-progress', '--tags', 'api'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['export', '--status', 'in-progress', '--tags', 'api'], {
+        cwd: workspace.directory
+      });
 
       const tasks = JSON.parse(result.stdout);
       expect(tasks.length).toBeGreaterThan(0); // At least one task matches both filters
@@ -265,7 +287,9 @@ describe('Export Command', () => {
     });
 
     it('should return empty result when filters match nothing', async () => {
-      const result = await runSTMSuccess(['export', '--status', 'done', '--tags', 'frontend'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['export', '--status', 'done', '--tags', 'frontend'], {
+        cwd: workspace.directory
+      });
 
       const tasks = JSON.parse(result.stdout);
       expect(tasks).toHaveLength(0);
@@ -273,7 +297,9 @@ describe('Export Command', () => {
     });
 
     it('should reject invalid status', async () => {
-      const result = await runSTMFailure(['export', '--status', 'invalid'], { cwd: workspace.directory });
+      const result = await runSTMFailure(['export', '--status', 'invalid'], {
+        cwd: workspace.directory
+      });
 
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain('Status must be one of: pending, in-progress, done');
@@ -296,7 +322,9 @@ describe('Export Command', () => {
     it('should auto-append file extension based on format', async () => {
       const outputBase = path.join(workspace.directory, 'tasks');
 
-      const result = await runSTMSuccess(['export', '--format', 'csv', '--output', outputBase], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['export', '--format', 'csv', '--output', outputBase], {
+        cwd: workspace.directory
+      });
 
       expect(result.stderr).toContain('Auto-appending .csv extension');
       expect(result.stderr).toContain('tasks.csv');
@@ -312,7 +340,9 @@ describe('Export Command', () => {
     it('should not auto-append extension if already present', async () => {
       const outputFile = path.join(workspace.directory, 'tasks.json');
 
-      const result = await runSTMSuccess(['export', '--format', 'json', '--output', outputFile], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['export', '--format', 'json', '--output', outputFile], {
+        cwd: workspace.directory
+      });
 
       expect(result.stderr).not.toContain('Auto-appending');
       expect(result.stderr).toContain('tasks.json');
@@ -329,7 +359,9 @@ describe('Export Command', () => {
       for (const { format, ext } of formats) {
         const outputBase = path.join(workspace.directory, `test-${format}`);
 
-        await runSTMSuccess(['export', '--format', format, '--output', outputBase], { cwd: workspace.directory });
+        await runSTMSuccess(['export', '--format', format, '--output', outputBase], {
+          cwd: workspace.directory
+        });
 
         const expectedFile = `${outputBase}${ext}`;
         const fileExists = await fs
@@ -343,7 +375,9 @@ describe('Export Command', () => {
     it('should handle short option -o for output', async () => {
       const outputFile = path.join(workspace.directory, 'short.json');
 
-      const _result = await runSTMSuccess(['export', '-o', outputFile], { cwd: workspace.directory });
+      const _result = await runSTMSuccess(['export', '-o', outputFile], {
+        cwd: workspace.directory
+      });
 
       const fileExists = await fs
         .access(outputFile)
@@ -370,7 +404,9 @@ describe('Export Command', () => {
       // Try to write to a directory that doesn't exist and can't be created
       const invalidPath = '/root/nonexistent/tasks.json';
 
-      const result = await runSTMFailure(['export', '--output', invalidPath], { cwd: workspace.directory });
+      const result = await runSTMFailure(['export', '--output', invalidPath], {
+        cwd: workspace.directory
+      });
 
       expect(result.exitCode).toBe(1);
       // Error message might vary by system, but should indicate a file system error
@@ -399,7 +435,9 @@ describe('Export Command', () => {
         dependencies: []
       });
 
-      const result = await runSTMSuccess(['export', '--format', 'json'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['export', '--format', 'json'], {
+        cwd: workspace.directory
+      });
 
       const tasks = JSON.parse(result.stdout);
       const specialTask = tasks.find(
@@ -420,7 +458,9 @@ describe('Export Command', () => {
         dependencies: []
       });
 
-      const result = await runSTMSuccess(['export', '--format', 'json'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['export', '--format', 'json'], {
+        cwd: workspace.directory
+      });
 
       const tasks = JSON.parse(result.stdout);
       const multilineTask = tasks.find(
@@ -447,7 +487,9 @@ describe('Export Command', () => {
         dependencies: []
       });
 
-      const result = await runSTMSuccess(['export', '--format', 'csv'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['export', '--format', 'csv'], {
+        cwd: workspace.directory
+      });
 
       // CSV should properly format titles and content
       expect(result.stdout).toContain('Task with quotes and commas');
@@ -455,7 +497,9 @@ describe('Export Command', () => {
     });
 
     it('should format YAML with proper structure', async () => {
-      const result = await runSTMSuccess(['export', '--format', 'yaml'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['export', '--format', 'yaml'], {
+        cwd: workspace.directory
+      });
 
       expect(result.stdout).toContain('- id: 1');
       expect(result.stdout).toContain('title: "Frontend Development"');
@@ -465,7 +509,9 @@ describe('Export Command', () => {
     });
 
     it('should format table with aligned columns', async () => {
-      const result = await runSTMSuccess(['export', '--format', 'table'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['export', '--format', 'table'], {
+        cwd: workspace.directory
+      });
 
       expect(result.stdout).toContain('│');
       expect(result.stdout).toContain('Frontend Development');
@@ -478,7 +524,9 @@ describe('Export Command', () => {
     });
 
     it('should format NDJSON with one task per line', async () => {
-      const result = await runSTMSuccess(['export', '--format', 'ndjson'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['export', '--format', 'ndjson'], {
+        cwd: workspace.directory
+      });
 
       const lines = result.stdout.trim().split('\n');
       expect(lines).toHaveLength(5);
@@ -501,7 +549,9 @@ describe('Export Command', () => {
     });
 
     it('should handle whitespace in tag filters', async () => {
-      const result = await runSTMSuccess(['export', '--tags', ' frontend , api '], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['export', '--tags', ' frontend , api '], {
+        cwd: workspace.directory
+      });
 
       const tasks = JSON.parse(result.stdout);
       expect(tasks.length).toBeGreaterThan(0);
@@ -523,7 +573,9 @@ describe('Export Command', () => {
         dependencies: []
       });
 
-      const result = await runSTMSuccess(['export', '--format', 'json'], { cwd: workspace.directory });
+      const result = await runSTMSuccess(['export', '--format', 'json'], {
+        cwd: workspace.directory
+      });
 
       const tasks = JSON.parse(result.stdout);
       const emptyTask = tasks.find((t: Record<string, unknown>) => t.title === 'Empty Arrays Task');
@@ -541,7 +593,9 @@ describe('Export Command', () => {
         'path.json'
       );
 
-      const _result = await runSTMSuccess(['export', '--output', longPath], { cwd: workspace.directory });
+      const _result = await runSTMSuccess(['export', '--output', longPath], {
+        cwd: workspace.directory
+      });
 
       const fileExists = await fs
         .access(longPath)

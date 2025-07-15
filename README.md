@@ -175,7 +175,7 @@ Update an existing task's properties with flexible options for metadata, content
 # Update status
 stm update 1 --status=done
 
-# Update title  
+# Update title
 stm update 1 --title="New task title"
 
 # Update tags
@@ -196,7 +196,7 @@ stm update 42 --details "## Implementation Notes
 
 # Update validation section
 stm update 42 --validation "✓ All tests pass
-✓ Code review completed  
+✓ Code review completed
 ✓ Manual QA approved"
 ```
 
@@ -227,7 +227,7 @@ EOF
 # Basic assignments
 stm update 42 status=done title="Completed feature implementation"
 
-# Content section assignments  
+# Content section assignments
 stm update 42 desc="Updated description" details="New implementation details"
 
 # Array operations - adding tags
@@ -271,7 +271,7 @@ stm update 42 status=in-progress tags+=urgent,hotfix desc="Critical bug fix in p
 
 - `--title, -t <title>`: Update task title
 - `--desc, -d <text>`: Update description section (use `-` for stdin)
-- `--details <text>`: Update details section (use `-` for stdin)  
+- `--details <text>`: Update details section (use `-` for stdin)
 - `--validation <text>`: Update validation section (use `-` for stdin)
 - `--status, -s <status>`: Update status (pending, in-progress, done)
 - `--tags <tags>`: Set task tags (comma-separated)
@@ -292,7 +292,7 @@ stm update 42 status=in-progress tags+=urgent,hotfix desc="Critical bug fix in p
 - `tags`: Task tags (comma-separated for arrays)
 - `dependencies`: Task dependencies (comma-separated IDs)
 - `desc`: Description section content
-- `details`: Details section content  
+- `details`: Details section content
 - `validation`: Validation section content
 
 ### `stm grep <pattern>`
@@ -453,7 +453,7 @@ stm add "Write unit tests" --tags=testing --priority=medium
 # Start working on API implementation with detailed plan
 stm update 2 status=in-progress --details "## Implementation Plan
 - Design REST endpoints
-- Set up authentication middleware  
+- Set up authentication middleware
 - Implement CRUD operations
 - Add input validation"
 

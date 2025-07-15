@@ -12,12 +12,14 @@ Simple Task Master (STM) is a minimalist, file-based task management CLI tool de
 ## Background/Problem Statement
 
 Modern task management tools often require:
+
 - Network connectivity and cloud accounts
 - Complex databases or state management
 - Integration with specific issue tracking systems
 - Separate workflows for different Git branches
 
 Developers need a simple, local-first solution that:
+
 - Works offline with zero network dependencies
 - Survives Git branch switches without data loss
 - Integrates naturally with text-based workflows
@@ -46,6 +48,7 @@ Developers need a simple, local-first solution that:
 ## Technical Dependencies
 
 ### Runtime Dependencies
+
 - **commander** (^12.0.0): CLI argument parsing and command routing
 - **gray-matter** (^4.0.3): YAML front-matter parsing and stringification
 - **js-yaml** (^4.1.0): YAML parsing and serialization
@@ -53,6 +56,7 @@ Developers need a simple, local-first solution that:
 - **slugify** (^1.6.6): Convert task titles to URL-safe filenames
 
 ### Development Dependencies
+
 - **typescript** (^5.0.0): Type safety and modern JavaScript features
 - **ts-node** (^10.9.0): TypeScript execution for development
 - **esbuild** (^0.23.0): Fast bundling for distribution
@@ -62,10 +66,12 @@ Developers need a simple, local-first solution that:
 - **eslint** (^8.0.0): Code linting
 
 ### Node.js Requirements
+
 - Node.js >= 18.0.0 (for native fetch, file system promises)
 - npm >= 9.0.0
 
 ### Distribution Strategy
+
 - **Primary**: `npm install -g simple-task-master`
 - **Alternative**: `npx simple-task-master@latest <command>` (no global install needed)
 - **Package format**: CommonJS with TypeScript definitions
@@ -94,8 +100,8 @@ The `config.json` file contains:
 ```json
 {
   "schema": 1,
-  "lockTimeoutMs": 30000,      // Lock timeout in milliseconds (default: 30s)
-  "maxTaskSizeBytes": 1048576  // Max task file size (default: 1MB)
+  "lockTimeoutMs": 30000, // Lock timeout in milliseconds (default: 30s)
+  "maxTaskSizeBytes": 1048576 // Max task file size (default: 1MB)
 }
 ```
 
@@ -116,31 +122,37 @@ dependencies: [1]
 ---
 
 ## Description
+
 Users get stuck in a /login redirect loop because the session cookie isn't cleared.
 
 ## Details
-* Add `clearBadSession()` in `auth.ts`
-* Integration test in `auth.spec.ts`
+
+- Add `clearBadSession()` in `auth.ts`
+- Integration test in `auth.spec.ts`
 
 ## Validation
+
 1. Curl /login with expired JWT → expect 302 /
 ```
 
 ### Core Components
 
 #### 1. Task Manager (`src/lib/task-manager.ts`)
+
 - Handles all task CRUD operations
 - Manages file I/O with atomic writes
 - Validates task schema and data integrity
 - Implements ID generation (highest + 1)
 
 #### 2. File Lock Manager (`src/lib/lock-manager.ts`)
+
 - PID-based locking to prevent concurrent operations
 - Automatic cleanup on process exit
 - 30-second timeout for stale lock detection
 - Process liveness checking
 
 #### 3. CLI Commands (`src/commands/`)
+
 - `init.ts`: Repository initialization
 - `add.ts`: Task creation
 - `list.ts`: Task querying and filtering
@@ -149,6 +161,7 @@ Users get stuck in a /login redirect loop because the session cookie isn't clear
 - `export.ts`: Data export functionality
 
 #### 4. Schema Validator (`src/lib/schema.ts`)
+
 - Validates YAML front-matter against schema
 - Ensures required fields are present
 - Rejects unknown fields (fail-fast principle)
@@ -166,13 +179,7 @@ Users get stuck in a /login redirect loop because the session cookie isn't clear
   "bin": {
     "stm": "./bin/stm"
   },
-  "files": [
-    "dist/",
-    "bin/",
-    "README.md",
-    "CHANGELOG.md",
-    "LICENSE"
-  ],
+  "files": ["dist/", "bin/", "README.md", "CHANGELOG.md", "LICENSE"],
   "engines": {
     "node": ">=18.0.0"
   },
@@ -224,12 +231,14 @@ stm export --format csv > tasks.csv
 #### Output Formats
 
 **ND-JSON (default)**: Newline-delimited JSON for scripting
+
 ```json
 {"id":1,"title":"Implement OAuth login","status":"pending","tags":["auth","feature"]}
 {"id":2,"title":"Fix memory leak","status":"in-progress","tags":["bug","critical"]}
 ```
 
 **Pretty Table** (with `--pretty` flag):
+
 ```
 ┌──┬─────────────────────────┬──────────────┬──────────────┐
 │ID│ Title                   │ Status       │ Tags         │
@@ -242,6 +251,7 @@ stm export --format csv > tasks.csv
 ### File Operations
 
 #### Atomic Write Strategy
+
 ```typescript
 async function writeTaskAtomic(filepath: string, content: string): Promise<void> {
   await writeFileAtomic(filepath, content, {
@@ -253,6 +263,7 @@ async function writeTaskAtomic(filepath: string, content: string): Promise<void>
 ```
 
 #### Lock File Implementation
+
 ```typescript
 interface LockFile {
   pid: number;
@@ -264,25 +275,25 @@ class LockManager {
   private readonly LOCK_TIMEOUT_MS = 30000; // 30 seconds default
   private readonly LOCK_CHECK_INTERVAL_MS = 100; // Retry interval
   private readonly MAX_LOCK_RETRIES = 50; // 5 seconds total wait
-  
+
   async acquire(): Promise<void> {
     const lockData: LockFile = {
       pid: process.pid,
       command: process.argv.join(' '),
       timestamp: Date.now()
     };
-    
+
     // Check for stale locks
     if (await this.exists()) {
       const existingLock = await this.read();
       const age = Date.now() - existingLock.timestamp;
-      
+
       if (age > this.LOCK_TIMEOUT_MS || !this.isProcessAlive(existingLock.pid)) {
         console.warn(`Removing stale lock (age: ${age}ms, pid: ${existingLock.pid})`);
         await this.forceRelease();
       }
     }
-    
+
     // Atomic write with O_EXCL flag
   }
 
@@ -301,6 +312,7 @@ STM uses a **readers-writer lock pattern** optimized for local filesystem operat
 3. **Initialization** (init): Acquire exclusive lock
 
 This design allows:
+
 - Multiple concurrent read operations without blocking
 - Fast read performance for common operations
 - Data consistency during writes
@@ -309,6 +321,7 @@ This design allows:
 ## User Experience
 
 ### Initial Setup
+
 ```bash
 $ npm install -g simple-task-master
 $ cd my-project
@@ -320,6 +333,7 @@ $ stm init
 ```
 
 ### Daily Workflow
+
 ```bash
 # Morning: Check pending tasks
 $ stm list --status pending --pretty
@@ -340,28 +354,33 @@ $ stm list --tags critical --grep bug
 ## Performance Considerations
 
 ### Scalability
+
 - **Task Discovery**: O(n) directory scan, but local filesystem is fast
 - **ID Generation**: O(n) scan of filenames, cached during operation
-- **Search Operations**: O(n*m) for content search, acceptable for <10k tasks
+- **Search Operations**: O(n\*m) for content search, acceptable for <10k tasks
 
 ### Optimization Strategies
+
 1. **Lazy Loading**: Only read file content when needed
 2. **Streaming Output**: Use ND-JSON for large result sets
 3. **Minimal Dependencies**: Fast startup time
 4. **No Background Processes**: Zero idle resource usage
 
 ### Benchmarks Target
+
 - `stm list` with 1000 tasks: <100ms
 - `stm add` with lock contention: <50ms
 - `stm grep` with 1000 tasks: <200ms
 
 ### Concurrency Performance
+
 - **Read operations**: Unlimited concurrent readers
 - **Write operations**: Sequential with lock acquisition
 - **Lock overhead**: ~5ms per write operation
 - **No caching**: Ensures fresh data, relies on OS file cache
 
 ### Resource Limits
+
 - **Task file size**: 1MB maximum (configurable) to ensure fast operations
 - **Title length**: 200 characters to prevent filesystem issues
 - **Description length**: 64KB to maintain reasonable memory usage
@@ -370,12 +389,14 @@ $ stm list --tags critical --grep bug
 ## Security Considerations
 
 ### File System Security
+
 - **Directory Permissions**: Tasks directory created with 0755
 - **File Permissions**: Task files created with 0644
 - **Path Traversal**: Validate all user input for path components
 - **Symbolic Link**: Refuse to follow symlinks in tasks directory
 
 ### Input Validation
+
 ```typescript
 // Prevent directory traversal
 function validateTaskId(id: string): void {
@@ -400,11 +421,11 @@ const MAX_DESCRIPTION_LENGTH = 65536; // 64KB for description field
 
 async function validateTaskSize(content: string): Promise<void> {
   const sizeInBytes = Buffer.byteLength(content, 'utf8');
-  
+
   if (sizeInBytes > MAX_TASK_SIZE_BYTES) {
     throw new Error(
       `Task file exceeds maximum size of ${MAX_TASK_SIZE_BYTES} bytes. ` +
-      `Current size: ${sizeInBytes} bytes. Consider breaking into subtasks.`
+        `Current size: ${sizeInBytes} bytes. Consider breaking into subtasks.`
     );
   }
 }
@@ -414,7 +435,7 @@ function validateTitle(title: string): void {
   if (title.length > MAX_TITLE_LENGTH) {
     throw new Error(`Task title exceeds ${MAX_TITLE_LENGTH} characters`);
   }
-  
+
   // Additional filesystem-safe checks
   const forbidden = /[<>:"|?*\x00-\x1f]/g;
   if (forbidden.test(title)) {
@@ -424,6 +445,7 @@ function validateTitle(title: string): void {
 ```
 
 ### Lock File Security
+
 - Include PID and command in lock file for debugging
 - Validate PID is still running before considering lock valid
 - Clean up stale locks older than 30 seconds
@@ -431,12 +453,14 @@ function validateTitle(title: string): void {
 ## Documentation
 
 ### User Documentation
+
 1. **README.md**: Installation, quick start, basic usage
 2. **CLI Help**: Built-in `--help` for all commands
 3. **Man Page**: `stm.1` for Unix systems
 4. **Examples Directory**: Common workflows and scripts
 
 ### Developer Documentation
+
 1. **API Documentation**: TypeScript interfaces and JSDoc
 2. **Architecture Guide**: Component relationships and data flow
 3. **Contributing Guide**: Development setup and standards
@@ -459,6 +483,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.1] - 2025-07-14
 
 ### Added
+
 - Initial release with core task management functionality
 - CLI commands: init, add, list, show, update, export
 - YAML front-matter with markdown body format
@@ -468,6 +493,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pretty table output with --pretty flag
 
 ### Security
+
 - Input validation for all user-provided data
 - Path traversal protection
 ```
@@ -475,6 +501,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Implementation Phases
 
 ### Phase 1: Core Functionality (MVP)
+
 - [ ] Project setup and build configuration
 - [ ] Basic task CRUD operations
 - [ ] File locking mechanism
@@ -483,6 +510,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [ ] Basic error handling
 
 ### Phase 2: Enhanced Features
+
 - [ ] Update command with all operators (+=, -=, etc.)
 - [ ] Search and filtering capabilities
 - [ ] Pretty output formatting
@@ -491,6 +519,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [ ] Comprehensive test suite
 
 ### Phase 3: Polish and Optimization
+
 - [ ] Performance optimizations
 - [ ] Extended validation and error messages
 - [ ] Shell completion scripts
@@ -498,6 +527,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [ ] Cross-platform testing
 
 ### Phase 4: Release Infrastructure
+
 - [ ] AI-powered release preparation script
 - [ ] GitHub Actions release workflow
 - [ ] GitHub Actions test workflow
@@ -589,7 +619,7 @@ echo "✅ Release preparation complete!"
 
 #### Release Workflow (`.github/workflows/release.yaml`)
 
-```yaml
+````yaml
 name: Release Package
 
 on:
@@ -621,25 +651,25 @@ jobs:
       version: ${{ steps.check.outputs.version }}
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Check if version changed
-      id: check
-      run: |
-        CURRENT_VERSION=$(node -p "require('./package.json').version")
-        echo "Current version: $CURRENT_VERSION"
+      - name: Check if version changed
+        id: check
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Current version: $CURRENT_VERSION"
 
-        if git tag | grep -q "^v$CURRENT_VERSION$"; then
-          echo "Tag v$CURRENT_VERSION already exists. Skipping release."
-          echo "should-release=false" >> $GITHUB_OUTPUT
-        else
-          echo "Tag v$CURRENT_VERSION does not exist. Proceeding with release."
-          echo "should-release=true" >> $GITHUB_OUTPUT
-          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
-        fi
+          if git tag | grep -q "^v$CURRENT_VERSION$"; then
+            echo "Tag v$CURRENT_VERSION already exists. Skipping release."
+            echo "should-release=false" >> $GITHUB_OUTPUT
+          else
+            echo "Tag v$CURRENT_VERSION does not exist. Proceeding with release."
+            echo "should-release=true" >> $GITHUB_OUTPUT
+            echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          fi
 
   release:
     name: Build and Publish
@@ -648,57 +678,57 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20.x
-        registry-url: 'https://registry.npmjs.org'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          registry-url: 'https://registry.npmjs.org'
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Run tests
-      run: npm test
+      - name: Run tests
+        run: npm test
 
-    - name: Build package
-      run: npm run build
+      - name: Build package
+        run: npm run build
 
-    - name: Create release tag
-      run: |
-        VERSION=${{ needs.check-version.outputs.version }}
-        git config --global user.name "github-actions[bot]"
-        git config --global user.email "github-actions[bot]@users.noreply.github.com"
-        git tag -a "v$VERSION" -m "Release v$VERSION"
-        git push origin "v$VERSION"
+      - name: Create release tag
+        run: |
+          VERSION=${{ needs.check-version.outputs.version }}
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "v$VERSION" -m "Release v$VERSION"
+          git push origin "v$VERSION"
 
-    - name: Publish to npm
-      run: npm publish
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish to npm
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-    - name: Create GitHub Release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: v${{ needs.check-version.outputs.version }}
-        release_name: Release v${{ needs.check-version.outputs.version }}
-        body: |
-          ## simple-task-master v${{ needs.check-version.outputs.version }}
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ needs.check-version.outputs.version }}
+          release_name: Release v${{ needs.check-version.outputs.version }}
+          body: |
+            ## simple-task-master v${{ needs.check-version.outputs.version }}
 
-          ### Installation
-          ```bash
-          npm install -g simple-task-master@${{ needs.check-version.outputs.version }}
-          ```
+            ### Installation
+            ```bash
+            npm install -g simple-task-master@${{ needs.check-version.outputs.version }}
+            ```
 
-          ### What's Changed
-          See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for details.
-        draft: false
-        prerelease: false
-```
+            ### What's Changed
+            See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for details.
+          draft: false
+          prerelease: false
+````
 
 #### Test Workflow (`.github/workflows/test.yaml`)
 
@@ -707,9 +737,9 @@ name: Test
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   test:
@@ -721,44 +751,47 @@ jobs:
         node-version: [18.x, 20.x, 22.x]
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Run linting
-      run: npm run lint
+      - name: Run linting
+        run: npm run lint
 
-    - name: Run type checking
-      run: npm run typecheck
+      - name: Run type checking
+        run: npm run typecheck
 
-    - name: Run tests
-      run: npm test
+      - name: Run tests
+        run: npm test
 
-    - name: Run build
-      run: npm run build
+      - name: Run build
+        run: npm run build
 ```
 
 ## Success Metrics
 
 ### Technical Metrics
+
 - **Test Coverage**: >90% code coverage
 - **Build Time**: <30 seconds for full build
 - **Package Size**: <500KB installed size
 - **Performance**: <50ms startup time
 
 ### User Adoption Metrics
+
 - **Downloads**: Track npm weekly downloads
 - **GitHub Stars**: Community engagement indicator
 - **Issue Response Time**: <48 hours for bug reports
 - **PR Merge Time**: <1 week for community contributions
 
 ### Quality Metrics
+
 - **Zero CVEs**: No known security vulnerabilities
 - **TypeScript Strict**: 100% type safety
 - **Documentation Coverage**: All public APIs documented
@@ -775,16 +808,19 @@ jobs:
 ## References
 
 ### Design Patterns
+
 - [Command Pattern](https://refactoring.guru/design-patterns/command) for CLI structure
 - [Repository Pattern](https://martinfowler.com/eaaCatalog/repository.html) for task storage
 - [Unit of Work Pattern](https://martinfowler.com/eaaCatalog/unitOfWork.html) for atomic operations
 
 ### Similar Tools
+
 - [Taskwarrior](https://taskwarrior.org/): Complex CLI task manager
 - [Todo.txt](http://todotxt.org/): Simple text-based format
 - [nb](https://xwmx.github.io/nb/): CLI note-taking with Git
 
 ### Technical References
+
 - [YAML 1.2 Specification](https://yaml.org/spec/1.2.2/)
 - [CommonMark Specification](https://spec.commonmark.org/)
 - [Newline Delimited JSON](http://ndjson.org/)
@@ -795,6 +831,7 @@ jobs:
 ### Unit Tests
 
 #### Task Manager Tests (`tests/unit/task-manager.spec.ts`)
+
 - Task creation with valid/invalid data
 - ID generation and collision prevention
 - File naming with special characters
@@ -802,12 +839,14 @@ jobs:
 - CRUD operations
 
 #### Lock Manager Tests (`tests/unit/lock-manager.spec.ts`)
+
 - Lock acquisition and release
 - Stale lock detection
 - Concurrent access prevention
 - Process crash recovery
 
 #### CLI Command Tests (`tests/unit/commands/*.spec.ts`)
+
 - Argument parsing
 - Flag validation
 - Output formatting
@@ -816,12 +855,14 @@ jobs:
 ### Integration Tests
 
 #### File System Tests (`tests/integration/filesystem.spec.ts`)
+
 - Atomic write verification
 - Directory creation
 - Permission handling
 - Cross-platform path resolution
 
 #### CLI Integration Tests (`tests/integration/cli.spec.ts`)
+
 - Full command execution
 - Multi-command workflows
 - Output format verification
@@ -830,6 +871,7 @@ jobs:
 ### End-to-End Tests
 
 #### Workflow Tests (`tests/e2e/workflows.spec.ts`)
+
 ```typescript
 test('complete task lifecycle', async () => {
   // Initialize repository
@@ -850,6 +892,7 @@ test('complete task lifecycle', async () => {
 ### Test Infrastructure
 
 #### Directory Structure
+
 ```
 test/
 ├── unit/                 # Unit tests for individual components
@@ -866,6 +909,7 @@ test/
 ```
 
 #### Test Configuration (`vitest.config.ts`)
+
 ```typescript
 import { defineConfig } from 'vitest/config';
 
@@ -902,13 +946,15 @@ export const e2eConfig = {
 ### Test Utilities
 
 #### Custom Matchers (`test/helpers/assertions/custom-matchers.ts`)
+
 ```typescript
 expect.extend({
   toBeValidTask(received) {
-    const pass = received.id &&
-                 received.title &&
-                 received.status &&
-                 ['pending', 'in-progress', 'done'].includes(received.status);
+    const pass =
+      received.id &&
+      received.title &&
+      received.status &&
+      ['pending', 'in-progress', 'done'].includes(received.status);
     return {
       pass,
       message: () => `expected ${received} to be a valid task`
@@ -916,7 +962,7 @@ expect.extend({
   },
 
   toHaveTaskCount(received, expected) {
-    const tasks = received.filter(f => f.endsWith('.md'));
+    const tasks = received.filter((f) => f.endsWith('.md'));
     return {
       pass: tasks.length === expected,
       message: () => `expected ${tasks.length} tasks, got ${expected}`
@@ -926,6 +972,7 @@ expect.extend({
 ```
 
 #### Test Doubles (`test/helpers/mocks/`)
+
 ```typescript
 // In-memory task storage for testing
 export class InMemoryTaskStore implements TaskStore {
@@ -961,6 +1008,7 @@ export class MockFileSystem {
 ```
 
 #### Test Data Builders (`test/helpers/builders/`)
+
 ```typescript
 export class TaskBuilder {
   private task: Partial<Task> = {
@@ -1000,6 +1048,7 @@ export class TaskBuilder {
 ### Unit Tests
 
 #### Task Manager Tests (`test/unit/task-manager.spec.ts`)
+
 ```typescript
 describe('TaskManager', () => {
   let taskManager: TaskManager;
@@ -1020,14 +1069,14 @@ describe('TaskManager', () => {
     });
 
     it('should validate required fields', async () => {
-      await expect(taskManager.create({ title: '' }))
-        .rejects.toThrow('Title is required');
+      await expect(taskManager.create({ title: '' })).rejects.toThrow('Title is required');
     });
   });
 });
 ```
 
 #### Lock Manager Tests (`test/unit/lock-manager.spec.ts`)
+
 ```typescript
 describe('LockManager', () => {
   let lockManager: LockManager;
@@ -1041,8 +1090,7 @@ describe('LockManager', () => {
   it('should prevent concurrent operations', async () => {
     await lockManager.acquire();
 
-    await expect(lockManager.acquire())
-      .rejects.toThrow('Lock is already held');
+    await expect(lockManager.acquire()).rejects.toThrow('Lock is already held');
   });
 
   it('should detect stale locks', async () => {
@@ -1063,6 +1111,7 @@ describe('LockManager', () => {
 ### Integration Tests
 
 #### Task Workspace Tests (`test/integration/workspace.spec.ts`)
+
 ```typescript
 describe('Task Workspace Integration', () => {
   let workspace: TestWorkspace;
@@ -1081,10 +1130,10 @@ describe('Task Workspace Integration', () => {
     );
 
     const tasks = await Promise.all(promises);
-    const ids = tasks.map(t => t.id);
+    const ids = tasks.map((t) => t.id);
 
     expect(new Set(ids).size).toBe(10); // All IDs unique
-    expect(Math.max(...ids)).toBe(10);  // Sequential
+    expect(Math.max(...ids)).toBe(10); // Sequential
   });
 });
 ```
@@ -1092,6 +1141,7 @@ describe('Task Workspace Integration', () => {
 ### End-to-End Tests
 
 #### CLI Workflow Tests (`test/e2e/cli-workflows.spec.ts`)
+
 ```typescript
 describe('STM CLI Workflows', () => {
   let testDir: string;
@@ -1128,6 +1178,7 @@ describe('STM CLI Workflows', () => {
 ### Performance Tests
 
 #### Benchmark Tests (`test/performance/benchmarks.spec.ts`)
+
 ```typescript
 import { bench } from 'vitest';
 
@@ -1140,9 +1191,7 @@ describe('Performance Benchmarks', () => {
   bench('concurrent adds', async () => {
     const workspace = await TestWorkspace.create();
     await Promise.all(
-      Array.from({ length: 100 }, (_, i) =>
-        workspace.addTask({ title: `Task ${i}` })
-      )
+      Array.from({ length: 100 }, (_, i) => workspace.addTask({ title: `Task ${i}` }))
     );
   });
 });
@@ -1151,14 +1200,15 @@ describe('Performance Benchmarks', () => {
 ### CI/CD Test Integration
 
 #### GitHub Actions Test Workflow (`.github/workflows/test.yaml`)
+
 ```yaml
 name: Test
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   test:
@@ -1170,37 +1220,38 @@ jobs:
         node-version: [18.x, 20.x, 22.x]
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Run linting
-      run: npm run lint
+      - name: Run linting
+        run: npm run lint
 
-    - name: Run type checking
-      run: npm run typecheck
+      - name: Run type checking
+        run: npm run typecheck
 
-    - name: Run unit tests
-      run: npm run test:unit
+      - name: Run unit tests
+        run: npm run test:unit
 
-    - name: Run integration tests
-      run: npm run test:integration
+      - name: Run integration tests
+        run: npm run test:integration
 
-    - name: Run e2e tests
-      run: npm run test:e2e
+      - name: Run e2e tests
+        run: npm run test:e2e
 
-    - name: Upload coverage
-      uses: codecov/codecov-action@v3
-      if: matrix.os == 'ubuntu-latest' && matrix.node-version == '20.x'
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        if: matrix.os == 'ubuntu-latest' && matrix.node-version == '20.x'
 ```
 
 ### Test Scripts in package.json
+
 ```json
 {
   "scripts": {
@@ -1217,14 +1268,13 @@ jobs:
 ```
 
 ### Test Workspace Helper
+
 ```typescript
 export class TestWorkspace {
   private tempDir: string;
 
   static async create(): Promise<TestWorkspace> {
-    const tempDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'stm-test-')
-    );
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'stm-test-'));
     process.chdir(tempDir);
     await runSTM(['init']);
     return new TestWorkspace(tempDir);
@@ -1247,6 +1297,7 @@ export class TestWorkspace {
       .trim()
       .split('\n')
       .filter(Boolean)
-      .map(line => JSON.parse(line));
+      .map((line) => JSON.parse(line));
   }
 }
+```

@@ -195,8 +195,7 @@ describe(
                 'large-dataset',
                 'performance-test'
               ],
-              status:
-                taskIndex % 3 === 0 ? 'done' : taskIndex % 3 === 1 ? 'in-progress' : 'pending'
+              status: taskIndex % 3 === 0 ? 'done' : taskIndex % 3 === 1 ? 'in-progress' : 'pending'
             });
           });
           batches.push(Promise.all(batchPromises));

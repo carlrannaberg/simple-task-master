@@ -12,8 +12,10 @@ import { MockTaskStore } from '@test/helpers';
 
 // Mock modules first - with factory functions to ensure fresh instances
 vi.mock('@lib/task-manager', () => {
+  const MockTaskManager = vi.fn();
+  MockTaskManager.create = vi.fn();
   return {
-    TaskManager: vi.fn()
+    TaskManager: MockTaskManager
   };
 });
 
@@ -35,6 +37,7 @@ import { printOutput, printError, formatTasks } from '@lib/output';
 
 // Get mocked functions
 const mockedTaskManager = vi.mocked(TaskManager);
+const mockedTaskManagerCreate = mockedTaskManager.create;
 const mockedPrintOutput = vi.mocked(printOutput);
 const mockedPrintError = vi.mocked(printError);
 const mockedFormatTasks = vi.mocked(formatTasks);
@@ -59,18 +62,29 @@ describe('Grep Command', () => {
     return true;
   });
 
+  // Mock process.stdout.isTTY to enable summary output
+  const _originalIsTTY = process.stdout.isTTY;
+
   beforeEach(async () => {
     // Reset all mocks
     vi.clearAllMocks();
 
     // Clear command options state
-    grepCommand.options.forEach(option => {
+    grepCommand.options.forEach((option) => {
       delete (grepCommand as Record<string, unknown>)[option.long.replace('--', '')];
     });
 
     // Reset captured output
     _capturedOutput = '';
     capturedError = '';
+
+    // Mock process.stdout.isTTY to enable summary output
+    // We need to mock it properly to handle both highlighting and summary logic
+    Object.defineProperty(process.stdout, 'isTTY', {
+      value: true,
+      writable: false,
+      configurable: true
+    });
 
     // Create mock task store
     mockTaskStore = new MockTaskStore();
@@ -81,8 +95,10 @@ describe('Grep Command', () => {
       get: vi.fn()
     };
 
-    // Setup TaskManager mock
+    // Setup TaskManager constructor mock
     mockedTaskManager.mockImplementation(() => mockTaskManagerInstance as TaskManager);
+    // Setup TaskManager.create static method mock
+    mockedTaskManagerCreate.mockResolvedValue(mockTaskManagerInstance as TaskManager);
 
     // Setup output mocks
     mockedPrintOutput.mockImplementation((output: string) => {
@@ -96,7 +112,7 @@ describe('Grep Command', () => {
     // Setup formatTasks mock with comprehensive formatting
     mockedFormatTasks.mockImplementation((tasks: Task[], format = 'ndjson') => {
       if (format === 'ndjson') {
-        return tasks.map(task => JSON.stringify(task)).join('\n');
+        return tasks.map((task) => JSON.stringify(task)).join('\n');
       }
       if (format === 'json') {
         return JSON.stringify(tasks, null, 2);
@@ -104,25 +120,30 @@ describe('Grep Command', () => {
       if (format === 'table') {
         const header = 'ID | Title | Status | Tags';
         const separator = '---|-------|--------|-----';
-        const rows = tasks.map(task =>
-          `${task.id} | ${task.title} | ${task.status} | ${task.tags?.join(', ') || ''}`
+        const rows = tasks.map(
+          (task) => `${task.id} | ${task.title} | ${task.status} | ${task.tags?.join(', ') || ''}`
         );
         return [header, separator, ...rows].join('\n');
       }
       if (format === 'csv') {
         const header = 'id,title,status,tags';
-        const rows = tasks.map(task =>
-          `${task.id},"${task.title}","${task.status}","${task.tags?.join(';') || ''}"`
+        const rows = tasks.map(
+          (task) => `${task.id},"${task.title}","${task.status}","${task.tags?.join(';') || ''}"`
         );
         return [header, ...rows].join('\n');
       }
       if (format === 'yaml') {
-        return tasks.map(task => {
-          const tags = task.tags && task.tags.length > 0 ? `\n  tags:\n${task.tags.map(tag => `    - ${tag}`).join('\n')}` : '';
-          return `- id: ${task.id}\n  title: ${task.title}\n  status: ${task.status}${tags}`;
-        }).join('\n');
+        return tasks
+          .map((task) => {
+            const tags =
+              task.tags && task.tags.length > 0
+                ? `\n  tags:\n${task.tags.map((tag) => `    - ${tag}`).join('\n')}`
+                : '';
+            return `- id: ${task.id}\n  title: ${task.title}\n  status: ${task.status}${tags}`;
+          })
+          .join('\n');
       }
-      return tasks.map(task => JSON.stringify(task)).join('\n');
+      return tasks.map((task) => JSON.stringify(task)).join('\n');
     });
 
     // Setup test tasks
@@ -131,6 +152,11 @@ describe('Grep Command', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+    Object.defineProperty(process.stdout, 'isTTY', {
+      value: _originalIsTTY,
+      writable: false,
+      configurable: true
+    });
   });
 
   async function setupTestTasks(): Promise<void> {
@@ -138,7 +164,8 @@ describe('Grep Command', () => {
     mockTaskStore.addTask({
       id: 1,
       title: 'Fix urgent bug in API',
-      content: 'There is a critical bug in the user authentication API that needs immediate attention.',
+      content:
+        'There is a critical bug in the user authentication API that needs immediate attention.',
       status: 'pending',
       tags: ['bug', 'urgent', 'api'],
       created: new Date().toISOString(),
@@ -150,7 +177,8 @@ describe('Grep Command', () => {
     mockTaskStore.addTask({
       id: 2,
       title: 'Implement new feature',
-      content: 'Add support for user profile management. This feature should include photo upload and basic info editing.',
+      content:
+        'Add support for user profile management. This feature should include photo upload and basic info editing.',
       status: 'in-progress',
       tags: ['feature', 'user'],
       created: new Date().toISOString(),
@@ -162,7 +190,8 @@ describe('Grep Command', () => {
     mockTaskStore.addTask({
       id: 3,
       title: 'Update documentation',
-      content: 'The API documentation needs to be updated to reflect recent changes. Include examples for all endpoints.',
+      content:
+        'The API documentation needs to be updated to reflect recent changes. Include examples for all endpoints.',
       status: 'pending',
       tags: ['docs', 'api'],
       created: new Date().toISOString(),
@@ -249,9 +278,7 @@ describe('Grep Command', () => {
       await grepTasks('Use', {});
 
       expect(mockedFormatTasks).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({ title: 'Setup CI/CD pipeline' })
-        ]),
+        expect.arrayContaining([expect.objectContaining({ title: 'Setup CI/CD pipeline' })]),
         'ndjson'
       );
       expect(capturedError).toContain('Found 1 matching task');
@@ -289,9 +316,7 @@ describe('Grep Command', () => {
       await grepTasks('documentation', { ignoreCase: true });
 
       expect(mockedFormatTasks).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({ title: 'Update documentation' })
-        ]),
+        expect.arrayContaining([expect.objectContaining({ title: 'Update documentation' })]),
         'ndjson'
       );
       expect(capturedError).toContain('Found 1 matching task');
@@ -306,7 +331,7 @@ describe('Grep Command', () => {
       vi.clearAllMocks();
       capturedError = '';
       mockedFormatTasks.mockImplementation((tasks: Task[], _format = 'ndjson') => {
-        return tasks.map(task => JSON.stringify(task)).join('\n');
+        return tasks.map((task) => JSON.stringify(task)).join('\n');
       });
 
       await grepTasks('use', { ignoreCase: true });
@@ -321,9 +346,7 @@ describe('Grep Command', () => {
       await grepTasks('bug', { titleOnly: true });
 
       expect(mockedFormatTasks).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({ title: 'Fix urgent bug in API' })
-        ]),
+        expect.arrayContaining([expect.objectContaining({ title: 'Fix urgent bug in API' })]),
         'ndjson'
       );
       expect(capturedError).toContain('Found 1 matching task');
@@ -333,9 +356,7 @@ describe('Grep Command', () => {
       await grepTasks('critical', { contentOnly: true });
 
       expect(mockedFormatTasks).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({ title: 'Fix urgent bug in API' })
-        ]),
+        expect.arrayContaining([expect.objectContaining({ title: 'Fix urgent bug in API' })]),
         'ndjson'
       );
       expect(capturedError).toContain('Found 1 matching task');
@@ -349,7 +370,9 @@ describe('Grep Command', () => {
     });
 
     it('should not find content matches when using titleOnly', async () => {
-      await expect(grepTasks('critical', { titleOnly: true })).rejects.toThrow('Process exit called');
+      await expect(grepTasks('critical', { titleOnly: true })).rejects.toThrow(
+        'Process exit called'
+      );
 
       expect(mockExit).toHaveBeenCalledWith(1);
       expect(mockedPrintError).toHaveBeenCalledWith('No tasks found matching pattern: critical');
@@ -374,9 +397,7 @@ describe('Grep Command', () => {
       await grepTasks('^Fix', {});
 
       expect(mockedFormatTasks).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({ title: 'Fix urgent bug in API' })
-        ]),
+        expect.arrayContaining([expect.objectContaining({ title: 'Fix urgent bug in API' })]),
         'ndjson'
       );
       expect(capturedError).toContain('Found 1 matching task');
@@ -386,9 +407,7 @@ describe('Grep Command', () => {
       await grepTasks('[Ff]ix', {});
 
       expect(mockedFormatTasks).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({ title: 'Fix urgent bug in API' })
-        ]),
+        expect.arrayContaining([expect.objectContaining({ title: 'Fix urgent bug in API' })]),
         'ndjson'
       );
       expect(capturedError).toContain('Found 1 matching task');
@@ -398,9 +417,7 @@ describe('Grep Command', () => {
       await grepTasks('user.*management', {});
 
       expect(mockedFormatTasks).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({ title: 'Implement new feature' })
-        ]),
+        expect.arrayContaining([expect.objectContaining({ title: 'Implement new feature' })]),
         'ndjson'
       );
       expect(capturedError).toContain('Found 1 matching task');
@@ -464,7 +481,9 @@ describe('Grep Command', () => {
       await expect(grepTasks('API', { format: 'invalid' })).rejects.toThrow('Process exit called');
 
       expect(mockExit).toHaveBeenCalledWith(1);
-      expect(mockedPrintError).toHaveBeenCalledWith('Invalid format: invalid. Valid formats: ndjson, json, table, csv, yaml');
+      expect(mockedPrintError).toHaveBeenCalledWith(
+        'Invalid format: invalid. Valid formats: ndjson, json, table, csv, yaml'
+      );
     });
 
     it('should prioritize explicit format over pretty flag', async () => {
@@ -525,9 +544,7 @@ describe('Grep Command', () => {
       await grepTasks('émojis', {});
 
       expect(mockedFormatTasks).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({ title: 'Unicode task émojis 🚀' })
-        ]),
+        expect.arrayContaining([expect.objectContaining({ title: 'Unicode task émojis 🚀' })]),
         'ndjson'
       );
       expect(capturedError).toContain('Found 1 matching task');
@@ -551,9 +568,7 @@ describe('Grep Command', () => {
       await grepTasks('Empty', {});
 
       expect(mockedFormatTasks).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({ title: 'Empty content task' })
-        ]),
+        expect.arrayContaining([expect.objectContaining({ title: 'Empty content task' })]),
         'ndjson'
       );
       expect(capturedError).toContain('Found 1 matching task');
@@ -578,9 +593,7 @@ describe('Grep Command', () => {
       await grepTasks('Second', {});
 
       expect(mockedFormatTasks).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({ title: 'Multiline task' })
-        ]),
+        expect.arrayContaining([expect.objectContaining({ title: 'Multiline task' })]),
         'ndjson'
       );
       expect(capturedError).toContain('Found 1 matching task');
@@ -592,9 +605,7 @@ describe('Grep Command', () => {
       await grepTasks('FIX', { ignoreCase: true, titleOnly: true });
 
       expect(mockedFormatTasks).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({ title: 'Fix urgent bug in API' })
-        ]),
+        expect.arrayContaining([expect.objectContaining({ title: 'Fix urgent bug in API' })]),
         'ndjson'
       );
       expect(capturedError).toContain('Found 1 matching task');
@@ -604,9 +615,7 @@ describe('Grep Command', () => {
       await grepTasks('CRITICAL', { ignoreCase: true, contentOnly: true });
 
       expect(mockedFormatTasks).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({ title: 'Fix urgent bug in API' })
-        ]),
+        expect.arrayContaining([expect.objectContaining({ title: 'Fix urgent bug in API' })]),
         'ndjson'
       );
       expect(capturedError).toContain('Found 1 matching task');
@@ -616,9 +625,7 @@ describe('Grep Command', () => {
       await grepTasks('documentation', { titleOnly: true, format: 'json' });
 
       expect(mockedFormatTasks).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({ title: 'Update documentation' })
-        ]),
+        expect.arrayContaining([expect.objectContaining({ title: 'Update documentation' })]),
         'json'
       );
       expect(capturedError).toContain('Found 1 matching task');
@@ -629,7 +636,9 @@ describe('Grep Command', () => {
     it('should handle task manager errors', async () => {
       mockTaskManagerInstance.list.mockRejectedValue(new Error('Database error'));
 
-      await expect(grepTasks('test', {})).rejects.toThrow('Database error');
+      await expect(grepTasks('test', {})).rejects.toThrow('Process exit called');
+      expect(mockExit).toHaveBeenCalledWith(1);
+      expect(mockedPrintError).toHaveBeenCalledWith('Database error');
     });
 
     it('should handle regex errors gracefully', async () => {

@@ -9,7 +9,7 @@ describe('TaskManager', () => {
 
   beforeEach(async () => {
     workspace = await TestWorkspace.create();
-    taskManager = new TaskManager({
+    taskManager = await TaskManager.create({
       tasksDir: workspace.tasksDirectory
     });
   });
@@ -236,7 +236,7 @@ describe('TaskManager', () => {
       const files = await workspace.listFiles('.simple-task-master/tasks');
       expect(files).toHaveTaskCount(1);
 
-      const taskFiles = files.filter(f => f.endsWith('.md'));
+      const taskFiles = files.filter((f) => f.endsWith('.md'));
       expect(taskFiles[0]).toMatch(/1-completely-new-title\.md/);
     });
 
@@ -365,7 +365,7 @@ describe('TaskManager', () => {
     });
 
     it('should handle missing task directory', async () => {
-      const customTaskManager = new TaskManager({
+      const customTaskManager = await TaskManager.create({
         tasksDir: '/non/existent/directory/tasks'
       });
 
@@ -673,7 +673,7 @@ Future task content`
 describe('TaskManager - Isolated Tests', () => {
   it('should work in isolated temp directory', async () => {
     await testIsolation.inTempDir(async (tempDir) => {
-      const taskManager = new TaskManager({
+      const taskManager = await TaskManager.create({
         tasksDir: `${tempDir}/.simple-task-master/tasks`
       });
 
@@ -690,7 +690,7 @@ describe('TaskManager - Isolated Tests', () => {
   it('should work with custom environment', async () => {
     await testIsolation.withEnv({ NODE_ENV: 'production' }, async () => {
       const workspace = await TestWorkspace.create();
-      const taskManager = new TaskManager({
+      const taskManager = await TaskManager.create({
         tasksDir: workspace.tasksDirectory
       });
 

@@ -39,7 +39,10 @@ describe('Update Command Section Integration Tests', () => {
     try {
       execSync(`${CLI_PATH} update ${taskId}`, { encoding: 'utf8' });
     } catch (error: unknown) {
-      exitCode = error && typeof error === 'object' && 'status' in error ? (error as { status: number }).status : 1;
+      exitCode =
+        error && typeof error === 'object' && 'status' in error
+          ? (error as { status: number }).status
+          : 1;
     }
 
     expect(exitCode).toBe(2);
@@ -47,10 +50,14 @@ describe('Update Command Section Integration Tests', () => {
 
   it('should update description section', () => {
     // Create a task
-    const taskId = execSync(`${CLI_PATH} add "Test task" -d "Initial description"`, { encoding: 'utf8' }).trim();
+    const taskId = execSync(`${CLI_PATH} add "Test task" -d "Initial description"`, {
+      encoding: 'utf8'
+    }).trim();
 
     // Update description
-    execSync(`${CLI_PATH} update ${taskId} --desc "Updated description"`, { encoding: 'utf8' });
+    execSync(`${CLI_PATH} update ${taskId} --description "Updated description"`, {
+      encoding: 'utf8'
+    });
 
     // Check the result
     const content = execSync(`${CLI_PATH} show ${taskId}`, { encoding: 'utf8' });
@@ -60,10 +67,15 @@ describe('Update Command Section Integration Tests', () => {
 
   it('should add details and validation sections', () => {
     // Create a task
-    const taskId = execSync(`${CLI_PATH} add "Test task" -d "Description"`, { encoding: 'utf8' }).trim();
+    const taskId = execSync(`${CLI_PATH} add "Test task" -d "Description"`, {
+      encoding: 'utf8'
+    }).trim();
 
     // Add details and validation
-    execSync(`${CLI_PATH} update ${taskId} --details "Implementation notes" --validation "Test checklist"`, { encoding: 'utf8' });
+    execSync(
+      `${CLI_PATH} update ${taskId} --details "Implementation notes" --validation "Test checklist"`,
+      { encoding: 'utf8' }
+    );
 
     // Check the result
     const content = execSync(`${CLI_PATH} show ${taskId}`, { encoding: 'utf8' });
@@ -76,11 +88,18 @@ describe('Update Command Section Integration Tests', () => {
 
   it('should update individual sections without affecting others', () => {
     // Create a task with sections
-    const taskId = execSync(`${CLI_PATH} add "Test task" -d "Description"`, { encoding: 'utf8' }).trim();
-    execSync(`${CLI_PATH} update ${taskId} --details "Original details" --validation "Original validation"`, { encoding: 'utf8' });
+    const taskId = execSync(`${CLI_PATH} add "Test task" -d "Description"`, {
+      encoding: 'utf8'
+    }).trim();
+    execSync(
+      `${CLI_PATH} update ${taskId} --details "Original details" --validation "Original validation"`,
+      { encoding: 'utf8' }
+    );
 
     // Update only validation
-    execSync(`${CLI_PATH} update ${taskId} --validation "Updated validation"`, { encoding: 'utf8' });
+    execSync(`${CLI_PATH} update ${taskId} --validation "Updated validation"`, {
+      encoding: 'utf8'
+    });
 
     // Check the result
     const content = execSync(`${CLI_PATH} show ${taskId}`, { encoding: 'utf8' });
@@ -95,7 +114,10 @@ describe('Update Command Section Integration Tests', () => {
     const taskId = execSync(`${CLI_PATH} add "Test task"`, { encoding: 'utf8' }).trim();
 
     // Update sections via assignments
-    execSync(`${CLI_PATH} update ${taskId} desc="Assignment description" details="Assignment details" validation="Assignment validation"`, { encoding: 'utf8' });
+    execSync(
+      `${CLI_PATH} update ${taskId} desc="Assignment description" details="Assignment details" validation="Assignment validation"`,
+      { encoding: 'utf8' }
+    );
 
     // Check the result
     const content = execSync(`${CLI_PATH} show ${taskId}`, { encoding: 'utf8' });

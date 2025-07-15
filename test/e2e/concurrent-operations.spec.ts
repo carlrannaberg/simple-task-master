@@ -460,7 +460,9 @@ describe(
         const uniqueIds = new Set(taskIds);
 
         // Show debug info before assertion
-        console.warn(`Debug: uniqueIds.size = ${uniqueIds.size}, taskIds.length = ${taskIds.length}`);
+        console.warn(
+          `Debug: uniqueIds.size = ${uniqueIds.size}, taskIds.length = ${taskIds.length}`
+        );
 
         expect(uniqueIds.size).toBe(taskIds.length);
 
@@ -485,12 +487,14 @@ describe(
 
         // Show duplicates
         const idCounts = {};
-        taskIds.forEach(id => {
+        taskIds.forEach((id) => {
           idCounts[id] = (idCounts[id] || 0) + 1;
         });
         const duplicates = Object.entries(idCounts).filter(([_id, count]) => count > 1);
         if (duplicates.length > 0) {
-          console.warn(`Duplicates found: ${duplicates.map(([id, count]) => `${id}(${count}x)`).join(', ')}`);
+          console.warn(
+            `Duplicates found: ${duplicates.map(([id, count]) => `${id}(${count}x)`).join(', ')}`
+          );
         }
 
         // Should have at least 10% success rate (some lock contention is expected)

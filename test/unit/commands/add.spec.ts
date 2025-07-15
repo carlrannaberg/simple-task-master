@@ -163,7 +163,7 @@ describe('Add Command', () => {
       expect(tasks).toHaveLength(1);
       expect(tasks[0]).toMatchObject({
         title,
-        content: description + '\n', // Content includes newline from markdown storage
+        content: description, // When only description is provided, no trailing newline
         tags: ['feature', 'backend', 'api'],
         status: 'done'
       });
@@ -351,6 +351,139 @@ describe('Add Command', () => {
     });
   });
 
+  describe('body sections', () => {
+    it('should create a task with details section', async () => {
+      const title = 'Task with Details';
+      const details = 'Implementation details go here';
+
+      const result = await runSTMSuccess(['add', title, '--details', details], {
+        cwd: workspace.directory
+      });
+
+      // Should output task ID
+      const taskId = parseInt(result.stdout.trim(), 10);
+      expect(taskId).toBe(1);
+
+      // Verify task was created by showing task
+      const showResult = await runSTMSuccess(['show', '1'], { cwd: workspace.directory });
+      expect(showResult.stdout).toContain('## Details');
+      expect(showResult.stdout).toContain(details);
+    });
+
+    it('should create a task with validation section', async () => {
+      const title = 'Task with Validation';
+      const validation = '- [ ] Unit tests\n- [ ] Integration tests';
+
+      const result = await runSTMSuccess(['add', title, '--validation', validation], {
+        cwd: workspace.directory
+      });
+
+      // Should output task ID
+      const taskId = parseInt(result.stdout.trim(), 10);
+      expect(taskId).toBe(1);
+
+      // Verify task was created by showing task
+      const showResult = await runSTMSuccess(['show', '1'], { cwd: workspace.directory });
+      expect(showResult.stdout).toContain('## Validation');
+      expect(showResult.stdout).toContain('- [ ] Unit tests');
+      expect(showResult.stdout).toContain('- [ ] Integration tests');
+    });
+
+    it('should create a task with all sections', async () => {
+      const title = 'Complete Task';
+      const description = 'Main task description';
+      const details = 'Technical implementation details';
+      const validation = 'Test checklist';
+
+      const result = await runSTMSuccess(
+        [
+          'add',
+          title,
+          '--description',
+          description,
+          '--details',
+          details,
+          '--validation',
+          validation
+        ],
+        { cwd: workspace.directory }
+      );
+
+      // Should output task ID
+      const taskId = parseInt(result.stdout.trim(), 10);
+      expect(taskId).toBe(1);
+
+      // Verify task was created by showing task
+      const showResult = await runSTMSuccess(['show', '1'], { cwd: workspace.directory });
+      expect(showResult.stdout).toContain(description);
+      expect(showResult.stdout).toContain('## Details');
+      expect(showResult.stdout).toContain(details);
+      expect(showResult.stdout).toContain('## Validation');
+      expect(showResult.stdout).toContain(validation);
+    });
+
+    it('should support stdin for description', async () => {
+      const title = 'Task with stdin description';
+      const description = 'Description from stdin';
+
+      const result = await runSTMSuccess(['add', title, '--description', '-'], {
+        cwd: workspace.directory,
+        input: description
+      });
+
+      // Should output task ID
+      const taskId = parseInt(result.stdout.trim(), 10);
+      expect(taskId).toBe(1);
+
+      // Verify task was created
+      const listResult = await runSTMSuccess(['list'], { cwd: workspace.directory });
+      const tasks = listResult.stdout
+        .split('\n')
+        .filter((line) => line.trim())
+        .map((line) => JSON.parse(line));
+
+      expect(tasks[0].content).toContain(description);
+    });
+
+    it('should support stdin for details', async () => {
+      const title = 'Task with stdin details';
+      const details = 'Details from stdin';
+
+      const result = await runSTMSuccess(['add', title, '--details', '-'], {
+        cwd: workspace.directory,
+        input: details
+      });
+
+      // Should output task ID
+      const taskId = parseInt(result.stdout.trim(), 10);
+      expect(taskId).toBe(1);
+
+      // Verify task was created by showing task
+      const showResult = await runSTMSuccess(['show', '1'], { cwd: workspace.directory });
+      expect(showResult.stdout).toContain('## Details');
+      expect(showResult.stdout).toContain(details);
+    });
+
+    it('should support stdin for validation', async () => {
+      const title = 'Task with stdin validation';
+      const validation = 'Validation from stdin';
+
+      const result = await runSTMSuccess(['add', title, '--validation', '-'], {
+        cwd: workspace.directory,
+        input: validation
+      });
+
+      // Should output task ID
+      const taskId = parseInt(result.stdout.trim(), 10);
+      expect(taskId).toBe(1);
+
+      // Verify task was created by showing task
+      const showResult = await runSTMSuccess(['show', '1'], { cwd: workspace.directory });
+      expect(showResult.stdout).toContain('## Validation');
+      expect(showResult.stdout).toContain(validation);
+    });
+  });
+
   describe('special characters and edge cases', () => {
     it('should handle titles with special characters', async () => {
       const specialTitles = [
@@ -510,6 +643,8 @@ describe('Add Command', () => {
       const optionNames = options.map((opt) => opt.long);
 
       expect(optionNames).toContain('--description');
+      expect(optionNames).toContain('--details');
+      expect(optionNames).toContain('--validation');
       expect(optionNames).toContain('--tags');
       expect(optionNames).toContain('--deps');
       expect(optionNames).toContain('--status');

@@ -10,6 +10,6 @@ export default defineConfig({
     testTimeout: 10000, // 10 seconds for integration tests
     hookTimeout: 15000,
     pool: 'forks', // Use forks instead of threads for integration tests
-    isolate: false,
-  },
+    isolate: false
+  }
 });

@@ -21,15 +21,15 @@ export default defineConfig({
         'src/**/*.test.ts',
         'src/**/*.spec.ts',
         'src/types/**/*',
-        'src/types/write-file-atomic.d.ts',
+        'src/types/write-file-atomic.d.ts'
       ],
       thresholds: {
         lines: 85,
         functions: 80,
         branches: 75,
-        statements: 85,
-      },
-    },
+        statements: 85
+      }
+    }
   },
   resolve: {
     alias: {
@@ -37,7 +37,7 @@ export default defineConfig({
       '@commands': resolve(__dirname, './src/commands'),
       '@lib': resolve(__dirname, './src/lib'),
       '@types': resolve(__dirname, './src/types'),
-      '@test': resolve(__dirname, './test'),
-    },
-  },
+      '@test': resolve(__dirname, './test')
+    }
+  }
 });

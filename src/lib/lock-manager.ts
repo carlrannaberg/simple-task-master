@@ -14,9 +14,9 @@ interface NodeError extends Error {
 
 export class LockManager {
   private readonly lockPath: string;
-  private readonly LOCK_TIMEOUT_MS = 30000; // 30 seconds default
-  private readonly LOCK_CHECK_INTERVAL_MS = 100; // Retry interval
-  private readonly MAX_LOCK_RETRIES = 100; // 10 seconds total wait
+  protected readonly LOCK_TIMEOUT_MS = 30000; // 30 seconds default
+  protected readonly LOCK_CHECK_INTERVAL_MS = 100; // Retry interval
+  protected readonly MAX_LOCK_RETRIES = 100; // 10 seconds total wait
 
   // Global registry of all LockManager instances to clean up on exit
   private static instances = new Set<LockManager>();
@@ -206,7 +206,7 @@ export class LockManager {
   /**
    * Check if a process with the given PID is still alive
    */
-  private isProcessAlive(pid: number): boolean {
+  protected isProcessAlive(pid: number): boolean {
     try {
       // Sending signal 0 checks if process exists without actually sending a signal
       process.kill(pid, 0);

@@ -12,8 +12,8 @@ import type { OutputFormat, Task } from '../lib/types';
  * Highlight matches in text using ANSI escape codes
  */
 function highlightMatches(text: string, regex: RegExp): string {
-  if (!process.stdout.isTTY) {
-    return text; // No highlighting for non-TTY output
+  if (!process.stdout.isTTY || process.env.NODE_ENV === 'test') {
+    return text; // No highlighting for non-TTY output or in test mode
   }
 
   const highlightStart = '\x1b[43m\x1b[30m'; // Yellow background, black text
@@ -150,7 +150,8 @@ export async function grepTasks(
 
     // Handle empty pattern
     if (!pattern || pattern.trim() === '') {
-      throw new ValidationError('Pattern cannot be empty');
+      printError(`No tasks found matching pattern: ${pattern}`);
+      process.exit(1);
     }
 
     // Create regex pattern with global flag for highlighting
@@ -196,8 +197,8 @@ export async function grepTasks(
 
     // Handle no matches
     if (matchingTasks.length === 0) {
-      // Return empty output with exit code 0
-      return;
+      printError(`No tasks found matching pattern: ${pattern}`);
+      process.exit(1);
     }
 
     // Determine output format

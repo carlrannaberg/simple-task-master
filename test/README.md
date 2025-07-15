@@ -158,7 +158,7 @@ describe('TaskManager', () => {
   beforeEach(async () => {
     workspace = await TestWorkspace.create();
     taskManager = new TaskManager({
-      tasksDir: workspace.tasksDirectory,
+      tasksDir: workspace.tasksDirectory
     });
   });
 

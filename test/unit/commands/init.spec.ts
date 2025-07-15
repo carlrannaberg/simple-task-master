@@ -56,7 +56,6 @@ import * as fs from 'fs/promises';
 
 describe('Init Command', () => {
   let tempDir: string;
-  let _originalCwd: string;
   let mockLockManager: {
     acquire: Mock;
     release: Mock;
@@ -74,7 +73,6 @@ describe('Init Command', () => {
 
     // Create temporary directory using actual fs (not mocked)
     tempDir = await mkdtemp(path.join(tmpdir(), 'stm-test-'));
-    originalCwd = process.cwd();
 
     // Mock process.cwd to return our temp directory
     vi.spyOn(process, 'cwd').mockReturnValue(tempDir);
@@ -97,7 +95,7 @@ describe('Init Command', () => {
       release: vi.fn().mockResolvedValue(undefined)
     };
 
-    vi.mocked(LockManager).mockImplementation((projectRoot?: string) => {
+    vi.mocked(LockManager).mockImplementation((_projectRoot?: string) => {
       // Ensure the lock manager uses the mocked project root
       return mockLockManager as unknown as LockManager;
     });
@@ -126,25 +124,36 @@ describe('Init Command', () => {
     });
 
     // Mock fs functions
-    vi.mocked(fs.writeFile).mockImplementation(async (filePath: string | fs.FileHandle, data: string | Buffer, encoding?: BufferEncoding | fs.WriteFileOptions) => {
-      if (typeof filePath === 'string') {
-        fileSystemState.set(filePath, typeof data === 'string' ? data : data.toString());
-      }
-      return Promise.resolve();
-    });
-
-    vi.mocked(fs.readFile).mockImplementation(async (filePath: string | fs.FileHandle, encoding?: BufferEncoding | { encoding?: BufferEncoding | null; flag?: string }) => {
-      if (typeof filePath === 'string') {
-        const data = fileSystemState.get(filePath);
-        if (!data) {
-          throw new Error(`ENOENT: no such file or directory, open '${filePath}'`);
+    vi.mocked(fs.writeFile).mockImplementation(
+      async (
+        filePath: string | fs.FileHandle,
+        data: string | Buffer,
+        _encoding?: BufferEncoding | fs.WriteFileOptions
+      ) => {
+        if (typeof filePath === 'string') {
+          fileSystemState.set(filePath, typeof data === 'string' ? data : data.toString());
         }
-        // Handle both string encoding and options object
-        const isStringEncoding = typeof encoding === 'string';
-        return (isStringEncoding || (encoding && encoding.encoding)) ? data.toString() : data;
+        return Promise.resolve();
       }
-      throw new Error('Invalid file handle');
-    });
+    );
+
+    vi.mocked(fs.readFile).mockImplementation(
+      async (
+        filePath: string | fs.FileHandle,
+        encoding?: BufferEncoding | { encoding?: BufferEncoding | null; flag?: string }
+      ) => {
+        if (typeof filePath === 'string') {
+          const data = fileSystemState.get(filePath);
+          if (!data) {
+            throw new Error(`ENOENT: no such file or directory, open '${filePath}'`);
+          }
+          // Handle both string encoding and options object
+          const isStringEncoding = typeof encoding === 'string';
+          return isStringEncoding || (encoding && encoding.encoding) ? data.toString() : data;
+        }
+        throw new Error('Invalid file handle');
+      }
+    );
 
     vi.mocked(fs.access).mockImplementation(async (filePath: string | fs.FileHandle) => {
       if (typeof filePath === 'string') {
@@ -154,18 +163,20 @@ describe('Init Command', () => {
       }
     });
 
-    vi.mocked(fs.mkdir).mockImplementation(async (dirPath: string, options?: fs.MakeDirectoryOptions) => {
-      directoryState.add(dirPath);
-      // Handle recursive parent directories
-      if (options?.recursive) {
-        let parent = path.dirname(dirPath);
-        while (parent !== '.' && parent !== '/') {
-          directoryState.add(parent);
-          parent = path.dirname(parent);
+    vi.mocked(fs.mkdir).mockImplementation(
+      async (dirPath: string, options?: fs.MakeDirectoryOptions) => {
+        directoryState.add(dirPath);
+        // Handle recursive parent directories
+        if (options?.recursive) {
+          let parent = path.dirname(dirPath);
+          while (parent !== '.' && parent !== '/') {
+            directoryState.add(parent);
+            parent = path.dirname(parent);
+          }
         }
+        return undefined as string | undefined;
       }
-      return undefined as string | undefined;
-    });
+    );
 
     vi.mocked(fs.stat).mockImplementation(async (filePath: string) => {
       if (directoryState.has(filePath)) {
@@ -200,7 +211,7 @@ describe('Init Command', () => {
     // Clean up temp directory using actual fs (not mocked)
     try {
       await rm(tempDir, { recursive: true, force: true });
-    } catch (error) {
+    } catch {
       // Ignore cleanup errors
     }
 
@@ -218,7 +229,9 @@ describe('Init Command', () => {
       expect(capturedOutput).toContain('Initialized STM repository');
       expect(capturedOutput).toContain('Created .simple-task-master/');
       expect(capturedOutput).toContain('Created .simple-task-master/tasks/');
-      expect(capturedOutput.some(msg => msg.includes('Created') && msg.includes('config.json'))).toBe(true);
+      expect(
+        capturedOutput.some((msg) => msg.includes('Created') && msg.includes('config.json'))
+      ).toBe(true);
     });
 
     it('should create directory structure', async () => {
@@ -357,18 +370,22 @@ describe('Init Command', () => {
     it('should handle .gitignore update failure gracefully', async () => {
       // Mock writeFile to fail for .gitignore
       const originalWriteFile = vi.mocked(fs.writeFile).getMockImplementation();
-      vi.mocked(fs.writeFile).mockImplementation(async (filePath: string | fs.FileHandle, data: string | Buffer) => {
-        if (typeof filePath === 'string' && filePath.endsWith('.gitignore')) {
-          throw new Error('Permission denied');
+      vi.mocked(fs.writeFile).mockImplementation(
+        async (filePath: string | fs.FileHandle, data: string | Buffer) => {
+          if (typeof filePath === 'string' && filePath.endsWith('.gitignore')) {
+            throw new Error('Permission denied');
+          }
+          return originalWriteFile?.(filePath, data);
         }
-        return originalWriteFile!(filePath, data);
-      });
+      );
 
       await program.parseAsync(['node', 'stm', 'init']);
 
       // Should still complete successfully but warn about gitignore
       expect(capturedOutput).toContain('Initialized STM repository');
-      expect(capturedWarnings.some(msg => msg.includes('Could not update .gitignore'))).toBe(true);
+      expect(capturedWarnings.some((msg) => msg.includes('Could not update .gitignore'))).toBe(
+        true
+      );
     });
   });
 
@@ -385,16 +402,18 @@ describe('Init Command', () => {
     it('should handle config file write failure', async () => {
       // Mock writeFile to fail for config.json
       const originalWriteFile = vi.mocked(fs.writeFile).getMockImplementation();
-      vi.mocked(fs.writeFile).mockImplementation(async (filePath: string | fs.FileHandle, data: string | Buffer) => {
-        if (typeof filePath === 'string' && filePath.endsWith('config.json')) {
-          throw new Error('EISDIR: illegal operation on a directory');
+      vi.mocked(fs.writeFile).mockImplementation(
+        async (filePath: string | fs.FileHandle, data: string | Buffer) => {
+          if (typeof filePath === 'string' && filePath.endsWith('config.json')) {
+            throw new Error('EISDIR: illegal operation on a directory');
+          }
+          return originalWriteFile?.(filePath, data);
         }
-        return originalWriteFile!(filePath, data);
-      });
+      );
 
       await expect(program.parseAsync(['node', 'stm', 'init'])).rejects.toThrow('process.exit');
 
-      expect(capturedErrors.some(err => err.includes('EISDIR'))).toBe(true);
+      expect(capturedErrors.some((err) => err.includes('EISDIR'))).toBe(true);
     });
 
     it('should handle lock acquisition failure', async () => {
@@ -578,7 +597,9 @@ describe('Init Command', () => {
       expect(capturedOutput).toContain('Initialized STM repository');
       expect(capturedOutput).toContain('Created .simple-task-master/');
       expect(capturedOutput).toContain('Created .simple-task-master/tasks/');
-      expect(capturedOutput.some(msg => msg.includes('Created') && msg.includes('config.json'))).toBe(true);
+      expect(
+        capturedOutput.some((msg) => msg.includes('Created') && msg.includes('config.json'))
+      ).toBe(true);
     });
 
     it('should provide relative paths in messages', async () => {

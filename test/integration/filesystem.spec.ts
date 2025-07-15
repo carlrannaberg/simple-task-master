@@ -444,8 +444,8 @@ describe(
         // These simulate temp files left from previous crashed writes
         const orphanedFiles = [
           `${filePath}.${process.pid - 1}12345`, // From previous process
-          `${filePath}.${process.pid}99999`,     // From current process
-          `${filePath}.2840185974`              // Random murmurhex pattern
+          `${filePath}.${process.pid}99999`, // From current process
+          `${filePath}.2840185974` // Random murmurhex pattern
         ];
 
         // Create orphaned temp files

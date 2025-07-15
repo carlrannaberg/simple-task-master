@@ -16,12 +16,12 @@ export default defineConfig({
     pool: 'threads',
     poolOptions: {
       threads: {
-        singleThread: true,
-      },
+        singleThread: true
+      }
     },
     coverage: {
-      enabled: false, // E2E tests focus on workflow, not coverage
-    },
+      enabled: false // E2E tests focus on workflow, not coverage
+    }
   },
   resolve: {
     alias: {
@@ -29,7 +29,7 @@ export default defineConfig({
       '@commands': resolve(__dirname, './src/commands'),
       '@lib': resolve(__dirname, './src/lib'),
       '@types': resolve(__dirname, './src/types'),
-      '@test': resolve(__dirname, './test'),
-    },
-  },
+      '@test': resolve(__dirname, './test')
+    }
+  }
 });

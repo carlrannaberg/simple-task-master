@@ -24,7 +24,7 @@ export function parseMarkdownSections(content: string): MarkdownSections {
   let currentContent: string[] = [];
 
   for (const line of lines) {
-    const headingMatch = line.match(/^##\s+(.+)$/);
+    const headingMatch = line.match(/^##(?!#)\s*(.*)$/);
 
     if (headingMatch) {
       // Save previous section
@@ -33,11 +33,9 @@ export function parseMarkdownSections(content: string): MarkdownSections {
       }
 
       // Start new section
-      const sectionName = headingMatch[1];
-      if (sectionName) {
-        currentSection = sectionName.toLowerCase();
-        currentContent = [];
-      }
+      const sectionName = headingMatch[1]?.trim() || '';
+      currentSection = sectionName.toLowerCase();
+      currentContent = [];
     } else {
       currentContent.push(line);
     }
@@ -65,7 +63,7 @@ export function buildMarkdownContent(sections: MarkdownSections): string {
   // Add sections with headings
   const sectionOrder = ['description', 'details', 'validation'];
   const otherSections = Object.keys(sections).filter(
-    key => !sectionOrder.includes(key) && sections[key]
+    (key) => !sectionOrder.includes(key) && sections[key]
   );
 
   // Add known sections in order
@@ -113,7 +111,7 @@ export function updateBodySection(content: string, section: string, newText: str
 function hasDescriptionHeading(sections: MarkdownSections): boolean {
   // If there's a description section and other sections exist, use heading
   const hasOtherSections = Object.keys(sections).some(
-    key => key !== 'description' && sections[key]
+    (key) => key !== 'description' && sections[key]
   );
   return hasOtherSections && !!sections.description;
 }

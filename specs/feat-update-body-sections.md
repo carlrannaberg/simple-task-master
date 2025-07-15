@@ -7,19 +7,20 @@
 
 ## Overview
 
-This specification defines enhancements to the `stm update` command to support granular editing of task body sections (description, details, validation) through dedicated flags and stdin support. These changes improve the user experience for updating task content while maintaining backward compatibility.
+This specification defines enhancements to the `stm update` command to support granular editing of task body sections (description, details, validation) through dedicated flags and stdin support. Additionally, it extends stdin support to the `stm add` command for consistency. These changes improve the user experience for managing task content while maintaining backward compatibility.
 
 ## Background/Problem Statement
 
 The current `stm update` command implementation has limitations when editing task body content:
 
 - The `--description` flag updates the entire content body, not specific sections
-- No support for editing individual sections (details, validation) separately  
+- No support for editing individual sections (details, validation) separately
 - No stdin support for piping content from other commands
 - No interactive editor fallback when no changes are specified
 - Users must manually edit files or replace entire content to update specific sections
 
 These limitations make it cumbersome to:
+
 - Update validation steps after completing a task
 - Add implementation details without overwriting the description
 - Pipe content from other commands (e.g., test output to validation)
@@ -28,11 +29,12 @@ These limitations make it cumbersome to:
 ## Goals
 
 - **Section-specific editing**: Enable updating individual body sections (description, details, validation)
-- **Stdin support**: Allow piping content from other commands using `-` as input
+- **Stdin support**: Allow piping content from other commands using `-` as input for both add and update commands
 - **Editor integration**: Launch `$EDITOR` when no specific changes are provided
 - **Backward compatibility**: Maintain existing command syntax and behavior
 - **Atomic operations**: Ensure all updates remain crash-safe
 - **Intuitive UX**: Make common workflows more efficient
+- **Command consistency**: Ensure add and update commands have similar input capabilities
 
 ## Non-Goals
 
@@ -46,6 +48,7 @@ These limitations make it cumbersome to:
 ## Technical Dependencies
 
 No new dependencies required. The implementation uses:
+
 - **gray-matter** (existing): For parsing and updating markdown with frontmatter
 - **Node.js built-ins**: For stdin handling and editor launching
 - **write-file-atomic** (existing): For safe file operations
@@ -54,36 +57,58 @@ No new dependencies required. The implementation uses:
 
 ### Command Syntax Enhancement
 
+#### Update Command
+
 ```bash
 stm update <id> [assignments...] [options]
 ```
 
+#### Add Command Enhancement
+
+```bash
+stm add <title> [options]
+# Now supports: --description, --details, --validation with stdin support
+```
+
 ### New Options
 
-| Flag | Long Form | Description | Example |
-|------|-----------|-------------|---------|
-| `--desc` | `--description` | Update description section | `--desc "New description"` |
-| `--details` | - | Update details section | `--details "Implementation notes"` |
-| `--validation` | - | Update validation section | `--validation "Test checklist"` |
+#### Update Command
+
+| Flag           | Long Form       | Description                | Example                            |
+| -------------- | --------------- | -------------------------- | ---------------------------------- |
+| `-d`           | `--description` | Update description section | `--description "New description"`  |
+| `--details`    | -               | Update details section     | `--details "Implementation notes"` |
+| `--validation` | -               | Update validation section  | `--validation "Test checklist"`    |
+
+#### Add Command
+
+| Flag           | Long Form       | Description             | Example                            |
+| -------------- | --------------- | ----------------------- | ---------------------------------- |
+| `-d`           | `--description` | Set description section | `--description "Task description"` |
+| `--details`    | -               | Set details section     | `--details "Implementation notes"` |
+| `--validation` | -               | Set validation section  | `--validation "Test checklist"`    |
 
 ### Input Methods
 
 Each body flag accepts:
-1. **Literal string**: `--desc "New description"`
-2. **Stdin marker**: `--desc -` (reads from stdin)
+
+1. **Literal string**: `--description "New description"`
+2. **Stdin marker**: `--description -` (reads from stdin)
 
 ### Section Handling
 
 #### Section Identification
 
 Sections are identified by markdown headings:
+
 - Description: Content before first heading or under `## Description`
-- Details: Content under `## Details`  
+- Details: Content under `## Details`
 - Validation: Content under `## Validation`
 
 #### Section Creation
 
 If a section doesn't exist when updating:
+
 1. Create the appropriate heading
 2. Insert content under the new heading
 3. Preserve existing sections
@@ -93,7 +118,7 @@ If a section doesn't exist when updating:
 ```typescript
 function updateBodySection(content: string, section: string, newText: string): string {
   const sections = parseMarkdownSections(content);
-  
+
   if (section === 'description') {
     // Update content before first heading or under ## Description
     sections.description = newText;
@@ -101,7 +126,7 @@ function updateBodySection(content: string, section: string, newText: string): s
     // Update or create section with heading
     sections[section] = newText;
   }
-  
+
   return buildMarkdownContent(sections);
 }
 ```
@@ -109,11 +134,13 @@ function updateBodySection(content: string, section: string, newText: string): s
 ### Editor Fallback
 
 When no changes are specified:
+
 ```bash
 stm update 42  # No assignments or options
 ```
 
 The command will:
+
 1. Create temporary file with current task content (full file)
 2. Launch `$EDITOR` (or `vi` as fallback)
 3. Read edited content
@@ -129,13 +156,26 @@ export const updateCommand = new Command('update')
   .description('Update a task')
   .argument('<id>', 'Task ID')
   .argument('[assignments...]', 'Field assignments (key=value, key+=value, key-=value)')
-  .option('--desc <text>', 'Update description section (use - for stdin)')
+  .option('-d, --description <text>', 'Update description section (use - for stdin)')
   .option('--details <text>', 'Update details section (use - for stdin)')
-  .option('--validation <text>', 'Update validation section (use - for stdin)')
-  // ... existing options
+  .option('--validation <text>', 'Update validation section (use - for stdin)');
+// ... existing options
 ```
 
-#### 2. Stdin Support
+#### 2. Add Command Enhancement
+
+```typescript
+export const addCommand = new Command('add')
+  .description('Add a new task')
+  .argument('<title>', 'Task title')
+  .option('-d, --description <desc>', 'Task description (use - for stdin)')
+  .option('--details <text>', 'Task details section (use - for stdin)')
+  .option('--validation <text>', 'Task validation section (use - for stdin)')
+  .option('-t, --tags <tags>', 'Comma-separated list of tags');
+// ... existing options
+```
+
+#### 3. Stdin Support
 
 ```typescript
 async function readInput(value: string): Promise<string> {
@@ -169,7 +209,7 @@ function parseMarkdownSections(content: string): MarkdownSections {
   const lines = content.split('\n');
   let currentSection = 'description';
   let currentContent: string[] = [];
-  
+
   for (const line of lines) {
     const headingMatch = line.match(/^##\s+(.+)$/);
     if (headingMatch) {
@@ -182,10 +222,10 @@ function parseMarkdownSections(content: string): MarkdownSections {
       currentContent.push(line);
     }
   }
-  
+
   // Save last section
   sections[currentSection] = currentContent.join('\n').trim();
-  
+
   return sections;
 }
 ```
@@ -205,7 +245,28 @@ if (!hasChanges && !willOpenEditor) {
 
 ### Common Workflows
 
-#### 1. Update validation after testing
+#### 1. Create task with piped description
+
+```bash
+# Direct string
+stm add "New Feature" --description "Implement user authentication"
+
+# From command output or file
+cat requirements.md | stm add "New Feature" --description -
+
+# With details and validation sections
+stm add "API Endpoint" --description "Create user profile endpoint" \
+  --details "Use REST conventions, implement rate limiting" \
+  --validation "- [ ] Unit tests\n- [ ] Integration tests\n- [ ] API docs"
+
+# From multiple sources
+cat spec.md | stm add "Feature X" --description - \
+  --details "See architecture doc" \
+  --validation "$(cat test-plan.md)"
+```
+
+#### 2. Update validation after testing
+
 ```bash
 # Direct string
 stm update 42 status=done --validation "✓ All tests pass\n✓ Manual QA complete"
@@ -214,30 +275,33 @@ stm update 42 status=done --validation "✓ All tests pass\n✓ Manual QA comple
 npm test | stm update 42 --validation -
 ```
 
-#### 2. Add implementation details
+#### 3. Add implementation details
+
 ```bash
 stm update 42 --details "Implemented using Observer pattern for event handling"
 ```
 
-#### 3. Quick edit with editor
+#### 4. Quick edit with editor
+
 ```bash
 stm update 42  # Opens full task in $EDITOR
 ```
 
-#### 4. Combined metadata and body updates
+#### 5. Combined metadata and body updates
+
 ```bash
-stm update 42 status=in-progress --desc "Revised approach after design review"
+stm update 42 status=in-progress --description "Revised approach after design review"
 ```
 
 ### Error Handling
 
-| Scenario | Behavior |
-|----------|----------|
-| No changes specified | Exit with code 2 |
+| Scenario                | Behavior                            |
+| ----------------------- | ----------------------------------- |
+| No changes specified    | Exit with code 2                    |
 | Invalid section content | Validation error with clear message |
-| Stdin timeout | Error after 30 seconds |
-| Editor not found | Fall back to vi, then error |
-| File locked | Retry with exponential backoff |
+| Stdin timeout           | Error after 30 seconds              |
+| Editor not found        | Fall back to vi, then error         |
+| File locked             | Retry with exponential backoff      |
 
 ## Testing Strategy
 
@@ -278,7 +342,7 @@ it('should update validation section from stdin', async () => {
   const { stdout, stdin } = await runCommand(['update', '1', '--validation', '-']);
   stdin.write('Test checklist\n- [ ] Unit tests\n- [ ] E2E tests');
   stdin.end();
-  
+
   const task = await getTask(1);
   expect(task.content).toContain('## Validation\nTest checklist');
 });
@@ -311,12 +375,12 @@ No significant performance impact expected for typical usage.
 
 ### Example Documentation
 
-```markdown
+````markdown
 ## Updating Task Content
 
 The `update` command supports granular editing of task body sections:
 
-- `--desc`: Update the description (main content)
+- `--description`: Update the description (main content)
 - `--details`: Update implementation details
 - `--validation`: Update validation checklist
 
@@ -324,7 +388,7 @@ Each flag accepts a string or `-` to read from stdin:
 
 ```bash
 # Update description directly
-stm update 42 --desc "Revised task description"
+stm update 42 --description "Revised task description"
 
 # Pipe test results to validation
 npm test | stm update 42 --validation -
@@ -332,12 +396,14 @@ npm test | stm update 42 --validation -
 # Open in editor when no options provided
 stm update 42
 ```
+````
+
 ```
 
 ## Implementation Phases
 
 ### Phase 1: Core Section Editing (Week 1)
-- [ ] Add `--desc`, `--details`, `--validation` flags
+- [ ] Add `--description`, `--details`, `--validation` flags
 - [ ] Implement section parsing and updating
 - [ ] Basic string input support
 - [ ] Exit code 2 for no changes
@@ -368,3 +434,4 @@ stm update 42
 - Task file format examples: `/test/fixtures/task-files/`
 - Commander.js documentation: https://github.com/tj/commander.js
 - Gray-matter documentation: https://github.com/jonschlinkert/gray-matter
+```

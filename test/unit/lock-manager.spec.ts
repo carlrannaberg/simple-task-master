@@ -7,20 +7,26 @@ import * as path from 'path';
 import { constants as _fsConstants } from 'fs';
 import { tmpdir } from 'os';
 
-// Interface for accessing private methods in tests
-interface LockManagerWithPrivates extends LockManager {
-  isProcessAlive(pid: number): boolean;
+// Test-specific LockManager that uses shorter timeouts for faster tests
+class TestLockManager extends LockManager {
+  // Override the protected properties for faster tests
+  protected readonly LOCK_CHECK_INTERVAL_MS = 50; // Reduce from 100ms to 50ms
+  protected readonly MAX_LOCK_RETRIES = 20; // Reduce from 100 to 20 for faster tests
+
+  constructor(projectRoot: string) {
+    super(projectRoot);
+  }
 }
 
 describe('LockManager', () => {
-  let lockManager: LockManager;
+  let lockManager: TestLockManager;
   let testDir: string;
   let lockPath: string;
 
   beforeEach(async () => {
     // Create a temporary directory for testing
     testDir = await fs.mkdtemp(path.join(tmpdir(), 'stm-lock-test-'));
-    lockManager = new LockManager(testDir);
+    lockManager = new TestLockManager(testDir);
     lockPath = path.join(testDir, '.simple-task-master', 'lock');
 
     // Ensure the .simple-task-master directory exists
@@ -139,7 +145,7 @@ describe('LockManager', () => {
 
       // Should have taken at least 250ms but less than the max retry time
       expect(duration).toBeGreaterThanOrEqual(200); // Allow some variance
-      expect(duration).toBeLessThan(6000); // Max retry time
+      expect(duration).toBeLessThan(2000); // Max retry time with TestLockManager
     }, 10000); // Increase timeout
   });
 
@@ -194,20 +200,20 @@ describe('LockManager', () => {
 
   describe('process liveness checking', () => {
     it('should correctly identify current process as alive', async () => {
-      // Use reflection to test private method
-      const isAlive = (lockManager as LockManagerWithPrivates).isProcessAlive(process.pid);
+      // Use the protected method directly
+      const isAlive = lockManager.isProcessAlive(process.pid);
       expect(isAlive).toBe(true);
     });
 
     it('should correctly identify non-existent process as dead', async () => {
-      // Use reflection to test private method
-      const isAlive = (lockManager as LockManagerWithPrivates).isProcessAlive(999999);
+      // Use the protected method directly
+      const isAlive = lockManager.isProcessAlive(999999);
       expect(isAlive).toBe(false);
     });
 
     it('should handle permission errors gracefully', async () => {
       // PID 1 exists but we might not have permission to signal it
-      const isAlive = (lockManager as LockManagerWithPrivates).isProcessAlive(1);
+      const isAlive = lockManager.isProcessAlive(1);
       // Should return true because EPERM means process exists
       expect(isAlive).toBe(true);
     });
@@ -260,13 +266,13 @@ describe('LockManager', () => {
       // MaxListenersExceededWarning by checking that handlers are shared globally
 
       // Create multiple LockManager instances
-      const managers = Array.from({ length: 5 }, () => new LockManager(testDir));
+      const managers = Array.from({ length: 5 }, () => new TestLockManager(testDir));
 
       // All instances should be created without warnings
       expect(managers.length).toBe(5);
 
       // Clean up all instances
-      managers.forEach(manager => manager.dispose());
+      managers.forEach((manager) => manager.dispose());
     });
   });
 
@@ -285,12 +291,13 @@ describe('LockManager', () => {
       try {
         await lockManager.acquire();
         throw new Error('Should have failed to acquire lock');
-      } catch (error) {
+      } catch (error: unknown) {
         const duration = Date.now() - startTime;
 
-        expect(error.message).toMatch(/Failed to acquire lock after \d+ retries/);
-        expect(duration).toBeGreaterThan(4000); // At least ~4 seconds (50 retries * 100ms)
-        expect(duration).toBeLessThan(7000); // But not too much longer
+        expect((error as Error).message).toMatch(/Failed to acquire lock after \d+ retries/);
+        // With TestLockManager: 20 retries * 50ms = 1000ms
+        expect(duration).toBeGreaterThan(800); // At least ~800ms
+        expect(duration).toBeLessThan(1500); // But not too much longer
       }
     }, 10000); // Increase timeout
 
@@ -307,15 +314,15 @@ describe('LockManager', () => {
       try {
         await lockManager.acquire();
         throw new Error('Should have failed to acquire lock');
-      } catch (error) {
+      } catch (error: unknown) {
         const duration = Date.now() - startTime;
 
         // Should have failed after retries
-        expect(error.message).toMatch(/Failed to acquire lock after \d+ retries/);
+        expect((error as Error).message).toMatch(/Failed to acquire lock after \d+ retries/);
 
-        // Duration should be approximately 50 retries * 100ms = 5000ms
-        expect(duration).toBeGreaterThan(4000);
-        expect(duration).toBeLessThan(7000);
+        // Duration should be approximately 20 retries * 50ms = 1000ms
+        expect(duration).toBeGreaterThan(800);
+        expect(duration).toBeLessThan(1500);
       }
     }, 10000); // Increase timeout
   });
@@ -325,7 +332,7 @@ describe('LockManager', () => {
       const staleTimes = [31000, 60000, 120000]; // 31s, 1min, 2min
 
       for (const staleTime of staleTimes) {
-        // Clean up any existing lock
+        // Clean up existing lock if it exists
         await fs.unlink(lockPath).catch(() => {});
 
         const staleLock = {
@@ -350,7 +357,7 @@ describe('LockManager', () => {
       const recentTimes = [1000, 5000, 15000]; // 1s, 5s, 15s
 
       for (const recentTime of recentTimes) {
-        // Clean up any existing lock
+        // Clean up existing lock if it exists
         await fs.unlink(lockPath).catch(() => {});
 
         const recentLock = {
@@ -376,7 +383,7 @@ describe('LockManager', () => {
       const deadPids = [999999, 888888, 777777];
 
       for (const deadPid of deadPids) {
-        // Clean up any existing lock
+        // Clean up existing lock if it exists
         await fs.unlink(lockPath).catch(() => {});
 
         const deadProcessLock = {
@@ -408,7 +415,7 @@ describe('LockManager', () => {
       ];
 
       for (const corruptedLock of corruptedLocks) {
-        // Clean up any existing lock
+        // Clean up existing lock if it exists
         await fs.unlink(lockPath).catch(() => {});
 
         await fs.writeFile(lockPath, JSON.stringify(corruptedLock, null, 2));
@@ -432,13 +439,13 @@ describe('LockManager', () => {
       const readOnlyDir = path.join(testDir, 'readonly');
       await fs.mkdir(readOnlyDir, { mode: 0o444 }); // Read-only directory
 
-      const readOnlyLockManager = new LockManager(readOnlyDir);
+      const readOnlyLockManager = new TestLockManager(readOnlyDir);
 
       try {
         await readOnlyLockManager.acquire();
         // If it doesn't throw, that's okay too (depends on system)
-      } catch (error) {
-        expect(error.message).toMatch(/EACCES|EPERM|permission/i);
+      } catch (error: unknown) {
+        expect((error as Error).message).toMatch(/EACCES|EPERM|permission/i);
       }
 
       // Restore permissions for cleanup
@@ -448,14 +455,13 @@ describe('LockManager', () => {
 
     it.skip('should handle disk full scenarios', async () => {
       // Create a custom lock manager for this test to avoid conflicts
-      const diskFullLockManager = new LockManager(testDir);
+      const diskFullLockManager = new TestLockManager(testDir);
 
       // Mock fs.open to simulate disk full
       const mockError = new Error('ENOSPC: no space left on device') as NodeJS.ErrnoException;
       mockError.code = 'ENOSPC';
 
       // Use mockImplementationOnce to avoid conflicts with other tests
-      const originalOpen = fs.open;
       const openSpy = vi.spyOn(fs, 'open');
 
       // Mock just the first call
@@ -483,17 +489,29 @@ describe('LockManager', () => {
         error: string;
       }
 
-      type _LockAttemptResult = LockAttemptSuccess | LockAttemptFailure;
+      type LockAttemptResult = LockAttemptSuccess | LockAttemptFailure;
 
+      // Use a small delay between creating lock managers to reduce race conditions
       const lockManagers: LockManager[] = [];
-      const lockPromises = Array.from({ length: concurrentAttempts }, () => {
-        const newLockManager = new LockManager(testDir);
+      const lockPromises: Promise<LockAttemptResult>[] = [];
+
+      for (let i = 0; i < concurrentAttempts; i++) {
+        const newLockManager = new TestLockManager(testDir);
         lockManagers.push(newLockManager);
-        return newLockManager.acquire().then(
-          (): LockAttemptSuccess => ({ success: true, lockManager: newLockManager }),
-          (error): LockAttemptFailure => ({ success: false, error: error.message })
+
+        // Start acquisition attempts with tiny delays to ensure atomic file operations
+        // don't collide at the exact same microsecond
+        lockPromises.push(
+          new Promise((resolve) => {
+            setTimeout(() => {
+              newLockManager.acquire().then(
+                (): void => resolve({ success: true, lockManager: newLockManager }),
+                (error): void => resolve({ success: false, error: error.message })
+              );
+            }, i * 2); // 2ms delay between each attempt
+          })
         );
-      });
+      }
 
       const results = await Promise.all(lockPromises);
 
@@ -510,7 +528,7 @@ describe('LockManager', () => {
       }
 
       // Dispose all lock manager instances created in this test
-      lockManagers.forEach(manager => manager.dispose());
+      lockManagers.forEach((manager) => manager.dispose());
     }, 30000); // Increase timeout for concurrent operations
 
     it('should handle rapid acquire-release cycles', async () => {
@@ -567,7 +585,7 @@ describe('LockManager', () => {
       ];
 
       for (const incompleteLock of incompleteLocks) {
-        // Clean up any existing lock
+        // Clean up existing lock if it exists
         await fs.unlink(lockPath).catch(() => {});
 
         await fs.writeFile(lockPath, JSON.stringify(incompleteLock));
@@ -595,7 +613,7 @@ describe('LockManager', () => {
       ];
 
       for (const customRoot of customRoots) {
-        const customLockManager = new LockManager(customRoot);
+        const customLockManager = new TestLockManager(customRoot);
 
         await customLockManager.acquire();
 
@@ -613,7 +631,7 @@ describe('LockManager', () => {
 
     it('should handle very long project paths', async () => {
       const longPath = path.join(testDir, 'very'.repeat(20), 'long'.repeat(10), 'path'.repeat(5));
-      const longPathLockManager = new LockManager(longPath);
+      const longPathLockManager = new TestLockManager(longPath);
 
       await longPathLockManager.acquire();
 

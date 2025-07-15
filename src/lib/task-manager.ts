@@ -34,7 +34,7 @@ export class TaskManager {
    * Create a new TaskManager instance with workspace discovery
    */
   static async create(config?: Partial<TaskManagerConfig>): Promise<TaskManager> {
-    const tasksDir = config?.tasksDir ?? await getTasksDirectory();
+    const tasksDir = config?.tasksDir ?? (await getTasksDirectory());
     const workspaceRoot = await getWorkspaceRoot();
 
     const fullConfig: Required<TaskManagerConfig> = {
@@ -94,15 +94,16 @@ export class TaskManager {
         const filepath = path.join(this.config.tasksDir, filename);
 
         // Only store metadata when necessary to handle gray-matter's newline behavior
-        const taskData = content === '' || (content.length > 0 && !content.endsWith('\n'))
-          ? {
-              ...task,
-              _contentMetadata: {
-                wasEmpty: content === '',
-                hadNoTrailingNewline: content.length > 0 && !content.endsWith('\n')
+        const taskData =
+          content === '' || (content.length > 0 && !content.endsWith('\n'))
+            ? {
+                ...task,
+                _contentMetadata: {
+                  wasEmpty: content === '',
+                  hadNoTrailingNewline: content.length > 0 && !content.endsWith('\n')
+                }
               }
-            }
-          : task;
+            : task;
 
         // Serialize to markdown with front-matter
         const fileContent = matter.stringify(content, taskData);
@@ -110,17 +111,17 @@ export class TaskManager {
         // Validate file size
         await this.validateTaskSize(fileContent);
 
-        // Verify tasks directory exists (should already exist from init)
+        // Ensure tasks directory exists, create if needed
         try {
           await fs.access(this.config.tasksDir);
         } catch {
-          throw new FileSystemError('Tasks directory does not exist. Run "stm init" to initialize.');
+          await fs.mkdir(this.config.tasksDir, { recursive: true });
         }
 
         // Before writing, check if ANY file with this ID already exists
         // This is critical because different titles produce different filenames
         const existingFiles = await this.findTaskFiles();
-        const idAlreadyExists = existingFiles.some(f => {
+        const idAlreadyExists = existingFiles.some((f) => {
           const existingId = this.extractIdFromFilename(f);
           return existingId === id;
         });
@@ -129,7 +130,9 @@ export class TaskManager {
           // ID collision detected - retry with a new ID
           retries++;
           if (retries >= maxRetries) {
-            throw new Error(`Failed to create task after ${maxRetries} retries due to ID conflicts`);
+            throw new Error(
+              `Failed to create task after ${maxRetries} retries due to ID conflicts`
+            );
           }
           continue;
         }
@@ -153,7 +156,9 @@ export class TaskManager {
             // but handle it just in case
             retries++;
             if (retries >= maxRetries) {
-              throw new Error(`Failed to create task after ${maxRetries} retries due to file conflicts`);
+              throw new Error(
+                `Failed to create task after ${maxRetries} retries due to file conflicts`
+              );
             }
             continue;
           }
@@ -279,15 +284,16 @@ export class TaskManager {
       const newFilepath = path.join(this.config.tasksDir, newFilename);
 
       // Only store metadata when necessary to handle gray-matter's newline behavior
-      const updatedTaskData = updatedContent === '' || (updatedContent.length > 0 && !updatedContent.endsWith('\n'))
-        ? {
-            ...updatedTask,
-            _contentMetadata: {
-              wasEmpty: updatedContent === '',
-              hadNoTrailingNewline: updatedContent.length > 0 && !updatedContent.endsWith('\n')
+      const updatedTaskData =
+        updatedContent === '' || (updatedContent.length > 0 && !updatedContent.endsWith('\n'))
+          ? {
+              ...updatedTask,
+              _contentMetadata: {
+                wasEmpty: updatedContent === '',
+                hadNoTrailingNewline: updatedContent.length > 0 && !updatedContent.endsWith('\n')
+              }
             }
-          }
-        : updatedTask;
+          : updatedTask;
 
       // Serialize to markdown
       const fileContent = matter.stringify(updatedContent, updatedTaskData);
@@ -377,7 +383,9 @@ export class TaskManager {
 
           if (task.id !== maxId) {
             // Frontmatter doesn't match filename - this is a data integrity issue
-            console.warn(`Data integrity warning: File ${maxIdFile} has ID ${task.id} in frontmatter but ${maxId} in filename`);
+            console.warn(
+              `Data integrity warning: File ${maxIdFile} has ID ${task.id} in frontmatter but ${maxId} in filename`
+            );
 
             // Fall back to scanning all files to find the true maximum ID
             return this.generateNextIdByFullScan();
@@ -515,11 +523,10 @@ export class TaskManager {
       );
     }
 
-    // Only check for control characters that are truly problematic
-    // We don't need to restrict quotes, apostrophes, etc. since we use slugify for filenames
-    const controlChars = /[\x00-\x1f]/g;
-    if (controlChars.test(title)) {
-      throw new ValidationError('Title contains invalid control characters');
+    // Check for filesystem-unsafe characters including control characters
+    const unsafeChars = /[<>"|?*\x00-\x1f]/g;
+    if (unsafeChars.test(title)) {
+      throw new ValidationError('Title contains invalid filesystem characters');
     }
   }
 

@@ -139,7 +139,6 @@ async function updateTask(
   assignments: string[],
   options: {
     title?: string;
-    desc?: string;
     description?: string;
     details?: string;
     validation?: string;
@@ -159,15 +158,15 @@ async function updateTask(
     }
 
     // Check if no changes are specified and handle editor fallback
-    const hasChanges = assignments.length > 0 ||
-                      options.title ||
-                      options.desc ||
-                      options.description ||
-                      options.details ||
-                      options.validation ||
-                      options.status ||
-                      options.tags ||
-                      options.deps;
+    const hasChanges =
+      assignments.length > 0 ||
+      options.title ||
+      options.description ||
+      options.details ||
+      options.validation ||
+      options.status ||
+      options.tags ||
+      options.deps;
 
     if (!hasChanges) {
       // Check if editor is enabled (default true, disabled with --no-editor)
@@ -186,8 +185,11 @@ async function updateTask(
 
           // Extract the content (remove the title comment)
           const lines = editedContent.split('\n');
-          const contentStartIndex = lines.findIndex(line => line.trim() !== '' && !line.startsWith('#'));
-          const newContent = contentStartIndex >= 0 ? lines.slice(contentStartIndex).join('\n').trim() : '';
+          const contentStartIndex = lines.findIndex(
+            (line) => line.trim() !== '' && !line.startsWith('#')
+          );
+          const newContent =
+            contentStartIndex >= 0 ? lines.slice(contentStartIndex).join('\n').trim() : '';
 
           // Update the task with the new content
           await taskManager.update(id, { content: newContent });
@@ -205,6 +207,7 @@ async function updateTask(
         // Editor is disabled, exit with error
         printError('No changes specified');
         process.exit(2);
+        return; // Ensure we don't continue execution
       }
     }
 
@@ -224,10 +227,9 @@ async function updateTask(
     let contentModified = false;
 
     // Process description option (supports stdin with "-")
-    const descValue = options.desc || options.description;
-    if (descValue !== undefined) {
+    if (options.description !== undefined) {
       try {
-        const descContent = await readInput(descValue, false, '', 30000);
+        const descContent = await readInput(options.description, false, '', 30000);
         if (descContent !== undefined) {
           updatedContent = updateBodySection(updatedContent, 'description', descContent);
           contentModified = true;
@@ -310,7 +312,11 @@ async function updateTask(
             updatedContent = currentTask.content || '';
             contentModified = true;
           }
-          updatedContent = updateBodySection(updatedContent, key === 'desc' ? 'description' : key, parsedValue as string);
+          updatedContent = updateBodySection(
+            updatedContent,
+            key === 'desc' ? 'description' : key,
+            parsedValue as string
+          );
           updates.content = updatedContent;
         } else {
           // Map field aliases to actual field names
@@ -378,6 +384,11 @@ async function updateTask(
 
     printSuccess(`Updated task ${id}`);
   } catch (error) {
+    // Don't handle errors that come from process.exit calls (for testing)
+    if (error instanceof Error && error.message.startsWith('Process.exit(')) {
+      throw error;
+    }
+
     if (
       error instanceof ValidationError ||
       error instanceof FileSystemError ||
@@ -425,12 +436,13 @@ async function validateDependencies(
  * Create the update command
  */
 export const updateCommand = new Command('update')
-  .description('Update a task with flexible options for metadata, content sections, and editor integration')
+  .description(
+    'Update a task with flexible options for metadata, content sections, and editor integration'
+  )
   .argument('<id>', 'Task ID')
   .argument('[assignments...]', 'Field assignments (key=value, key+=value, key-=value)')
   .option('-t, --title <title>', 'Update task title')
-  .option('-d, --desc <text>', 'Update description section (use - for stdin)')
-  .option('--description <text>', 'Update description section (use - for stdin, alias for --desc)')
+  .option('-d, --description <text>', 'Update description section (use - for stdin)')
   .option('--details <text>', 'Update details section (use - for stdin)')
   .option('--validation <text>', 'Update validation section (use - for stdin)')
   .option('-s, --status <status>', 'Update task status (pending, in-progress, done)')

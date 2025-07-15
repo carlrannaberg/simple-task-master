@@ -5,10 +5,9 @@
  * with properly mocked dependencies.
  */
 
-import type { MockedFunction } from 'vitest';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi, type MockedFunction } from 'vitest';
 import type { Task } from '@lib/types';
-import { ValidationError, NotFoundError, FileSystemError } from '@lib/errors';
+import { FileSystemError } from '@lib/errors';
 import { MockTaskStore } from '@test/helpers';
 
 // Mock modules first - with factory functions to ensure fresh instances
@@ -91,14 +90,14 @@ describe('Show Command', () => {
 
         if (task.tags && task.tags.length > 0) {
           lines.push('tags:');
-          task.tags.forEach(tag => lines.push(`  - "${tag}"`));
+          task.tags.forEach((tag) => lines.push(`  - "${tag}"`));
         } else {
           lines.push('tags: []');
         }
 
         if (task.dependencies && task.dependencies.length > 0) {
           lines.push('dependencies:');
-          task.dependencies.forEach(dep => lines.push(`  - ${dep}`));
+          task.dependencies.forEach((dep) => lines.push(`  - ${dep}`));
         } else {
           lines.push('dependencies: []');
         }
@@ -126,7 +125,7 @@ describe('Show Command', () => {
         lines.push(`- **Updated**: ${new Date(task.updated).toLocaleString()}`);
 
         if (task.tags && task.tags.length > 0) {
-          lines.push(`- **Tags**: ${task.tags.map(tag => `\`${tag}\``).join(', ')}`);
+          lines.push(`- **Tags**: ${task.tags.map((tag) => `\`${tag}\``).join(', ')}`);
         }
 
         if (task.dependencies && task.dependencies.length > 0) {
@@ -183,7 +182,6 @@ describe('Show Command', () => {
 
     // Setup constructor mock
     mockedTaskManager.mockImplementation(() => mockTaskManagerInstance as unknown as TaskManager);
-    
     // Setup static create method
     mockedTaskManagerCreate.mockResolvedValue(mockTaskManagerInstance as unknown as TaskManager);
 
@@ -201,7 +199,7 @@ describe('Show Command', () => {
     // Clear Commander options state to prevent test interference
     if (showCommand.opts) {
       const opts = showCommand.opts();
-      Object.keys(opts).forEach(key => {
+      Object.keys(opts).forEach((key) => {
         delete opts[key];
       });
     }
@@ -261,7 +259,9 @@ console.log('Hello, World!');
   /**
    * Helper to run the show command and capture output/errors
    */
-  async function runShowCommand(args: string[]): Promise<{ output: string; error: string; exitCode?: number }> {
+  async function runShowCommand(
+    args: string[]
+  ): Promise<{ output: string; error: string; exitCode?: number }> {
     exitCode = undefined;
     capturedOutput = '';
     capturedError = '';

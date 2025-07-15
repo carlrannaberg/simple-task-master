@@ -61,10 +61,7 @@ describe('Update Command E2E - Stdin Functionality', () => {
     it('should detect "-" marker for description input via stdin', async () => {
       const stdinContent = 'Updated description from stdin\nwith multiple lines.';
 
-      const result = await runWithStdin(
-        ['update', '1', '--desc', '-'],
-        stdinContent
-      );
+      const result = await runWithStdin(['update', '1', '--desc', '-'], stdinContent);
 
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('Updated task 1');
@@ -87,10 +84,7 @@ describe('Update Command E2E - Stdin Functionality', () => {
    }
    \`\`\``;
 
-      const result = await runWithStdin(
-        ['update', '1', '--details', '-'],
-        stdinContent
-      );
+      const result = await runWithStdin(['update', '1', '--details', '-'], stdinContent);
 
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('Updated task 1');
@@ -115,10 +109,7 @@ Manual testing steps:
 2. Verify output
 3. Check logs`;
 
-      const result = await runWithStdin(
-        ['update', '1', '--validation', '-'],
-        stdinContent
-      );
+      const result = await runWithStdin(['update', '1', '--validation', '-'], stdinContent);
 
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('Updated task 1');
@@ -133,18 +124,12 @@ Manual testing steps:
     it('should handle multiple sections with stdin markers', async () => {
       // First update: description via stdin
       const descContent = 'New description from stdin';
-      const descResult = await runWithStdin(
-        ['update', '1', '--desc', '-'],
-        descContent
-      );
+      const descResult = await runWithStdin(['update', '1', '--desc', '-'], descContent);
       expect(descResult.exitCode).toBe(0);
 
       // Second update: details via stdin (should preserve description)
       const detailsContent = 'Details content from stdin';
-      const detailsResult = await runWithStdin(
-        ['update', '1', '--details', '-'],
-        detailsContent
-      );
+      const detailsResult = await runWithStdin(['update', '1', '--details', '-'], detailsContent);
       expect(detailsResult.exitCode).toBe(0);
 
       // Verify both sections are preserved
@@ -184,7 +169,8 @@ Manual testing steps:
       );
 
       expect(result.exitCode).not.toBe(0);
-      expect(result.stderr).toContain('timeout') || expect(result.stderr).toContain('Failed to read');
+      expect(result.stderr).toContain('timeout') ||
+        expect(result.stderr).toContain('Failed to read');
     });
 
     it('should handle large stdin input within timeout', async () => {
@@ -276,10 +262,7 @@ This description contains:
 - **Formatted text**
 - Code snippets: \`const x = 1;\``;
 
-      const descResult = await runWithStdin(
-        ['update', taskId, '--desc', '-'],
-        descContent
-      );
+      const descResult = await runWithStdin(['update', taskId, '--desc', '-'], descContent);
       expect(descResult.exitCode).toBe(0);
 
       // Step 3: Add details via stdin
@@ -330,9 +313,12 @@ interface Example {
 
       // Step 5: Update status and tags via direct options
       const statusResult = await cliRunner.run([
-        'update', taskId,
-        '--status', 'in-progress',
-        '--tags', 'complex,workflow,testing'
+        'update',
+        taskId,
+        '--status',
+        'in-progress',
+        '--tags',
+        'complex,workflow,testing'
       ]);
       expect(statusResult.exitCode).toBe(0);
 
@@ -358,15 +344,13 @@ interface Example {
 
       // Update via stdin
       const stdinContent = 'Description updated via stdin';
-      const stdinResult = await runWithStdin(
-        ['update', taskId, '--desc', '-'],
-        stdinContent
-      );
+      const stdinResult = await runWithStdin(['update', taskId, '--desc', '-'], stdinContent);
       expect(stdinResult.exitCode).toBe(0);
 
       // Update via assignment
       const assignResult = await cliRunner.run([
-        'update', taskId,
+        'update',
+        taskId,
         'title=Updated via assignment',
         'status=done'
       ]);
@@ -391,10 +375,7 @@ interface Example {
       ];
 
       for (const update of updates) {
-        const result = await runWithStdin(
-          ['update', taskId, update.option, '-'],
-          update.content
-        );
+        const result = await runWithStdin(['update', taskId, update.option, '-'], update.content);
         expect(result.exitCode).toBe(0);
       }
 
@@ -421,10 +402,7 @@ interface Example {
       // Test with null bytes and control characters
       const malformedContent = 'Normal text\x00null byte\x01control char\x1F';
 
-      const result = await runWithStdin(
-        ['update', '1', '--desc', '-'],
-        malformedContent
-      );
+      const result = await runWithStdin(['update', '1', '--desc', '-'], malformedContent);
 
       // Should either succeed (filtering control chars) or fail gracefully
       expect([0, 1]).toContain(result.exitCode);
@@ -457,10 +435,7 @@ interface Example {
 - Arrows: → ← ↑ ↓ ⇒ ⇐
 - Currency: € £ ¥ ₹ ₽`;
 
-      const result = await runWithStdin(
-        ['update', '1', '--desc', '-'],
-        unicodeContent
-      );
+      const result = await runWithStdin(['update', '1', '--desc', '-'], unicodeContent);
 
       expect(result.exitCode).toBe(0);
 
@@ -490,10 +465,7 @@ interface Example {
       
     - Item 3`;
 
-      const result = await runWithStdin(
-        ['update', '1', '--details', '-'],
-        formattedContent
-      );
+      const result = await runWithStdin(['update', '1', '--details', '-'], formattedContent);
 
       expect(result.exitCode).toBe(0);
 
@@ -516,17 +488,17 @@ interface Example {
       const stdinContent = 'Atomic update content';
 
       // Update via stdin
-      const result1 = await runWithStdin(
-        ['update', taskId, '--desc', '-'],
-        stdinContent
-      );
+      const result1 = await runWithStdin(['update', taskId, '--desc', '-'], stdinContent);
       expect(result1.exitCode).toBe(0);
 
       // Immediately follow with another update
       const result2 = await cliRunner.run([
-        'update', taskId,
-        '--status', 'in-progress',
-        '--tags', 'atomic,test'
+        'update',
+        taskId,
+        '--status',
+        'in-progress',
+        '--tags',
+        'atomic,test'
       ]);
       expect(result2.exitCode).toBe(0);
 
@@ -546,17 +518,12 @@ interface Example {
 
       // Queue multiple stdin updates
       for (let i = 0; i < 3; i++) {
-        updates.push(
-          runWithStdin(
-            ['update', taskId, '--desc', '-'],
-            `Update ${i + 1}`
-          )
-        );
+        updates.push(runWithStdin(['update', taskId, '--desc', '-'], `Update ${i + 1}`));
       }
 
       // All should eventually succeed
       const results = await Promise.all(updates);
-      results.forEach(result => {
+      results.forEach((result) => {
         expect([0, 1]).toContain(result.exitCode); // Either success or handled error
       });
 

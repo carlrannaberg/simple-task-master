@@ -33,9 +33,6 @@ export function formatAsNDJSON(tasks: Task[]): string {
  * Formats tasks as pretty JSON
  */
 export function formatAsJSON(tasks: Task[]): string {
-  if (tasks.length === 0) {
-    return '';
-  }
   return JSON.stringify(tasks, null, 2);
 }
 
