@@ -28,28 +28,28 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout repository
+        - name: Checkout repository
       uses: actions/checkout@v4
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
     
-    - name: Setup Node.js
+      - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 20.x
+        node-version: 22.x
+        
     
-    - name: Configure Git
+      - name: Configure Git
       run: |
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
     
-    - name: Bump version
+      - name: Bump version
       id: bump
       run: |
         # Get current version
         CURRENT_VERSION=$(node -p "require('./package.json').version")
         echo "Current version: $CURRENT_VERSION"
-        echo "current-version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
         
         # Bump version based on input
         if [ "${{ inputs.version-type }}" == "prerelease" ]; then
@@ -63,7 +63,7 @@ jobs:
         echo "New version: $NEW_VERSION"
         echo "new-version=$NEW_VERSION" >> $GITHUB_OUTPUT
     
-    - name: Create Pull Request
+      - name: Create Pull Request
       uses: peter-evans/create-pull-request@v6
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
@@ -85,8 +85,6 @@ jobs:
           
           ---
           *This PR was automatically created by the Version Bump workflow.*
-          
-          🤖 Generated with [Claude Code](https://claude.ai/code)
         branch: version-bump-${{ steps.bump.outputs.new-version }}
         delete-branch: true
         labels: |
