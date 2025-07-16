@@ -12,14 +12,16 @@ import { updateCommand } from './commands/update';
 import { grepCommand } from './commands/grep';
 import { exportCommand } from './commands/export';
 
-// Set up process error handlers
-process.on('unhandledRejection', (reason: unknown) => {
-  handleGlobalError(new Error(`Unhandled rejection: ${String(reason)}`));
-});
+// Set up process error handlers only if not in test environment
+if (process.env.NODE_ENV !== 'test') {
+  process.on('unhandledRejection', (reason: unknown) => {
+    handleGlobalError(new Error(`Unhandled rejection: ${String(reason)}`));
+  });
 
-process.on('uncaughtException', (error: Error) => {
-  handleGlobalError(error);
-});
+  process.on('uncaughtException', (error: Error) => {
+    handleGlobalError(error);
+  });
+}
 
 // Create the main program
 const program = new Command();

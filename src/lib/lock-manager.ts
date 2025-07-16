@@ -21,6 +21,13 @@ export class LockManager {
   // Global registry of all LockManager instances to clean up on exit
   private static instances = new Set<LockManager>();
   private static globalCleanupHandlersSetup = false;
+  private static cleanupListeners: {
+    exit: () => void;
+    sigint: () => void;
+    sigterm: () => void;
+    uncaughtException: (error: Error) => void;
+    unhandledRejection: (reason: unknown) => void;
+  } | null = null;
 
   constructor(projectRoot: string) {
     this.lockPath = path.join(projectRoot, '.simple-task-master', 'lock');
@@ -256,26 +263,79 @@ export class LockManager {
       await Promise.all(cleanupPromises);
     };
 
-    // Handle various exit scenarios
-    process.once('exit', () => cleanup());
-    process.once('SIGINT', async () => {
+    // Check if we're in a test environment
+    const isTestEnvironment = process.env.NODE_ENV === 'test' || 
+                              process.env.VITEST === 'true' || 
+                              process.env.JEST_WORKER_ID !== undefined ||
+                              process.argv.some(arg => arg.includes('vitest') || arg.includes('jest'));
+
+    // Create listener functions to store references for cleanup
+    const exitListener = () => {
+      // Synchronous cleanup for exit event
+      try {
+        // Use sync operations for exit
+        for (const instance of LockManager.instances) {
+          try {
+            const lockData = require('fs').readFileSync(instance.lockPath, 'utf8');
+            const parsed = JSON.parse(lockData);
+            if (parsed.pid === process.pid) {
+              require('fs').unlinkSync(instance.lockPath);
+            }
+          } catch {
+            // Ignore errors during exit cleanup
+          }
+        }
+      } catch {
+        // Ignore errors during exit cleanup
+      }
+    };
+
+    const sigintListener = async () => {
       await cleanup();
-      process.exit(0);
-    });
-    process.once('SIGTERM', async () => {
+      if (!isTestEnvironment) {
+        process.exit(0);
+      }
+    };
+
+    const sigtermListener = async () => {
       await cleanup();
-      process.exit(0);
-    });
-    process.once('uncaughtException', async (error) => {
+      if (!isTestEnvironment) {
+        process.exit(0);
+      }
+    };
+
+    const uncaughtExceptionListener = async (error: Error) => {
       console.error('Uncaught exception:', error);
       await cleanup();
-      process.exit(1);
-    });
-    process.once('unhandledRejection', async (reason) => {
+      if (!isTestEnvironment) {
+        process.exit(1);
+      }
+    };
+
+    const unhandledRejectionListener = async (reason: unknown) => {
       console.error('Unhandled rejection:', reason);
       await cleanup();
-      process.exit(1);
-    });
+      // Don't exit the process in test environments - let test frameworks handle the error
+      if (!isTestEnvironment) {
+        process.exit(1);
+      }
+    };
+
+    // Store references for cleanup
+    LockManager.cleanupListeners = {
+      exit: exitListener,
+      sigint: sigintListener,
+      sigterm: sigtermListener,
+      uncaughtException: uncaughtExceptionListener,
+      unhandledRejection: unhandledRejectionListener
+    };
+
+    // Handle various exit scenarios
+    process.once('exit', exitListener);
+    process.once('SIGINT', sigintListener);
+    process.once('SIGTERM', sigtermListener);
+    process.once('uncaughtException', uncaughtExceptionListener);
+    process.once('unhandledRejection', unhandledRejectionListener);
   }
 
   /**
@@ -283,5 +343,25 @@ export class LockManager {
    */
   dispose(): void {
     LockManager.instances.delete(this);
+  }
+
+  /**
+   * Clean up all global event listeners (for testing)
+   */
+  static disposeGlobalListeners(): void {
+    if (LockManager.cleanupListeners) {
+      try {
+        process.removeListener('exit', LockManager.cleanupListeners.exit);
+        process.removeListener('SIGINT', LockManager.cleanupListeners.sigint);
+        process.removeListener('SIGTERM', LockManager.cleanupListeners.sigterm);
+        process.removeListener('uncaughtException', LockManager.cleanupListeners.uncaughtException);
+        process.removeListener('unhandledRejection', LockManager.cleanupListeners.unhandledRejection);
+      } catch {
+        // Ignore errors during cleanup
+      }
+      LockManager.cleanupListeners = null;
+    }
+    LockManager.globalCleanupHandlersSetup = false;
+    LockManager.instances.clear();
   }
 }

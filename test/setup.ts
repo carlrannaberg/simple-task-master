@@ -35,6 +35,21 @@ afterAll(async () => {
   // Clean up any remaining temporary directories
   await cleanupTempDirectories();
 
+  // Clean up global event listeners
+  try {
+    const { LockManager } = await import('../src/lib/lock-manager');
+    if (typeof LockManager.disposeGlobalListeners === 'function') {
+      LockManager.disposeGlobalListeners();
+    }
+  } catch (error) {
+    // Ignore errors during cleanup
+    console.warn('Warning: Could not clean up global listeners:', error);
+  }
+
+  // Clean up global temp manager
+  const { disposeGlobalTempManager } = await import('./helpers/temp-utils');
+  disposeGlobalTempManager();
+
   // Restore console
   restoreConsole();
 });

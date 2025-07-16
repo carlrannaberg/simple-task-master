@@ -12,6 +12,13 @@ import { tmpdir } from 'os';
 export class TempDirManager {
   private directories = new Set<string>();
   private cleanupOnExit = true;
+  private cleanupListeners: {
+    exit: () => void;
+    sigint: () => Promise<void>;
+    sigterm: () => Promise<void>;
+    uncaughtException: () => Promise<void>;
+    unhandledRejection: () => Promise<void>;
+  } | null = null;
 
   constructor(options: { cleanupOnExit?: boolean } = {}) {
     this.cleanupOnExit = options.cleanupOnExit ?? true;
@@ -81,12 +88,27 @@ export class TempDirManager {
     return this.directories.size;
   }
 
+  /**
+   * Dispose of event listeners and cleanup resources
+   */
+  dispose(): void {
+    if (this.cleanupListeners) {
+      process.removeListener('exit', this.cleanupListeners.exit);
+      process.removeListener('SIGINT', this.cleanupListeners.sigint);
+      process.removeListener('SIGTERM', this.cleanupListeners.sigterm);
+      process.removeListener('uncaughtException', this.cleanupListeners.uncaughtException);
+      process.removeListener('unhandledRejection', this.cleanupListeners.unhandledRejection);
+      this.cleanupListeners = null;
+    }
+  }
+
   private setupCleanupHandlers(): void {
     const cleanup = async (): Promise<void> => {
       await this.removeAll();
     };
 
-    process.on('exit', () => {
+    // Create listener functions to store references for cleanup
+    const exitListener = () => {
       // Synchronous cleanup for exit
       for (const dir of this.directories) {
         try {
@@ -95,12 +117,38 @@ export class TempDirManager {
           // Ignore errors during exit cleanup
         }
       }
-    });
+    };
 
-    process.on('SIGINT', cleanup);
-    process.on('SIGTERM', cleanup);
-    process.on('uncaughtException', cleanup);
-    process.on('unhandledRejection', cleanup);
+    const sigintListener = async () => {
+      await cleanup();
+    };
+
+    const sigtermListener = async () => {
+      await cleanup();
+    };
+
+    const uncaughtExceptionListener = async () => {
+      await cleanup();
+    };
+
+    const unhandledRejectionListener = async () => {
+      await cleanup();
+    };
+
+    // Store references for cleanup
+    this.cleanupListeners = {
+      exit: exitListener,
+      sigint: sigintListener,
+      sigterm: sigtermListener,
+      uncaughtException: uncaughtExceptionListener,
+      unhandledRejection: unhandledRejectionListener
+    };
+
+    process.on('exit', exitListener);
+    process.on('SIGINT', sigintListener);
+    process.on('SIGTERM', sigtermListener);
+    process.on('uncaughtException', uncaughtExceptionListener);
+    process.on('unhandledRejection', unhandledRejectionListener);
   }
 
   private async createStructure(baseDir: string, structure: DirectoryStructure): Promise<void> {
@@ -357,6 +405,13 @@ Task ${i} demonstrates the task file format and structure.
 export const globalTempManager = new TempDirManager();
 
 /**
+ * Dispose of the global temporary directory manager
+ */
+export function disposeGlobalTempManager(): void {
+  globalTempManager.dispose();
+}
+
+/**
  * Convenience functions using the global manager
  */
 export const temp = {
@@ -389,5 +444,15 @@ export const temp = {
   /**
    * Get count of managed directories
    */
-  count: () => globalTempManager.count()
+  count: () => globalTempManager.count(),
+
+  /**
+   * Create a directory (alias for create for backward compatibility)
+   */
+  createDirectory: (prefix?: string) => globalTempManager.create(prefix),
+
+  /**
+   * Clean up a directory (alias for remove for backward compatibility)
+   */
+  cleanup: (tempDir: string) => globalTempManager.remove(tempDir)
 };
