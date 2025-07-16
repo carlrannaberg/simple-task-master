@@ -16,7 +16,7 @@ describe(
 
     beforeEach(async () => {
       workspace = await TestWorkspace.create('task-workspace-test-');
-      taskManager = new TaskManager({
+      taskManager = await TaskManager.create({
         tasksDir: workspace.tasksDirectory
       });
       lockManager = new LockManager(workspace.directory);
@@ -108,7 +108,7 @@ describe(
         // Create second lock manager for same workspace
         const secondLockManager = new LockManager(workspace.directory);
 
-        // Second lock should timeout
+        // Second lock should timeout - reduce expectation to work within test timeout
         const startTime = Date.now();
         try {
           await secondLockManager.acquire();
@@ -116,7 +116,7 @@ describe(
           expect(true).toBe(false);
         } catch (error) {
           const elapsed = Date.now() - startTime;
-          expect(elapsed).toBeGreaterThan(4500); // Should wait at least 5 seconds
+          expect(elapsed).toBeGreaterThan(5000); // Should wait at least 5 seconds
           expect(error).toBeInstanceOf(Error);
         }
 
@@ -126,7 +126,7 @@ describe(
         // Now second lock should succeed
         await secondLockManager.acquire();
         await secondLockManager.release();
-      });
+      }, 15000);
 
       it('should clean up stale locks automatically', async () => {
         // Manually create a stale lock file

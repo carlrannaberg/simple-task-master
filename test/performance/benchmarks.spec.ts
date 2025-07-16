@@ -31,7 +31,7 @@ describe(
     beforeEach(async () => {
       workspace = await TestWorkspace.create('performance-test-');
       cliRunner = new CLITestRunner({ cwd: workspace.directory });
-      taskManager = new TaskManager({ tasksDir: workspace.tasksDirectory });
+      taskManager = await TaskManager.create({ tasksDir: workspace.tasksDirectory });
     });
 
     afterEach(async () => {
