@@ -264,13 +264,13 @@ export class LockManager {
     };
 
     // Check if we're in a test environment
-    const isTestEnvironment = process.env.NODE_ENV === 'test' || 
-                              process.env.VITEST === 'true' || 
+    const isTestEnvironment = process.env.NODE_ENV === 'test' ||
+                              process.env.VITEST === 'true' ||
                               process.env.JEST_WORKER_ID !== undefined ||
                               process.argv.some(arg => arg.includes('vitest') || arg.includes('jest'));
 
     // Create listener functions to store references for cleanup
-    const exitListener = () => {
+    const exitListener = (): void => {
       // Synchronous cleanup for exit event
       try {
         // Use sync operations for exit
@@ -290,21 +290,21 @@ export class LockManager {
       }
     };
 
-    const sigintListener = async () => {
+    const sigintListener = async (): Promise<void> => {
       await cleanup();
       if (!isTestEnvironment) {
         process.exit(0);
       }
     };
 
-    const sigtermListener = async () => {
+    const sigtermListener = async (): Promise<void> => {
       await cleanup();
       if (!isTestEnvironment) {
         process.exit(0);
       }
     };
 
-    const uncaughtExceptionListener = async (error: Error) => {
+    const uncaughtExceptionListener = async (error: Error): Promise<void> => {
       console.error('Uncaught exception:', error);
       await cleanup();
       if (!isTestEnvironment) {
@@ -312,7 +312,7 @@ export class LockManager {
       }
     };
 
-    const unhandledRejectionListener = async (reason: unknown) => {
+    const unhandledRejectionListener = async (reason: unknown): Promise<void> => {
       console.error('Unhandled rejection:', reason);
       await cleanup();
       // Don't exit the process in test environments - let test frameworks handle the error

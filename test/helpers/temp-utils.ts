@@ -108,7 +108,7 @@ export class TempDirManager {
     };
 
     // Create listener functions to store references for cleanup
-    const exitListener = () => {
+    const exitListener = (): void => {
       // Synchronous cleanup for exit
       for (const dir of this.directories) {
         try {
@@ -119,19 +119,19 @@ export class TempDirManager {
       }
     };
 
-    const sigintListener = async () => {
+    const sigintListener = async (): Promise<void> => {
       await cleanup();
     };
 
-    const sigtermListener = async () => {
+    const sigtermListener = async (): Promise<void> => {
       await cleanup();
     };
 
-    const uncaughtExceptionListener = async () => {
+    const uncaughtExceptionListener = async (): Promise<void> => {
       await cleanup();
     };
 
-    const unhandledRejectionListener = async () => {
+    const unhandledRejectionListener = async (): Promise<void> => {
       await cleanup();
     };
 
