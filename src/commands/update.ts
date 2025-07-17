@@ -231,6 +231,10 @@ async function updateTask(
       try {
         const descContent = await readInput(options.description, false, '', 30000);
         if (descContent !== undefined) {
+          // Validate that description is not empty after trimming
+          if (descContent.trim().length === 0) {
+            throw new ValidationError('description cannot be empty');
+          }
           updatedContent = updateBodySection(updatedContent, 'description', descContent);
           contentModified = true;
         }

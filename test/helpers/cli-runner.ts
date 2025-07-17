@@ -72,8 +72,30 @@ export async function runSTM(args: string[], options: CLIRunOptions = {}): Promi
 
     // Send input if provided
     if (input && child.stdin) {
-      child.stdin.write(input);
-      child.stdin.end();
+      child.stdin.on('error', (error) => {
+        // Handle EPIPE errors gracefully - this occurs when the child process
+        // has already closed its stdin but we're trying to write to it
+        if ((error as NodeJS.ErrnoException).code === 'EPIPE') {
+          // EPIPE is expected when the child process closes stdin early
+          // This is not an error condition, just ignore it
+          return;
+        }
+        // For other errors, we should still log them
+        console.warn('stdin error:', error.message);
+      });
+
+      try {
+        child.stdin.write(input);
+        child.stdin.end();
+      } catch (error) {
+        // Handle synchronous errors (e.g., if stdin is already closed)
+        if ((error as NodeJS.ErrnoException).code === 'EPIPE') {
+          // EPIPE is expected when the child process closes stdin early
+          // This is not an error condition, just ignore it
+          return;
+        }
+        throw error;
+      }
     }
 
     // Handle process completion

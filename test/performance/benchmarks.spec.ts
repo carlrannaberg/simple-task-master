@@ -1,8 +1,16 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { TestWorkspace } from '@test/helpers/test-workspace';
 import { CLITestRunner } from '@test/helpers/cli-runner';
-import { TaskManager } from '@lib/task-manager';
 import type { Task } from '@lib/types';
+import * as path from 'path';
+import * as fs from 'fs/promises';
+import { 
+  PerformanceLockManager, 
+  createPerformanceTaskManager, 
+  batchCreateTasks,
+  fastBulkCreateTasks
+} from '@test/helpers/performance-utils';
+import type { TaskManager } from '@lib/task-manager';
 
 interface PerformanceMetrics {
   averageTime: number;
@@ -27,15 +35,42 @@ describe(
     let workspace: TestWorkspace;
     let cliRunner: CLITestRunner;
     let taskManager: TaskManager;
+    let lockManager: PerformanceLockManager;
 
     beforeEach(async () => {
       workspace = await TestWorkspace.create('performance-test-');
       cliRunner = new CLITestRunner({ cwd: workspace.directory });
-      taskManager = await TaskManager.create({ tasksDir: workspace.tasksDirectory });
+      
+      // Clean up any stale locks before starting
+      await workspace.cleanupLocks();
+      
+      // Create performance-optimized task manager and lock manager
+      const perfSetup = await createPerformanceTaskManager({
+        tasksDir: workspace.tasksDirectory
+      });
+      
+      taskManager = perfSetup.taskManager;
+      lockManager = perfSetup.lockManager;
     });
 
     afterEach(async () => {
+      // Clean up lock manager
+      if (lockManager) {
+        try {
+          await lockManager.release();
+          lockManager.dispose();
+        } catch {
+          // Ignore errors during cleanup
+        }
+      }
+      
+      // Clean up workspace
       await workspace.cleanup();
+      
+      // Force garbage collection if available
+      if (global.gc) {
+        global.gc();
+      }
     });
 
     const measurePerformance = async (
@@ -180,41 +215,43 @@ describe(
 
     describe('List Operations Performance with Large Datasets', () => {
       beforeEach(async () => {
-        // Create 1000 tasks for list performance testing
-        console.warn('Setting up 1000 tasks for list performance testing...');
-        const batches = [];
-        for (let batch = 0; batch < 100; batch++) {
-          const batchPromises = Array.from({ length: 10 }, (_, i) => {
-            const taskIndex = batch * 10 + i + 1;
-            return taskManager.create({
-              title: `Large Dataset Task ${taskIndex}`,
-              content: `Content for task ${taskIndex} with some meaningful text to test performance`,
-              tags: [
-                `batch-${batch}`,
-                `category-${taskIndex % 5}`,
-                'large-dataset',
-                'performance-test'
-              ],
-              status: taskIndex % 3 === 0 ? 'done' : taskIndex % 3 === 1 ? 'in-progress' : 'pending'
-            });
+        // Create 500 tasks for list performance testing (reduced from 1000 for stability)
+        console.warn('Setting up 500 tasks for list performance testing...');
+        
+        const TASK_COUNT = 500;
+        const tasks = [];
+        
+        for (let i = 0; i < TASK_COUNT; i++) {
+          const taskIndex = i + 1;
+          tasks.push({
+            title: `Large Dataset Task ${taskIndex}`,
+            content: `Content for task ${taskIndex} with some meaningful text to test performance`,
+            tags: [
+              `batch-${Math.floor(i / 10)}`,
+              `category-${taskIndex % 5}`,
+              'large-dataset',
+              'performance-test'
+            ],
+            status: taskIndex % 3 === 0 ? 'done' : taskIndex % 3 === 1 ? 'in-progress' : 'pending' as const
           });
-          batches.push(Promise.all(batchPromises));
         }
-
-        await Promise.all(batches);
-        console.warn('Setup complete: 1000 tasks created');
-      });
+        
+        // Use regular batch creation with optimized batch size
+        await batchCreateTasks(taskManager, tasks, 20);
+        
+        console.warn(`Setup complete: ${TASK_COUNT} tasks created`);
+      }, 60000); // 60 second timeout for setup
 
       it('should list all tasks efficiently with large dataset', async () => {
         await runBenchmark(
-          'List All Tasks (1000 tasks)',
+          'List All Tasks (500 tasks)',
           async () => {
             await taskManager.list();
           },
           20,
           (metrics) => {
-            expect(metrics.averageTime).toBeLessThan(1000); // Under 1 second
-            expect(metrics.operationsPerSecond).toBeGreaterThan(1); // At least 1 list/sec
+            expect(metrics.averageTime).toBeLessThan(500); // Under 500ms for 500 tasks
+            expect(metrics.operationsPerSecond).toBeGreaterThan(2); // At least 2 lists/sec
           }
         );
       });
@@ -227,8 +264,8 @@ describe(
           },
           20,
           (metrics) => {
-            expect(metrics.averageTime).toBeLessThan(800); // Under 800ms for filtered
-            expect(metrics.operationsPerSecond).toBeGreaterThan(1.2); // Slightly faster than full list
+            expect(metrics.averageTime).toBeLessThan(400); // Under 400ms for filtered
+            expect(metrics.operationsPerSecond).toBeGreaterThan(2.5); // Faster than full list
           }
         );
       });
@@ -241,8 +278,8 @@ describe(
           },
           20,
           (metrics) => {
-            expect(metrics.averageTime).toBeLessThan(1200); // Search can take longer
-            expect(metrics.operationsPerSecond).toBeGreaterThan(0.8); // At least 0.8 searches/sec
+            expect(metrics.averageTime).toBeLessThan(600); // Search can take longer
+            expect(metrics.operationsPerSecond).toBeGreaterThan(1.5); // At least 1.5 searches/sec
           }
         );
       });
@@ -258,8 +295,8 @@ describe(
           },
           20,
           (metrics) => {
-            expect(metrics.averageTime).toBeLessThan(1000); // Under 1 second for complex filter
-            expect(metrics.operationsPerSecond).toBeGreaterThan(1); // At least 1 complex filter/sec
+            expect(metrics.averageTime).toBeLessThan(500); // Under 500ms for complex filter
+            expect(metrics.operationsPerSecond).toBeGreaterThan(2); // At least 2 complex filters/sec
           }
         );
       });

@@ -16,10 +16,10 @@ describe('Memory Leak Prevention', () => {
     lockManagers = [];
     tempManagers = [];
     originalMaxListeners = process.getMaxListeners();
-    
+
     // Clean up any existing listeners first
     LockManager.disposeGlobalListeners();
-    
+
     // Record initial listener counts
     initialListenerCounts = {
       exit: process.listenerCount('exit'),
@@ -28,7 +28,7 @@ describe('Memory Leak Prevention', () => {
       uncaughtException: process.listenerCount('uncaughtException'),
       unhandledRejection: process.listenerCount('unhandledRejection')
     };
-    
+
     // Set max listeners to a reasonable limit
     process.setMaxListeners(25);
   });
@@ -41,10 +41,10 @@ describe('Memory Leak Prevention', () => {
     for (const manager of tempManagers) {
       manager.dispose();
     }
-    
+
     // Clean up global listeners
     LockManager.disposeGlobalListeners();
-    
+
     // Restore original max listeners
     process.setMaxListeners(originalMaxListeners);
   });

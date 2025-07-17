@@ -58,43 +58,7 @@ export interface TaskManagerConfig {
   maxDescriptionLength?: number;
 }
 
-export class TaskError extends Error {
-  constructor(
-    message: string,
-    public code: string
-  ) {
-    super(message);
-    this.name = 'TaskError';
-  }
-}
-
-export class ValidationError extends TaskError {
-  constructor(message: string) {
-    super(message, 'VALIDATION_ERROR');
-    this.name = 'ValidationError';
-  }
-}
-
-export class FileSystemError extends TaskError {
-  constructor(message: string) {
-    super(message, 'FILESYSTEM_ERROR');
-    this.name = 'FileSystemError';
-  }
-}
-
-export class NotFoundError extends TaskError {
-  constructor(message: string) {
-    super(message, 'NOT_FOUND');
-    this.name = 'NotFoundError';
-  }
-}
-
-export class LockError extends TaskError {
-  constructor(message: string) {
-    super(message, 'LOCK_ERROR');
-    this.name = 'LockError';
-  }
-}
+// Error classes moved to ./errors.ts to avoid duplication
 
 export interface Config {
   schema: number;

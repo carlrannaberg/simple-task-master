@@ -14,7 +14,7 @@ export class TestWorkspace {
   private taskManager: TaskManager | null = null;
   private originalCwd: string;
 
-  private constructor(tempDir: string) {
+  constructor(tempDir: string) {
     this.tempDir = tempDir;
     this.originalCwd = process.cwd();
   }
@@ -33,16 +33,23 @@ export class TestWorkspace {
   }
 
   /**
+   * Initialize the workspace (for backward compatibility)
+   */
+  async init(): Promise<void> {
+    await this.initializeSTM();
+  }
+
+  /**
    * Initialize STM configuration in the workspace
    */
   private async initializeSTM(): Promise<void> {
     const stmDir = path.join(this.tempDir, '.simple-task-master');
     await fs.mkdir(stmDir, { recursive: true });
 
-    // Create default config
+    // Create default config with extended timeout for tests
     const config = {
       schema: 1,
-      lockTimeoutMs: 5000,
+      lockTimeoutMs: 30000, // 30 seconds for test environments
       maxTaskSizeBytes: 1048576
     };
 
@@ -56,11 +63,26 @@ export class TestWorkspace {
    * Clean up the workspace
    */
   async cleanup(): Promise<void> {
+    // Clean up any locks first
+    await this.cleanupLocks();
+    
     // Remove temporary directory
     try {
       await fs.rm(this.tempDir, { recursive: true, force: true });
     } catch (error) {
       console.warn(`Failed to clean up test workspace: ${error}`);
+    }
+  }
+  
+  /**
+   * Clean up any stale locks in the workspace
+   */
+  async cleanupLocks(): Promise<void> {
+    const lockPath = path.join(this.tempDir, '.simple-task-master', 'lock');
+    try {
+      await fs.unlink(lockPath);
+    } catch {
+      // Ignore if lock doesn't exist
     }
   }
 

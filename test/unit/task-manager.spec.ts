@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { TaskManager } from '@lib/task-manager';
-import { ValidationError, NotFoundError, type Task } from '@lib/types';
+import { ValidationError, NotFoundError } from '@lib/errors';
+import { type Task } from '@lib/types';
 import { TestWorkspace, TaskBuilder, testIsolation } from '@test/helpers';
 
 describe('TaskManager', () => {
@@ -76,10 +77,11 @@ describe('TaskManager', () => {
     });
 
     it('should handle filesystem-unsafe characters in title', async () => {
-      await expect(taskManager.create({ title: 'Task with <invalid> chars' })).rejects.toThrow(
-        ValidationError
-      );
-
+      // Characters like <, >, ", |, ?, * are now allowed in titles
+      // They will be sanitized when creating filenames
+      await expect(taskManager.create({ title: 'Task with <invalid> chars' })).resolves.toBeTruthy();
+      
+      // But control characters are still not allowed
       await expect(taskManager.create({ title: 'Task with\x00null' })).rejects.toThrow(
         ValidationError
       );
@@ -309,13 +311,13 @@ describe('TaskManager', () => {
       await expect(taskManager.create({ title: '\t\n' })).rejects.toThrow('Title is required');
     });
 
-    it('should handle invalid characters in title', async () => {
-      const invalidChars = ['<', '>', '"', '|', '?', '*'];
+    it('should handle special characters in title', async () => {
+      // These characters are now allowed in titles
+      const specialChars = ['<', '>', '"', '|', '?', '*', '\'', '&', '!', '@', '#', '$', '%', '^', '(', ')'];
 
-      for (const char of invalidChars) {
-        await expect(taskManager.create({ title: `Task with ${char} char` })).rejects.toThrow(
-          'invalid filesystem characters'
-        );
+      for (const char of specialChars) {
+        const task = await taskManager.create({ title: `Task with ${char} char` });
+        expect(task.title).toBe(`Task with ${char} char`);
       }
     });
 
@@ -324,7 +326,7 @@ describe('TaskManager', () => {
 
       for (const char of controlChars) {
         await expect(taskManager.create({ title: `Task with${char}control` })).rejects.toThrow(
-          'invalid filesystem characters'
+          'invalid control characters'
         );
       }
     });

@@ -116,7 +116,7 @@ describe(
           expect(true).toBe(false);
         } catch (error) {
           const elapsed = Date.now() - startTime;
-          expect(elapsed).toBeGreaterThan(5000); // Should wait at least 5 seconds
+          expect(elapsed).toBeGreaterThan(10000); // Should wait at least 10 seconds (MAX_LOCK_RETRIES * LOCK_CHECK_INTERVAL_MS)
           expect(error).toBeInstanceOf(Error);
         }
 
@@ -126,7 +126,7 @@ describe(
         // Now second lock should succeed
         await secondLockManager.acquire();
         await secondLockManager.release();
-      }, 15000);
+      }, 20000); // Increased timeout to accommodate 10+ second lock wait
 
       it('should clean up stale locks automatically', async () => {
         // Manually create a stale lock file

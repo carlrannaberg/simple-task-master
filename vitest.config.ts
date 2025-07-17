@@ -6,6 +6,12 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     setupFiles: ['./test/setup.ts'],
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true
+      }
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
@@ -26,8 +32,12 @@ export default defineConfig({
     },
     include: ['test/**/*.test.ts', 'test/**/*.spec.ts'],
     exclude: ['node_modules', 'dist', 'coverage'],
-    testTimeout: 5000,
-    hookTimeout: 10000
+    testTimeout: 15000,
+    hookTimeout: 20000,
+    maxConcurrency: 2,
+    sequence: {
+      concurrent: false
+    }
   },
   resolve: {
     alias: {

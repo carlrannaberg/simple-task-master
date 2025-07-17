@@ -200,9 +200,19 @@ export async function readStdin(timeoutMs: number = 30000): Promise<string> {
       }
 
       // Remove all listeners to clean up
-      process.stdin.removeAllListeners('data');
-      process.stdin.removeAllListeners('end');
-      process.stdin.removeAllListeners('error');
+      try {
+        process.stdin.removeAllListeners('data');
+        process.stdin.removeAllListeners('end');
+        process.stdin.removeAllListeners('error');
+
+        // Try to pause stdin to stop any pending reads
+        if (process.stdin.readable) {
+          process.stdin.pause();
+        }
+      } catch {
+        // Ignore cleanup errors - they might occur if stdin is already closed
+        // This prevents EPIPE errors during cleanup
+      }
 
       if (result instanceof Error) {
         reject(result);
@@ -227,7 +237,14 @@ export async function readStdin(timeoutMs: number = 30000): Promise<string> {
     });
 
     process.stdin.on('error', (error) => {
-      finish(new Error(`Failed to read from stdin: ${error.message}`));
+      // Handle EPIPE errors gracefully - this occurs when the writing process
+      // has already closed the pipe but we're trying to read from it
+      if ((error as NodeJS.ErrnoException).code === 'EPIPE') {
+        // EPIPE on stdin read side is less common, but handle it gracefully
+        finish(new Error('Input stream was closed prematurely'));
+      } else {
+        finish(new Error(`Failed to read from stdin: ${error.message}`));
+      }
     });
 
     // Start reading

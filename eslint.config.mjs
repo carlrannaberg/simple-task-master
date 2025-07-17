@@ -4,7 +4,7 @@ import typescriptParser from '@typescript-eslint/parser';
 
 export default [
   {
-    ignores: ['dist/**', 'node_modules/**', 'coverage/**'],
+    ignores: ['dist/**', 'node_modules/**', 'coverage/**']
   },
   js.configs.recommended,
   {
@@ -14,7 +14,7 @@ export default [
       parserOptions: {
         ecmaVersion: 2022,
         sourceType: 'module',
-        project: './tsconfig.json',
+        project: './tsconfig.json'
       },
       globals: {
         console: 'readonly',
@@ -30,11 +30,11 @@ export default [
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
         setInterval: 'readonly',
-        clearInterval: 'readonly',
-      },
+        clearInterval: 'readonly'
+      }
     },
     plugins: {
-      '@typescript-eslint': typescript,
+      '@typescript-eslint': typescript
     },
     rules: {
       // TypeScript specific rules
@@ -42,23 +42,23 @@ export default [
         'error',
         {
           allowExpressions: true,
-          allowTypedFunctionExpressions: true,
-        },
+          allowTypedFunctionExpressions: true
+        }
       ],
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
           argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
-        },
+          varsIgnorePattern: '^_'
+        }
       ],
       '@typescript-eslint/no-non-null-assertion': 'error',
       '@typescript-eslint/consistent-type-imports': [
         'error',
         {
-          prefer: 'type-imports',
-        },
+          prefer: 'type-imports'
+        }
       ],
 
       // General rules
@@ -75,8 +75,8 @@ export default [
       'eol-last': ['error', 'always'],
       'no-multiple-empty-lines': ['error', { max: 1 }],
       'object-curly-spacing': ['error', 'always'],
-      'array-bracket-spacing': ['error', 'never'],
-    },
+      'array-bracket-spacing': ['error', 'never']
+    }
   },
   {
     files: ['test/**/*.ts'],
@@ -85,7 +85,7 @@ export default [
       parserOptions: {
         ecmaVersion: 2022,
         sourceType: 'module',
-        project: './tsconfig.test.json',
+        project: './tsconfig.test.json'
       },
       globals: {
         console: 'readonly',
@@ -111,11 +111,11 @@ export default [
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
         setInterval: 'readonly',
-        clearInterval: 'readonly',
-      },
+        clearInterval: 'readonly'
+      }
     },
     plugins: {
-      '@typescript-eslint': typescript,
+      '@typescript-eslint': typescript
     },
     rules: {
       // Same TypeScript rules
@@ -123,23 +123,23 @@ export default [
         'error',
         {
           allowExpressions: true,
-          allowTypedFunctionExpressions: true,
-        },
+          allowTypedFunctionExpressions: true
+        }
       ],
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
           argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
-        },
+          varsIgnorePattern: '^_'
+        }
       ],
       '@typescript-eslint/no-non-null-assertion': 'error',
       '@typescript-eslint/consistent-type-imports': [
         'error',
         {
-          prefer: 'type-imports',
-        },
+          prefer: 'type-imports'
+        }
       ],
 
       // General rules
@@ -155,7 +155,38 @@ export default [
       'eol-last': ['error', 'always'],
       'no-multiple-empty-lines': ['error', { max: 1 }],
       'object-curly-spacing': ['error', 'always'],
-      'array-bracket-spacing': ['error', 'never'],
-    },
+      'array-bracket-spacing': ['error', 'never']
+    }
   },
+  {
+    files: ['**/*.js', '**/*.cjs', '**/*.mjs'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+        Buffer: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        exports: 'writable',
+        module: 'writable',
+        require: 'readonly',
+        global: 'readonly',
+        NodeJS: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly'
+      }
+    },
+    rules: {
+      'no-console': 'off', // Allow console in JS files for scripts
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      'prefer-const': 'error',
+      quotes: ['error', 'single'],
+      semi: ['error', 'always'],
+      'comma-dangle': ['error', 'never']
+    }
+  }
 ];

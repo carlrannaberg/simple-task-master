@@ -1,6 +1,6 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import matter from 'gray-matter';
+import { FrontmatterParser } from './frontmatter-parser';
 import writeFileAtomic from 'write-file-atomic';
 import slugify from 'slugify';
 import { LockManager } from './lock-manager';
@@ -8,12 +8,14 @@ import { getTasksDirectory, getWorkspaceRoot } from './workspace';
 import {
   ValidationError,
   FileSystemError,
-  NotFoundError,
-  type Task,
-  type TaskCreateInput,
-  type TaskUpdateInput,
-  type TaskListFilters,
-  type TaskManagerConfig
+  NotFoundError
+} from './errors';
+import type {
+  Task,
+  TaskCreateInput,
+  TaskUpdateInput,
+  TaskListFilters,
+  TaskManagerConfig
 } from './types';
 
 // Default configuration values
@@ -93,20 +95,8 @@ export class TaskManager {
         const filename = this.generateFilename(id, task.title);
         const filepath = path.join(this.config.tasksDir, filename);
 
-        // Only store metadata when necessary to handle gray-matter's newline behavior
-        const taskData =
-          content === '' || (content.length > 0 && !content.endsWith('\n'))
-            ? {
-                ...task,
-                _contentMetadata: {
-                  wasEmpty: content === '',
-                  hadNoTrailingNewline: content.length > 0 && !content.endsWith('\n')
-                }
-              }
-            : task;
-
         // Serialize to markdown with front-matter
-        const fileContent = matter.stringify(content, taskData);
+        const fileContent = FrontmatterParser.stringify(content, task);
 
         // Validate file size
         await this.validateTaskSize(fileContent);
@@ -283,20 +273,8 @@ export class TaskManager {
       const oldFilepath = path.join(this.config.tasksDir, currentFile);
       const newFilepath = path.join(this.config.tasksDir, newFilename);
 
-      // Only store metadata when necessary to handle gray-matter's newline behavior
-      const updatedTaskData =
-        updatedContent === '' || (updatedContent.length > 0 && !updatedContent.endsWith('\n'))
-          ? {
-              ...updatedTask,
-              _contentMetadata: {
-                wasEmpty: updatedContent === '',
-                hadNoTrailingNewline: updatedContent.length > 0 && !updatedContent.endsWith('\n')
-              }
-            }
-          : updatedTask;
-
       // Serialize to markdown
-      const fileContent = matter.stringify(updatedContent, updatedTaskData);
+      const fileContent = FrontmatterParser.stringify(updatedContent, updatedTask);
 
       // Validate file size
       await this.validateTaskSize(fileContent);
@@ -391,9 +369,12 @@ export class TaskManager {
             return this.generateNextIdByFullScan();
           }
         } catch (error) {
-          // If we can't read the file, fall back to full scan
+          // If we can't read the file, still use the ID from the filename
+          // This prevents infinite loops when files are corrupted
           console.warn(`Warning: Could not read file ${maxIdFile} for ID verification: ${error}`);
-          return this.generateNextIdByFullScan();
+          // Important: Return the next ID based on filename, not a full scan
+          // This ensures we don't get stuck trying to use the same ID
+          return maxId + 1;
         }
       }
 
@@ -415,6 +396,16 @@ export class TaskManager {
 
     let maxId = 0;
     for (const file of files) {
+      // First try to extract ID from filename
+      const filenameMatch = file.match(/^(\d+)-/);
+      if (filenameMatch && filenameMatch[1]) {
+        const filenameId = parseInt(filenameMatch[1], 10);
+        if (!isNaN(filenameId) && filenameId > maxId) {
+          maxId = filenameId;
+        }
+      }
+
+      // Then try to read the file for verification
       try {
         const filepath = path.join(this.config.tasksDir, file);
         const task = await this.readTaskFile(filepath);
@@ -422,7 +413,7 @@ export class TaskManager {
           maxId = task.id;
         }
       } catch (error) {
-        // Skip files that can't be read
+        // Skip files that can't be read but we already have the ID from filename
         console.warn(`Warning: Could not read file ${file}: ${error}`);
       }
     }
@@ -467,32 +458,17 @@ export class TaskManager {
   private async readTaskFile(filepath: string): Promise<Task> {
     try {
       const fileContent = await fs.readFile(filepath, 'utf8');
-      const { data, content } = matter(fileContent);
+      const { data, content } = FrontmatterParser.parse(fileContent);
 
       // Validate required fields
-      if (!data.id || !data.title || !data.status) {
-        throw new ValidationError('Invalid task file: missing required fields');
-      }
+      FrontmatterParser.validateTaskData(data);
 
-      // Handle gray-matter's behavior of adding trailing newlines
-      // We need to preserve the original content exactly as it was provided
-      let preservedContent = content;
-
-      // Check if we stored the original content info in metadata
-      // If not, we'll need to handle common cases
-      if (data._contentMetadata) {
-        // If we have metadata about the original content, use it
-        if (data._contentMetadata.wasEmpty && content === '\n') {
-          preservedContent = '';
-        } else if (data._contentMetadata.hadNoTrailingNewline && content.endsWith('\n')) {
-          // Remove the extra newline that gray-matter added
-          preservedContent = content.slice(0, -1);
-        }
-      }
-
+      // Content is already preserved exactly as it was in the file
+      // After validation, we know data is a valid Task
+      const task = data as unknown as Task;
       return {
-        ...(data as Task),
-        content: preservedContent
+        ...task,
+        content: content
       };
     } catch (error) {
       if (error instanceof ValidationError) throw error;
@@ -523,10 +499,12 @@ export class TaskManager {
       );
     }
 
-    // Check for filesystem-unsafe characters including control characters
-    const unsafeChars = /[<>"|?*\x00-\x1f]/g;
-    if (unsafeChars.test(title)) {
-      throw new ValidationError('Title contains invalid filesystem characters');
+    // Only check for truly dangerous characters - control characters and null bytes
+    // Allow quotes, apostrophes, and other symbols in titles
+    // The filename sanitization will handle filesystem-specific restrictions
+    const dangerousChars = /[\x00-\x1f]/g;
+    if (dangerousChars.test(title)) {
+      throw new ValidationError('Title contains invalid control characters');
     }
   }
 
