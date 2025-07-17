@@ -167,5 +167,15 @@ export const addCommand = new Command('add')
   .option('--deps <dependencies>', 'Comma-separated list of dependency task IDs')
   .option('-s, --status <status>', 'Task status (pending, in-progress, done)', 'pending')
   .action(async (title: string, options) => {
-    await addTask(title, options);
+    try {
+      await addTask(title, options);
+    } catch (error) {
+      // Ensure all errors result in non-zero exit
+      if (error instanceof Error) {
+        printError(error.message);
+      } else {
+        printError(String(error));
+      }
+      process.exit(1);
+    }
   });

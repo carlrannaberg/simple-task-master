@@ -65,7 +65,7 @@ export class TestWorkspace {
   async cleanup(): Promise<void> {
     // Clean up any locks first
     await this.cleanupLocks();
-    
+
     // Remove temporary directory
     try {
       await fs.rm(this.tempDir, { recursive: true, force: true });
@@ -73,7 +73,7 @@ export class TestWorkspace {
       console.warn(`Failed to clean up test workspace: ${error}`);
     }
   }
-  
+
   /**
    * Clean up any stale locks in the workspace
    */

@@ -76,12 +76,24 @@ export class LockManager {
             } else {
               // Lock is fresh but process is dead - wait a bit for cleanup
               retries++;
+              if (retries >= this.MAX_LOCK_RETRIES) {
+                throw new Error(
+                  `Failed to acquire lock after ${this.MAX_LOCK_RETRIES} retries (${this.MAX_LOCK_RETRIES * this.LOCK_CHECK_INTERVAL_MS}ms). ` +
+                    'Another process is holding the lock.'
+                );
+              }
               await this.sleep(this.LOCK_CHECK_INTERVAL_MS);
               continue;
             }
           } else {
             // Lock is still valid, wait and retry
             retries++;
+            if (retries >= this.MAX_LOCK_RETRIES) {
+              throw new Error(
+                `Failed to acquire lock after ${this.MAX_LOCK_RETRIES} retries (${this.MAX_LOCK_RETRIES * this.LOCK_CHECK_INTERVAL_MS}ms). ` +
+                  'Another process is holding the lock.'
+              );
+            }
             await this.sleep(this.LOCK_CHECK_INTERVAL_MS);
             continue;
           }

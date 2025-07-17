@@ -11,7 +11,7 @@ The Simple Task Master project has excellent infrastructure, comprehensive testi
 ### ✅ **Package Information**
 - **Version**: 0.0.1
 - **Package Name**: simple-task-master
-- **Registry**: npm ([REDACTED] configured)
+- **Registry**: npm (configured)
 - **Repository**: https://github.com/carlrannaberg/simple-task-master.git
 - **License**: MIT
 - **Author**: Carl Rannaberg

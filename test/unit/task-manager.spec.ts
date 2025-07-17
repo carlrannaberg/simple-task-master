@@ -80,7 +80,7 @@ describe('TaskManager', () => {
       // Characters like <, >, ", |, ?, * are now allowed in titles
       // They will be sanitized when creating filenames
       await expect(taskManager.create({ title: 'Task with <invalid> chars' })).resolves.toBeTruthy();
-      
+
       // But control characters are still not allowed
       await expect(taskManager.create({ title: 'Task with\x00null' })).rejects.toThrow(
         ValidationError

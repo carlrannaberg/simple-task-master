@@ -132,11 +132,25 @@ export class TaskManager {
           // Try to create the file exclusively
           const fd = await fs.open(filepath, 'wx'); // 'wx' fails if file exists
           await fd.write(fileContent, 0, 'utf8');
+          await fd.sync(); // Force filesystem sync
           await fd.close();
 
           // Ensure the file is visible to other processes before we release the lock
           // This prevents race conditions where the next process might not see this file
-          await fs.access(filepath); // Verify file exists
+          // Wait up to 100ms for the file to be visible in directory listing
+          let fileVisible = false;
+          for (let i = 0; i < 10; i++) {
+            const files = await fs.readdir(this.config.tasksDir);
+            if (files.includes(filename)) {
+              fileVisible = true;
+              break;
+            }
+            await new Promise(resolve => setTimeout(resolve, 10));
+          }
+
+          if (!fileVisible) {
+            throw new Error(`File ${filename} not visible in directory after creation`);
+          }
 
           // Success! Return the task
           return task;

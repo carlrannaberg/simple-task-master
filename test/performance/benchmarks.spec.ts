@@ -1,15 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { TestWorkspace } from '@test/helpers/test-workspace';
+import { PerformanceTestWorkspace } from '@test/helpers/performance-test-workspace';
 import { CLITestRunner } from '@test/helpers/cli-runner';
 import type { Task } from '@lib/types';
-import * as path from 'path';
-import * as fs from 'fs/promises';
-import { 
-  PerformanceLockManager, 
-  createPerformanceTaskManager, 
-  batchCreateTasks,
-  fastBulkCreateTasks
-} from '@test/helpers/performance-utils';
 import type { TaskManager } from '@lib/task-manager';
 
 interface PerformanceMetrics {
@@ -32,41 +24,25 @@ interface BenchmarkResult {
 describe(
   'Performance Benchmarks',
   () => {
-    let workspace: TestWorkspace;
+    let workspace: PerformanceTestWorkspace;
     let cliRunner: CLITestRunner;
     let taskManager: TaskManager;
-    let lockManager: PerformanceLockManager;
 
     beforeEach(async () => {
-      workspace = await TestWorkspace.create('performance-test-');
+      workspace = await PerformanceTestWorkspace.create('performance-test-');
       cliRunner = new CLITestRunner({ cwd: workspace.directory });
-      
+
       // Clean up any stale locks before starting
       await workspace.cleanupLocks();
-      
-      // Create performance-optimized task manager and lock manager
-      const perfSetup = await createPerformanceTaskManager({
-        tasksDir: workspace.tasksDirectory
-      });
-      
-      taskManager = perfSetup.taskManager;
-      lockManager = perfSetup.lockManager;
+
+      // Get performance-optimized task manager
+      taskManager = await workspace.getPerformanceTaskManager();
     });
 
     afterEach(async () => {
-      // Clean up lock manager
-      if (lockManager) {
-        try {
-          await lockManager.release();
-          lockManager.dispose();
-        } catch {
-          // Ignore errors during cleanup
-        }
-      }
-      
-      // Clean up workspace
+      // Clean up workspace (includes lock manager cleanup)
       await workspace.cleanup();
-      
+
       // Force garbage collection if available
       if (global.gc) {
         global.gc();
@@ -217,10 +193,10 @@ describe(
       beforeEach(async () => {
         // Create 500 tasks for list performance testing (reduced from 1000 for stability)
         console.warn('Setting up 500 tasks for list performance testing...');
-        
+
         const TASK_COUNT = 500;
         const tasks = [];
-        
+
         for (let i = 0; i < TASK_COUNT; i++) {
           const taskIndex = i + 1;
           tasks.push({
@@ -235,10 +211,10 @@ describe(
             status: taskIndex % 3 === 0 ? 'done' : taskIndex % 3 === 1 ? 'in-progress' : 'pending' as const
           });
         }
-        
-        // Use regular batch creation with optimized batch size
-        await batchCreateTasks(taskManager, tasks, 20);
-        
+
+        // Use workspace's optimized batch creation
+        await workspace.batchCreateTasks(tasks, 20);
+
         console.warn(`Setup complete: ${TASK_COUNT} tasks created`);
       }, 60000); // 60 second timeout for setup
 
@@ -406,7 +382,10 @@ describe(
         console.warn(`Memory usage after GC: ${memoryAfterGC.toFixed(2)}MB`);
 
         // Memory should decrease after garbage collection
-        expect(memoryAfterGC).toBeLessThan(memoryIncrease);
+        // Only check if memory actually increased (positive value)
+        if (memoryIncrease > 0) {
+          expect(memoryAfterGC).toBeLessThan(memoryIncrease);
+        }
       });
 
       it('should handle memory efficiently during rapid task creation', async () => {

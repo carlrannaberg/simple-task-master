@@ -21,10 +21,10 @@ export async function createPerformanceTaskManager(
 ): Promise<{ taskManager: TaskManager; lockManager: PerformanceLockManager }> {
   // Get the workspace root by searching from the tasks directory's parent
   const workspaceRoot = await getWorkspaceRoot(path.dirname(config.tasksDir));
-  
+
   // Create performance-optimized lock manager
   const lockManager = new PerformanceLockManager(workspaceRoot);
-  
+
   // Create full config with performance defaults
   const fullConfig: Required<TaskManagerConfig> = {
     tasksDir: config.tasksDir,
@@ -32,11 +32,11 @@ export async function createPerformanceTaskManager(
     maxTitleLength: config.maxTitleLength ?? 500,
     maxDescriptionLength: config.maxDescriptionLength ?? 131072 // 128KB
   };
-  
+
   // Create TaskManager with our custom lock manager using the constructor directly
   // We need to use the constructor directly since the static create method creates its own lock manager
   const taskManager = new TaskManager(fullConfig, lockManager);
-  
+
   return { taskManager, lockManager };
 }
 
@@ -54,15 +54,15 @@ export async function batchCreateTasks(
   batchSize = 25
 ): Promise<void> {
   const numBatches = Math.ceil(tasks.length / batchSize);
-  
+
   for (let batch = 0; batch < numBatches; batch++) {
     const startIdx = batch * batchSize;
     const endIdx = Math.min(startIdx + batchSize, tasks.length);
     const batchTasks = tasks.slice(startIdx, endIdx);
-    
+
     // Create tasks in this batch concurrently
     await Promise.all(batchTasks.map(task => taskManager.create(task)));
-    
+
     // Small delay between batches to prevent lock contention
     if (batch < numBatches - 1) {
       await new Promise(resolve => setTimeout(resolve, 10));
@@ -86,7 +86,7 @@ export async function fastBulkCreateTasks(
 ): Promise<void> {
   // Acquire lock once for the entire operation
   await lockManager.acquire();
-  
+
   try {
     // Access private properties for test setup
     // We need to access the internal config which is not exposed in the public API
@@ -101,15 +101,15 @@ export async function fastBulkCreateTasks(
     }
     const taskManagerInternal = taskManager as unknown as TaskManagerInternal;
     const tasksDir = taskManagerInternal.config.tasksDir;
-    
+
     // Ensure tasks directory exists
     const fs = await import('fs/promises');
     await fs.mkdir(tasksDir, { recursive: true });
-    
+
     // Get current max ID
     const files = await fs.readdir(tasksDir);
     let maxId = 0;
-    
+
     for (const file of files) {
       if (file.endsWith('.md')) {
         const match = file.match(/^(\d+)-/);
@@ -119,12 +119,12 @@ export async function fastBulkCreateTasks(
         }
       }
     }
-    
+
     // Create all tasks with sequential IDs
     const createPromises = tasks.map(async (taskInput, index) => {
       const id = maxId + index + 1;
       const now = new Date().toISOString();
-      
+
       const task = {
         schema: 1,
         id,
@@ -135,7 +135,7 @@ export async function fastBulkCreateTasks(
         tags: taskInput.tags ?? [],
         dependencies: []
       };
-      
+
       // Generate filename
       const slug = taskInput.title
         .toLowerCase()
@@ -144,16 +144,16 @@ export async function fastBulkCreateTasks(
         .substring(0, 50);
       const filename = `${id}-${slug || 'task'}.md`;
       const filepath = path.join(tasksDir, filename);
-      
+
       // Serialize to markdown
       const { FrontmatterParser } = await import('@lib/frontmatter-parser');
       const content = taskInput.content || '';
       const fileContent = FrontmatterParser.stringify(content, task);
-      
+
       // Write file
       await fs.writeFile(filepath, fileContent, 'utf8');
     });
-    
+
     await Promise.all(createPromises);
   } finally {
     await lockManager.release();
