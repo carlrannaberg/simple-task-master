@@ -362,7 +362,7 @@ The `.claude` directory contains Claude Code configuration files with specific v
 - Any `*.local.json` files - Personal configuration not meant for sharing
 
 **Important Notes:**
-- Claude Code automatically adds `.claude/settings.local.json` to `.gitignore`
+- You must manually add `.claude/settings.local.json` to `.gitignore`
 - The shared `settings.json` should contain team-wide standards (linting, type checking, etc.)
 - Personal preferences or experimental settings belong in `settings.local.json`
 - Hook scripts in `.claude/hooks/` should be executable (`chmod +x`)
