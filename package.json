@@ -1,6 +1,6 @@
 {
   "name": "simple-task-master",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A simple command-line task management tool",
   "main": "dist/index.js",
   "type": "commonjs",
