@@ -84,14 +84,14 @@ detect_ai_cli() {
     
     if command -v claude &> /dev/null; then
         AI_CLI="claude"
-        AI_MODEL="--model claude-3-5-sonnet-latest"
-        AI_FLAGS="--output-format stream-json --verbose --max-turns 30"
-        print_success "Found Claude CLI with sonnet model"
+        AI_MODEL="--model claude-3-5-sonnet-20241022"
+        AI_FLAGS='--output-format stream-json --verbose --max-turns 30 --allowedTools "Edit" "MultiEdit" "Read" "Write"'
+        print_success "Found Claude CLI with Sonnet 4 model"
     elif command -v gemini &> /dev/null; then
         AI_CLI="gemini"
-        AI_MODEL="--model gemini-2.0-flash"
+        AI_MODEL="--model gemini-2.5-flash"
         AI_FLAGS="--include-all"
-        print_success "Found Gemini CLI with gemini-2.0-flash model"
+        print_success "Found Gemini CLI with Gemini 2.5 Flash model"
     else
         print_error "No AI CLI found. Install Claude CLI or Gemini CLI to use this script."
         echo "Installation instructions:"
@@ -204,8 +204,8 @@ run_tests() {
         return
     fi
     
-    # Run tests
-    if ! npm test; then
+    # Run tests in non-interactive mode
+    if ! CI=true npm test; then
         print_error "Tests are failing. Please fix the failing tests before preparing a release."
         exit 1
     fi
@@ -395,7 +395,7 @@ IMPORTANT:
 - Focus on accuracy - changelog entries should reflect actual code changes, not just commit messages
 - Ensure README.md is comprehensive and up-to-date with all features in the new release"
     
-    $TIMEOUT_CMD $AI_CLI $AI_MODEL $AI_FLAGS -p "$prompt"
+    $TIMEOUT_CMD $AI_CLI -p "$prompt" $AI_MODEL $AI_FLAGS
     
     AI_EXIT_CODE=$?
     set -e  # Re-enable exit on error
