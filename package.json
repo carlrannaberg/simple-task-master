@@ -22,8 +22,6 @@
     "test:coverage": "vitest run --coverage",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "format": "prettier --write \"**/*.{ts,js,json,md}\"",
-    "format:check": "prettier --check \"**/*.{ts,js,json,md}\"",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist coverage",
     "prepack": "npm run clean && npm run build",
@@ -63,7 +61,6 @@
     "@vitest/coverage-v8": "^1.0.0",
     "esbuild": "^0.23.0",
     "eslint": "^9.0.0",
-    "prettier": "^3.0.0",
     "ts-node": "^10.9.0",
     "typescript": "^5.0.0",
     "vitest": "^1.0.0"

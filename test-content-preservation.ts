@@ -32,10 +32,10 @@ const testCases = [
 
 console.log('=== GRAY-MATTER BEHAVIOR ===\n');
 
-testCases.forEach(test => {
+testCases.forEach((test) => {
   const stringified = matter.stringify(test.input.content, test.input.data);
   const parsed = matter(stringified);
-  
+
   console.log(`Test: ${test.name}`);
   console.log(`Input content: ${JSON.stringify(test.input.content)}`);
   console.log(`Expected output: ${JSON.stringify(test.expected)}`);
@@ -53,36 +53,38 @@ class ContentPreservingFrontmatter {
       return content;
     }
 
-    const yamlStr = yaml.dump(data, {
-      lineWidth: -1,
-      sortKeys: false,
-      noRefs: true
-    }).trimEnd();
+    const yamlStr = yaml
+      .dump(data, {
+        lineWidth: -1,
+        sortKeys: false,
+        noRefs: true
+      })
+      .trimEnd();
 
     return `---\n${yamlStr}\n---\n${content}`;
   }
 
-  static parse(fileContent: string): { data: Record<string, any>, content: string } {
+  static parse(fileContent: string): { data: Record<string, any>; content: string } {
     const match = fileContent.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
-    
+
     if (!match) {
       return { data: {}, content: fileContent };
     }
 
     const yamlContent = match[1];
-    const data = yaml.load(yamlContent) as Record<string, any> || {};
+    const data = (yaml.load(yamlContent) as Record<string, any>) || {};
     const content = fileContent.substring(match[0].length);
-    
+
     return { data, content };
   }
 }
 
 console.log('\n=== CUSTOM IMPLEMENTATION BEHAVIOR ===\n');
 
-testCases.forEach(test => {
+testCases.forEach((test) => {
   const stringified = ContentPreservingFrontmatter.stringify(test.input.content, test.input.data);
   const parsed = ContentPreservingFrontmatter.parse(stringified);
-  
+
   console.log(`Test: ${test.name}`);
   console.log(`Input content: ${JSON.stringify(test.input.content)}`);
   console.log(`Expected output: ${JSON.stringify(test.expected)}`);

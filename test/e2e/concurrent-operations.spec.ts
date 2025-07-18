@@ -466,9 +466,11 @@ describe(
         console.warn(
           `Debug: uniqueIds.size = ${uniqueIds.size}, taskIds.length = ${taskIds.length}`
         );
-        console.warn(`Task IDs: ${taskIds.slice(0, 20).join(', ')}${taskIds.length > 20 ? '...' : ''}`);
-        console.warn(`Failed processes: ${results.filter(r => r.status === 'rejected').length}`);
-        console.warn(`Processes with NaN output: ${allResults.filter(id => isNaN(id)).length}`);
+        console.warn(
+          `Task IDs: ${taskIds.slice(0, 20).join(', ')}${taskIds.length > 20 ? '...' : ''}`
+        );
+        console.warn(`Failed processes: ${results.filter((r) => r.status === 'rejected').length}`);
+        console.warn(`Processes with NaN output: ${allResults.filter((id) => isNaN(id)).length}`);
 
         expect(uniqueIds.size).toBe(taskIds.length);
 
@@ -596,10 +598,10 @@ describe(
         );
 
         // Read operations should have very high success rate
-        expect(successByType.list?.success / successByType.list?.total).toBeGreaterThan(0.90);
-        expect(successByType.export?.success / successByType.export?.total).toBeGreaterThan(0.90);
+        expect(successByType.list?.success / successByType.list?.total).toBeGreaterThan(0.9);
+        expect(successByType.export?.success / successByType.export?.total).toBeGreaterThan(0.9);
         // Grep might fail if no tasks match the search pattern, so lower expectation
-        expect(successByType.grep?.success / successByType.grep?.total).toBeGreaterThan(0.70);
+        expect(successByType.grep?.success / successByType.grep?.total).toBeGreaterThan(0.7);
 
         // Write operations should have reasonable success rate (some contention expected)
         expect(successByType.add?.success / successByType.add?.total).toBeGreaterThan(0.8);

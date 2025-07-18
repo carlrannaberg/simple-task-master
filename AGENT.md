@@ -1,4 +1,5 @@
 # AGENT.md
+
 This file provides guidance to AI coding assistants working in this repository.
 
 **Note:** CLAUDE.md, .clinerules, .cursorrules, and other AI config files are symlinks to AGENT.md in this project.
@@ -10,6 +11,7 @@ Simple Task Master is a sophisticated command-line task management tool built in
 ## Build & Commands
 
 ### Core Development Commands
+
 ```bash
 # Build pipeline
 npm run build          # TypeScript compilation + binary permissions
@@ -39,6 +41,7 @@ npm run test:e2e -- test/e2e/specific-e2e.spec.ts
 ```
 
 ### Binary Usage
+
 ```bash
 # Global installation
 npm install -g .
@@ -52,6 +55,7 @@ node bin/stm --help
 ## Code Style
 
 ### TypeScript Configuration
+
 - **Strict mode**: Full TypeScript strictness enabled
 - **ES2022 target**: Modern JavaScript features
 - **Path mapping**: Use `@lib/*`, `@test/*`, `@commands/*` aliases
@@ -59,6 +63,7 @@ node bin/stm --help
 - **No `any` types**: Use proper typing or `unknown`
 
 ### Import Conventions
+
 ```typescript
 // External imports first
 import { Command } from 'commander';
@@ -74,6 +79,7 @@ import type { TaskInput } from '@lib/types';
 ```
 
 ### Naming Conventions
+
 - **Files**: kebab-case (`task-manager.ts`, `lock-manager.ts`)
 - **Classes**: PascalCase (`TaskManager`, `LockManager`)
 - **Functions**: camelCase (`createTask`, `validateInput`)
@@ -82,6 +88,7 @@ import type { TaskInput } from '@lib/types';
 - **Types**: PascalCase (`TaskStatus`, `OutputFormat`)
 
 ### Error Handling Patterns
+
 ```typescript
 // Use custom error classes
 import { ValidationError, NotFoundError } from '@lib/errors';
@@ -105,6 +112,7 @@ try {
 ```
 
 ### Code Formatting
+
 - **Line length**: 100 characters maximum
 - **Indentation**: 2 spaces (no tabs)
 - **Quotes**: Single quotes for strings
@@ -114,6 +122,7 @@ try {
 ## Testing
 
 ### Framework: Vitest
+
 The project uses Vitest with a sophisticated three-tier testing approach:
 
 1. **Unit Tests** (`test/unit/`): Individual function/class testing
@@ -122,12 +131,14 @@ The project uses Vitest with a sophisticated three-tier testing approach:
 4. **Performance Tests** (`test/performance/`): Benchmarking and performance validation
 
 ### Test File Patterns
+
 - Unit tests: `test/unit/**/*.spec.ts`
 - Integration tests: `test/integration/**/*.spec.ts`
 - E2E tests: `test/e2e/**/*.spec.ts`
 - Performance tests: `test/performance/**/*.spec.ts`
 
 ### Test Conventions
+
 ```typescript
 // Use descriptive test names
 describe('TaskManager', () => {
@@ -135,10 +146,9 @@ describe('TaskManager', () => {
     it('should create a task with valid input', async () => {
       // Test implementation
     });
-    
+
     it('should throw ValidationError for empty title', async () => {
-      await expect(taskManager.create({ title: '' }))
-        .rejects.toThrow(ValidationError);
+      await expect(taskManager.create({ title: '' })).rejects.toThrow(ValidationError);
     });
   });
 });
@@ -157,15 +167,18 @@ const task = new TaskBuilder()
 ```
 
 ### Test Utilities
+
 - **Custom matchers**: `toBeValidTask()`, `toHaveStatus()`, `toHaveValidTimestamps()`
 - **Test builders**: `TaskBuilder` for fluent test data creation
 - **Test workspace**: `TestWorkspace` for isolated filesystem testing
 - **CLI runner**: `CLITestRunner` for E2E command testing
 
 ### Testing Philosophy
+
 **When tests fail, fix the code, not the test.**
 
 Key principles:
+
 - **Tests should be meaningful** - Avoid tests that always pass regardless of behavior
 - **Test actual functionality** - Call the functions being tested, don't just check side effects
 - **Failing tests are valuable** - They reveal bugs or missing features
@@ -174,6 +187,7 @@ Key principles:
 - **Document test purpose** - Each test should include a comment explaining why it exists and what it validates
 
 ### Coverage Requirements
+
 - **Unit tests**: 95% coverage threshold
 - **Integration tests**: 85% coverage threshold
 - **E2E tests**: Coverage disabled (focuses on workflow validation)
@@ -181,18 +195,21 @@ Key principles:
 ## Security
 
 ### Input Validation
+
 - **Title validation**: Max 500 characters, no control characters
 - **Content validation**: Max 1MB, safe encoding
 - **Path validation**: Prevent directory traversal attacks
 - **Command injection**: All user inputs are sanitized
 
 ### File System Safety
+
 - **Atomic operations**: Use `write-file-atomic` for data integrity
 - **File locking**: Prevent concurrent access corruption
 - **Path sanitization**: Safe filename generation with `slugify`
 - **Size limits**: Prevent oversized files from causing issues
 
 ### Data Protection
+
 - **Local-only**: No remote connections, all data stays local
 - **No sensitive data**: Tasks are stored in plain text markdown
 - **Minimal dependencies**: Reduced attack surface
@@ -201,6 +218,7 @@ Key principles:
 ## Directory Structure & File Organization
 
 ### Source Code Organization
+
 ```
 src/
 ├── cli.ts                 # CLI entry point with error handling
@@ -229,6 +247,7 @@ src/
 ```
 
 ### Test Architecture
+
 ```
 test/
 ├── unit/                  # Unit tests
@@ -241,6 +260,7 @@ test/
 ```
 
 ### Reports Directory
+
 ALL project reports and documentation should be saved to the `reports/` directory:
 
 ```
@@ -256,40 +276,48 @@ reports/                   # All project reports and documentation
 ```
 
 ### Report Generation Guidelines
+
 **Important**: ALL reports should be saved to the `reports/` directory with descriptive names:
 
 **Implementation Reports:**
+
 - Phase validation: `PHASE_X_VALIDATION_REPORT.md`
 - Implementation summaries: `IMPLEMENTATION_SUMMARY_[FEATURE].md`
 - Feature completion: `FEATURE_[NAME]_REPORT.md`
 
 **Testing & Analysis Reports:**
+
 - Test results: `TEST_RESULTS_[DATE].md`
 - Coverage reports: `COVERAGE_REPORT_[DATE].md`
 - Performance analysis: `PERFORMANCE_ANALYSIS_[SCENARIO].md`
 - Security scans: `SECURITY_SCAN_[DATE].md`
 
 **Quality & Validation:**
+
 - Code quality: `CODE_QUALITY_REPORT.md`
 - Dependency analysis: `DEPENDENCY_REPORT.md`
 - API compatibility: `API_COMPATIBILITY_REPORT.md`
 
 **Report Naming Conventions:**
+
 - Use descriptive names: `[TYPE]_[SCOPE]_[DATE].md`
 - Include dates: `YYYY-MM-DD` format
 - Group with prefixes: `TEST_`, `PERFORMANCE_`, `SECURITY_`
 - Markdown format: All reports end in `.md`
 
 ### Temporary Files & Debugging
+
 All temporary files, debugging scripts, and test artifacts should be organized in a `/temp` folder:
 
 **Temporary File Organization:**
+
 - **Debug scripts**: `temp/debug-*.js`, `temp/analyze-*.py`
 - **Test artifacts**: `temp/test-results/`, `temp/coverage/`
 - **Generated files**: `temp/generated/`, `temp/build-artifacts/`
 - **Logs**: `temp/logs/debug.log`, `temp/logs/error.log`
 
 **Guidelines:**
+
 - Never commit files from `/temp` directory
 - Use `/temp` for all debugging and analysis scripts created during development
 - Clean up `/temp` directory regularly or use automated cleanup
@@ -298,6 +326,7 @@ All temporary files, debugging scripts, and test artifacts should be organized i
 ## Configuration
 
 ### Environment Setup
+
 ```bash
 # Node.js version
 node --version  # Should be >= 18.0.0
@@ -313,12 +342,14 @@ npm test
 ```
 
 ### Development Configuration
+
 - **TypeScript**: Strict mode enabled with path mapping
 - **ESLint**: Modern flat config with TypeScript rules
 - **Prettier**: 100 char line width, single quotes
 - **Vitest**: Multiple configurations for different test types
 
 ### Package Configuration
+
 ```json
 {
   "name": "simple-task-master",
@@ -335,6 +366,7 @@ npm test
 ## Architecture Details
 
 ### Core Components
+
 - **TaskManager**: Central task operations and data management
 - **LockManager**: File-level locking for concurrent access safety
 - **FrontmatterParser**: YAML frontmatter processing for markdown files
@@ -342,6 +374,7 @@ npm test
 - **OutputFormatter**: Multi-format output (JSON, table, CSV, markdown)
 
 ### Data Flow
+
 1. CLI command parsing with Commander.js
 2. Workspace discovery and validation
 3. Task manager initialization with file locking
@@ -349,6 +382,7 @@ npm test
 5. Output formatting and display
 
 ### Concurrency Safety
+
 - **File locking**: Prevents concurrent access corruption
 - **Atomic operations**: Use `write-file-atomic` for data integrity
 - **Lock timeouts**: Configurable timeout for lock acquisition
@@ -402,18 +436,21 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ## Performance Considerations
 
 ### Optimization Guidelines
+
 - **Task loading**: Optimized for 1000+ tasks
 - **Search operations**: Efficient regex-based searching
 - **Memory usage**: Linear scaling with task count
 - **File operations**: Minimized disk I/O with caching
 
 ### Limits & Thresholds
+
 - **Maximum task size**: 1MB (configurable)
 - **Lock timeout**: 30 seconds (configurable)
 - **Title length**: 500 characters maximum
 - **Content length**: 1MB maximum
 
 ### Performance Testing
+
 - **Benchmarks**: Automated performance test suite
 - **Load testing**: Tested with 1000+ tasks
 - **Memory profiling**: Regular memory usage validation
@@ -422,18 +459,21 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ## Contributing Guidelines
 
 ### Code Reviews
+
 - **Type safety**: All code must pass TypeScript strict checks
 - **Test coverage**: New features require comprehensive tests
 - **Documentation**: Public APIs must be documented
 - **Performance**: Consider performance impact of changes
 
 ### Release Process
+
 - **Semantic versioning**: Follow semver for releases
 - **Changelog**: Update CHANGELOG.md for notable changes
 - **CI/CD**: All tests must pass before release
 - **NPM publishing**: Automated release workflow
 
 ### Development Workflow
+
 1. Create feature branch from main
 2. Implement changes with tests
 3. Run full test suite and linting

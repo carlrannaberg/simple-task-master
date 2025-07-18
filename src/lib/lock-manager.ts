@@ -276,10 +276,11 @@ export class LockManager {
     };
 
     // Check if we're in a test environment
-    const isTestEnvironment = process.env.NODE_ENV === 'test' ||
-                              process.env.VITEST === 'true' ||
-                              process.env.JEST_WORKER_ID !== undefined ||
-                              process.argv.some(arg => arg.includes('vitest') || arg.includes('jest'));
+    const isTestEnvironment =
+      process.env.NODE_ENV === 'test' ||
+      process.env.VITEST === 'true' ||
+      process.env.JEST_WORKER_ID !== undefined ||
+      process.argv.some((arg) => arg.includes('vitest') || arg.includes('jest'));
 
     // Create listener functions to store references for cleanup
     const exitListener = (): void => {
@@ -367,7 +368,10 @@ export class LockManager {
         process.removeListener('SIGINT', LockManager.cleanupListeners.sigint);
         process.removeListener('SIGTERM', LockManager.cleanupListeners.sigterm);
         process.removeListener('uncaughtException', LockManager.cleanupListeners.uncaughtException);
-        process.removeListener('unhandledRejection', LockManager.cleanupListeners.unhandledRejection);
+        process.removeListener(
+          'unhandledRejection',
+          LockManager.cleanupListeners.unhandledRejection
+        );
       } catch {
         // Ignore errors during cleanup
       }

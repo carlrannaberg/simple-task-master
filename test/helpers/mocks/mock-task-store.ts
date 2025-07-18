@@ -189,7 +189,7 @@ export class MockTaskStore {
     done: number;
     withTags: number;
     withContent: number;
-  } {
+    } {
     const tasks = Array.from(this.tasks.values());
 
     return {

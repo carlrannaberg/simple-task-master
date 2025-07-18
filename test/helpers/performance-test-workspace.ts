@@ -64,10 +64,7 @@ export class PerformanceTestWorkspace extends TestWorkspace {
   /**
    * Batch create tasks with progress logging
    */
-  async batchCreateTasks(
-    tasks: TaskCreateInput[],
-    batchSize = 25
-  ): Promise<void> {
+  async batchCreateTasks(tasks: TaskCreateInput[], batchSize = 25): Promise<void> {
     const taskManager = await this.getPerformanceTaskManager();
     const totalBatches = Math.ceil(tasks.length / batchSize);
 
@@ -79,7 +76,7 @@ export class PerformanceTestWorkspace extends TestWorkspace {
       const batch = tasks.slice(start, end);
 
       // Create batch concurrently
-      await Promise.all(batch.map(task => taskManager.create(task)));
+      await Promise.all(batch.map((task) => taskManager.create(task)));
 
       // Log progress every 10 batches
       if ((i + 1) % 10 === 0 || i === totalBatches - 1) {
@@ -88,7 +85,7 @@ export class PerformanceTestWorkspace extends TestWorkspace {
 
       // Small delay between batches to prevent contention
       if (i < totalBatches - 1) {
-        await new Promise(resolve => setTimeout(resolve, 5));
+        await new Promise((resolve) => setTimeout(resolve, 5));
       }
     }
   }

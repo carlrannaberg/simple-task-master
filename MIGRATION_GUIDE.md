@@ -1,10 +1,11 @@
-# Migration Guide: Removing _contentMetadata Hack
+# Migration Guide: Removing \_contentMetadata Hack
 
 This guide describes the process of migrating from gray-matter to a custom FrontmatterParser implementation that preserves content exactly as written.
 
 ## Overview
 
 The migration replaces the gray-matter library with a custom implementation that:
+
 - Preserves empty content as empty (not as '\n')
 - Preserves content without trailing newlines exactly
 - Eliminates the need for the `_contentMetadata` workaround
@@ -13,21 +14,26 @@ The migration replaces the gray-matter library with a custom implementation that
 ## Migration Steps
 
 ### 1. Install Dependencies
+
 No new dependencies are needed - we already use `js-yaml` which is sufficient.
 
 ### 2. Apply Code Changes
+
 The following files have been created/modified:
 
 #### New Files:
+
 - `src/lib/frontmatter-parser.ts` - Custom frontmatter parser implementation
 - `test/unit/frontmatter-parser.spec.ts` - Comprehensive tests for the parser
 - `test/unit/task-manager-content-preservation.spec.ts` - Content preservation tests
 - `scripts/migrate-remove-content-metadata.ts` - Migration script for existing files
 
 #### Modified Files:
+
 - `src/lib/task-manager.ts` - Updated to use FrontmatterParser instead of gray-matter
 
 ### 3. Run Tests
+
 ```bash
 # Run all tests to ensure nothing is broken
 npm test
@@ -38,6 +44,7 @@ npm test test/unit/task-manager-content-preservation.spec.ts
 ```
 
 ### 4. Migrate Existing Task Files
+
 If you have existing task files that contain `_contentMetadata`, run the migration script:
 
 ```bash
@@ -49,12 +56,14 @@ npx ts-node scripts/migrate-remove-content-metadata.ts /path/to/tasks
 ```
 
 The migration script will:
+
 - Scan all .md files in the tasks directory
 - Remove `_contentMetadata` from any files that contain it
 - Preserve the actual content exactly as stored
 - Report statistics on files migrated
 
 ### 5. Remove gray-matter Dependency
+
 After successful migration:
 
 ```bash
@@ -64,22 +73,32 @@ npm uninstall gray-matter
 ## Key Changes
 
 ### Before (with gray-matter):
+
 ```typescript
 // Content preservation required metadata hack
-const taskData = content === '' || !content.endsWith('\n')
-  ? { ...task, _contentMetadata: { wasEmpty: content === '', hadNoTrailingNewline: !content.endsWith('\n') } }
-  : task;
+const taskData =
+  content === '' || !content.endsWith('\n')
+    ? {
+        ...task,
+        _contentMetadata: {
+          wasEmpty: content === '',
+          hadNoTrailingNewline: !content.endsWith('\n')
+        }
+      }
+    : task;
 
 const fileContent = matter.stringify(content, taskData);
 ```
 
 ### After (with FrontmatterParser):
+
 ```typescript
 // Content is preserved exactly as provided
 const fileContent = FrontmatterParser.stringify(content, task);
 ```
 
 ### Reading Files
+
 ```typescript
 // Before
 const { data, content } = matter(fileContent);
@@ -95,18 +114,20 @@ const { data, content } = FrontmatterParser.parse(fileContent);
 To verify the migration was successful:
 
 1. Check that no files contain `_contentMetadata`:
+
    ```bash
    grep -r "_contentMetadata" .simple-task-master/tasks/
    ```
 
 2. Create test tasks with edge cases:
+
    ```bash
    # Empty content
    stm add "Test Empty" --description ""
-   
+
    # No trailing newline
    echo -n "No newline" | stm add "Test No Newline" --stdin
-   
+
    # Verify content preservation
    stm show <task-id> --format yaml
    ```
@@ -135,11 +156,13 @@ If issues arise, you can rollback by:
 ## Risk Assessment
 
 ### Low Risk:
+
 - File format remains unchanged (except for removing `_contentMetadata`)
 - All existing functionality preserved
 - Comprehensive test coverage
 
 ### Mitigations:
+
 - Migration script backs up files before modifying (in memory)
 - Can be tested on a copy of the data first
 - Easy rollback if needed

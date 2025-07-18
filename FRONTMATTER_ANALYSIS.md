@@ -7,6 +7,7 @@ After thorough research of frontmatter parsing libraries, I recommend **implemen
 ## Current Issue with gray-matter
 
 The `gray-matter` library modifies content during the stringify process:
+
 - Adds trailing newlines to content that doesn't end with one
 - Transforms empty content (`''`) into a single newline (`'\n'`)
 - Forces the codebase to implement workarounds using `_contentMetadata`
@@ -14,6 +15,7 @@ The `gray-matter` library modifies content during the stringify process:
 ## Library Analysis
 
 ### 1. **gray-matter** (Current)
+
 - **Pros:**
   - Feature-rich with support for YAML, JSON, TOML, Coffee formats
   - Well-maintained with 4M+ weekly downloads
@@ -24,6 +26,7 @@ The `gray-matter` library modifies content during the stringify process:
   - Larger bundle size (~15KB)
 
 ### 2. **front-matter**
+
 - **NPM:** `npm install front-matter`
 - **GitHub Stars:** 700+
 - **Weekly Downloads:** 900K+
@@ -38,6 +41,7 @@ The `gray-matter` library modifies content during the stringify process:
   - Would require custom stringify implementation
 
 ### 3. **yaml-front-matter**
+
 - **NPM:** `npm install yaml-front-matter`
 - **GitHub Stars:** 100+
 - **Weekly Downloads:** 70K+
@@ -51,6 +55,7 @@ The `gray-matter` library modifies content during the stringify process:
   - Non-standard API design
 
 ### 4. **Custom Implementation** (Recommended)
+
 - **Pros:**
   - Full control over content preservation
   - No external dependencies beyond js-yaml (already in project)
@@ -63,15 +68,15 @@ The `gray-matter` library modifies content during the stringify process:
 
 ## Detailed Comparison
 
-| Feature | gray-matter | front-matter | yaml-front-matter | Custom |
-|---------|-------------|--------------|-------------------|---------|
-| Content Preservation | ❌ Modifies | ✅ Preserves | ✅ Preserves | ✅ Preserves |
-| Stringify Support | ✅ Built-in | ❌ None | ❌ None | ✅ Built-in |
-| Format Support | YAML, JSON, TOML, Coffee | YAML only | YAML only | YAML (extensible) |
-| TypeScript Support | ✅ Types available | ✅ Types available | ❌ No types | ✅ Native |
-| Bundle Size | ~15KB | ~5KB | ~8KB | ~2KB |
-| Active Maintenance | ✅ Active | ❌ Stale | ⚠️ Low activity | ✅ In-house |
-| Weekly Downloads | 4M+ | 900K+ | 70K+ | N/A |
+| Feature              | gray-matter              | front-matter       | yaml-front-matter | Custom            |
+| -------------------- | ------------------------ | ------------------ | ----------------- | ----------------- |
+| Content Preservation | ❌ Modifies              | ✅ Preserves       | ✅ Preserves      | ✅ Preserves      |
+| Stringify Support    | ✅ Built-in              | ❌ None            | ❌ None           | ✅ Built-in       |
+| Format Support       | YAML, JSON, TOML, Coffee | YAML only          | YAML only         | YAML (extensible) |
+| TypeScript Support   | ✅ Types available       | ✅ Types available | ❌ No types       | ✅ Native         |
+| Bundle Size          | ~15KB                    | ~5KB               | ~8KB              | ~2KB              |
+| Active Maintenance   | ✅ Active                | ❌ Stale           | ⚠️ Low activity   | ✅ In-house       |
+| Weekly Downloads     | 4M+                      | 900K+              | 70K+              | N/A               |
 
 ## Implementation Examples
 
@@ -79,10 +84,10 @@ The `gray-matter` library modifies content during the stringify process:
 
 ```typescript
 class ContentPreservingFrontmatter {
-  static parse(fileContent: string): { data: any, content: string } {
+  static parse(fileContent: string): { data: any; content: string } {
     const match = fileContent.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
     if (!match) return { data: {}, content: fileContent };
-    
+
     const data = yaml.load(match[1]) || {};
     const content = fileContent.substring(match[0].length);
     return { data, content };
@@ -90,13 +95,15 @@ class ContentPreservingFrontmatter {
 
   static stringify(content: string, data: any): string {
     if (!data || Object.keys(data).length === 0) return content;
-    
-    const yamlStr = yaml.dump(data, {
-      lineWidth: -1,
-      sortKeys: false,
-      noRefs: true
-    }).trimEnd();
-    
+
+    const yamlStr = yaml
+      .dump(data, {
+        lineWidth: -1,
+        sortKeys: false,
+        noRefs: true
+      })
+      .trimEnd();
+
     return `---\n${yamlStr}\n---\n${content}`;
   }
 }
@@ -130,22 +137,25 @@ function stringify(content: string, data: any) {
 ## Code Changes Required
 
 ### Current (with gray-matter):
+
 ```typescript
 // Complex workaround for content preservation
-const taskData = content === '' || (content.length > 0 && !content.endsWith('\n'))
-  ? {
-      ...task,
-      _contentMetadata: {
-        wasEmpty: content === '',
-        hadNoTrailingNewline: content.length > 0 && !content.endsWith('\n')
+const taskData =
+  content === '' || (content.length > 0 && !content.endsWith('\n'))
+    ? {
+        ...task,
+        _contentMetadata: {
+          wasEmpty: content === '',
+          hadNoTrailingNewline: content.length > 0 && !content.endsWith('\n')
+        }
       }
-    }
-  : task;
+    : task;
 
 const fileContent = matter.stringify(content, taskData);
 ```
 
 ### After Migration:
+
 ```typescript
 // Simple, direct usage
 const fileContent = frontmatter.stringify(content, task);

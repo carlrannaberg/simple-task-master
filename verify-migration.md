@@ -7,6 +7,7 @@ The migration from `gray-matter` to `FrontmatterParser` has been successfully co
 ## Key Changes Made
 
 ### 1. Created FrontmatterParser Class
+
 - **File**: `src/lib/frontmatter-parser.ts`
 - **Features**:
   - Preserves content exactly as provided (no newline manipulation)
@@ -15,6 +16,7 @@ The migration from `gray-matter` to `FrontmatterParser` has been successfully co
   - Full compatibility with existing task format
 
 ### 2. Updated TaskManager
+
 - **File**: `src/lib/task-manager.ts`
 - **Changes**:
   - Replaced `import matter from 'gray-matter'` with `import { FrontmatterParser }`
@@ -24,6 +26,7 @@ The migration from `gray-matter` to `FrontmatterParser` has been successfully co
   - Removed all `_contentMetadata` related code
 
 ### 3. Test Coverage
+
 - **File**: `test/unit/frontmatter-parser.spec.ts` - Comprehensive parser tests
 - **File**: `test/unit/task-manager-content-preservation.spec.ts` - Content preservation tests
 - **File**: `test-migration.ts` - Simple manual verification test
@@ -31,20 +34,23 @@ The migration from `gray-matter` to `FrontmatterParser` has been successfully co
 ## Verification
 
 ### Code Analysis
+
 ✅ **No gray-matter imports in src/**: Verified via grep search
-✅ **No _contentMetadata in src/**: Only references are in comments/docs
+✅ **No \_contentMetadata in src/**: Only references are in comments/docs
 ✅ **FrontmatterParser implementation**: Complete with all required methods
 ✅ **TaskManager updated**: All methods use FrontmatterParser
 ✅ **Test coverage**: Comprehensive tests for all edge cases
 
 ### Expected Behavior
+
 ✅ **Empty content**: Preserved as empty string (not as '\\n')
 ✅ **No trailing newline**: Preserved exactly without modification
 ✅ **Trailing newlines**: Preserved with exact count
 ✅ **Round-trip preservation**: Content identical after parse/stringify cycle
-✅ **No _contentMetadata**: New files will not contain metadata workaround
+✅ **No \_contentMetadata**: New files will not contain metadata workaround
 
 ### Current State
+
 📋 **Existing task files**: Still contain `_contentMetadata` (expected until migration script is run)
 📋 **Package.json**: Still includes `gray-matter` dependency (to be removed after migration)
 📋 **Build output**: Needs to be rebuilt to use new implementation
@@ -59,7 +65,8 @@ The migration from `gray-matter` to `FrontmatterParser` has been successfully co
 
 ## Risk Assessment
 
-✅ **Low Risk**: 
+✅ **Low Risk**:
+
 - File format unchanged (just removes metadata field)
 - Full backward compatibility maintained
 - Comprehensive test coverage
@@ -68,7 +75,7 @@ The migration from `gray-matter` to `FrontmatterParser` has been successfully co
 ## Success Criteria Met
 
 ✅ **Content preservation**: Exact content formatting preserved
-✅ **No _contentMetadata**: New files will be clean
+✅ **No \_contentMetadata**: New files will be clean
 ✅ **Performance**: Custom parser is simpler and faster
 ✅ **Maintainability**: Cleaner code without workarounds
 ✅ **Dependency reduction**: One less external dependency

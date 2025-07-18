@@ -43,7 +43,8 @@ describe('FrontmatterParser - Edge Cases from gray-matter', () => {
     });
 
     it('should handle delimiter-like strings in YAML values', () => {
-      const input = '---\ntitle: "Contains --- delimiter"\ndescription: "Another --- test"\n---\nContent';
+      const input =
+        '---\ntitle: "Contains --- delimiter"\ndescription: "Another --- test"\n---\nContent';
       const result = FrontmatterParser.parse(input);
       expect(result.data.title).toBe('Contains --- delimiter');
       expect(result.data.description).toBe('Another --- test');
@@ -108,7 +109,8 @@ describe('FrontmatterParser - Edge Cases from gray-matter', () => {
     });
 
     it('should handle special characters in values', () => {
-      const input = '---\ntitle: "Title with \'quotes\' and \\"double quotes\\""\npath: "C:\\\\Users\\\\test"\n---\nContent';
+      const input =
+        '---\ntitle: "Title with \'quotes\' and \\"double quotes\\""\npath: "C:\\\\Users\\\\test"\n---\nContent';
       const result = FrontmatterParser.parse(input);
       expect(result.data.title).toBe('Title with \'quotes\' and "double quotes"');
       expect(result.data.path).toBe('C:\\Users\\test');
@@ -124,7 +126,8 @@ describe('FrontmatterParser - Edge Cases from gray-matter', () => {
 
   describe('complex YAML structures', () => {
     it('should handle nested empty values', () => {
-      const input = '---\ntitle: ""\ntags: []\nmeta:\n  description: null\n  keywords: []\n---\nContent';
+      const input =
+        '---\ntitle: ""\ntags: []\nmeta:\n  description: null\n  keywords: []\n---\nContent';
       const result = FrontmatterParser.parse(input);
       expect(result.data).toEqual({
         title: '',

@@ -98,7 +98,10 @@ Content`;
     });
 
     it('should handle null/undefined data', () => {
-      const result = FrontmatterParser.stringify('Content', null as unknown as Record<string, unknown>);
+      const result = FrontmatterParser.stringify(
+        'Content',
+        null as unknown as Record<string, unknown>
+      );
 
       expect(result).toBe('Content');
     });
@@ -178,19 +181,25 @@ Content`;
     it('should throw on missing title', () => {
       const data = { id: 1, status: 'pending' };
 
-      expect(() => FrontmatterParser.validateTaskData(data)).toThrow('missing required fields: title');
+      expect(() => FrontmatterParser.validateTaskData(data)).toThrow(
+        'missing required fields: title'
+      );
     });
 
     it('should throw on missing status', () => {
       const data = { id: 1, title: 'Test' };
 
-      expect(() => FrontmatterParser.validateTaskData(data)).toThrow('missing required fields: status');
+      expect(() => FrontmatterParser.validateTaskData(data)).toThrow(
+        'missing required fields: status'
+      );
     });
 
     it('should throw on multiple missing fields', () => {
       const data = { id: 1 };
 
-      expect(() => FrontmatterParser.validateTaskData(data)).toThrow('missing required fields: title, status');
+      expect(() => FrontmatterParser.validateTaskData(data)).toThrow(
+        'missing required fields: title, status'
+      );
     });
   });
 

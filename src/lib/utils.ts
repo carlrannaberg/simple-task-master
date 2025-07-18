@@ -128,7 +128,7 @@ export function truncateString(str: string, maxLength: number): string {
 /**
  * Debounce function to limit how often a function can be called
  */
-export function debounce<T extends (...args: unknown[]) => void>(
+export function debounce<T extends(...args: unknown[]) => void>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {

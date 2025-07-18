@@ -5,11 +5,7 @@ import writeFileAtomic from 'write-file-atomic';
 import slugify from 'slugify';
 import { LockManager } from './lock-manager';
 import { getTasksDirectory, getWorkspaceRoot } from './workspace';
-import {
-  ValidationError,
-  FileSystemError,
-  NotFoundError
-} from './errors';
+import { ValidationError, FileSystemError, NotFoundError } from './errors';
 import type {
   Task,
   TaskCreateInput,
@@ -145,7 +141,7 @@ export class TaskManager {
               fileVisible = true;
               break;
             }
-            await new Promise(resolve => setTimeout(resolve, 10));
+            await new Promise((resolve) => setTimeout(resolve, 10));
           }
 
           if (!fileVisible) {

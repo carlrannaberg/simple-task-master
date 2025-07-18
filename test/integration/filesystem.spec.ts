@@ -82,9 +82,10 @@ describe(
         // The original file should not be corrupted
         expect(finalContent).not.toContain('Partial content');
 
-        // Note: write-file-atomic doesn't clean up orphaned temp files from previous crashes
-        // This is expected behavior - it only cleans up its own temp files from the current operation
-        // Manual cleanup of orphaned files would be needed in a real application
+        // Note: write-file-atomic doesn't clean up orphaned temp files from
+        // previous crashes. This is expected behavior - it only cleans up its
+        // own temp files from the current operation. Manual cleanup of orphaned
+        // files would be needed in a real application
       });
 
       it('should handle interrupted write operations gracefully', async () => {

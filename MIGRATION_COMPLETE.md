@@ -7,14 +7,16 @@ The migration from `gray-matter` to our custom `FrontmatterParser` is now comple
 ## Key Accomplishments
 
 ### 1. ✅ Custom FrontmatterParser Implementation
+
 - **Location**: `src/lib/frontmatter-parser.ts`
-- **Features**: 
+- **Features**:
   - Exact content preservation (no newline manipulation)
   - Robust YAML parsing with error handling
   - Validation method for task data
   - Full TypeScript support with no `any` types
 
 ### 2. ✅ Comprehensive Edge Case Testing
+
 - **Added**: `test/unit/frontmatter-parser-edge-cases.spec.ts`
 - **Coverage**:
   - Empty string and whitespace-only input
@@ -29,18 +31,21 @@ The migration from `gray-matter` to our custom `FrontmatterParser` is now comple
 ### 3. ✅ Parsing Approach Analysis
 
 **Our implementation uses a similar approach to gray-matter:**
+
 - **Line-based parsing**: Uses `split('\n')` for predictable performance
 - **Simple delimiter detection**: `startsWith()` and regex only for exact line matching
 - **Position-based extraction**: Uses `substring()` for precise content extraction
 - **No catastrophic backtracking**: Avoids complex regex patterns
 
 **Key differences:**
+
 - **Focused scope**: Only handles YAML frontmatter (not JSON/TOML/etc.)
 - **Content preservation**: Primary goal is exact content preservation
 - **Simpler API**: No unnecessary features like excerpts or custom delimiters
 - **Better TypeScript support**: Fully typed with no `any` usage
 
 ### 4. ✅ Strict Type Safety
+
 - Replaced all `any` types with proper generics
 - Default type parameter: `Record<string, unknown>`
 - Maintains flexibility while ensuring type safety

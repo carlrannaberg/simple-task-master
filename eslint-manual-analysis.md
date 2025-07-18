@@ -7,6 +7,7 @@ Due to shell configuration issues preventing direct execution of ESLint, I perfo
 ## ESLint Configuration Summary
 
 The project uses ESLint 9.0+ with flat configuration format and includes:
+
 - TypeScript ESLint plugin
 - Strict TypeScript rules
 - Code formatting rules
@@ -50,16 +51,19 @@ The project uses ESLint 9.0+ with flat configuration format and includes:
 ## Potential Issues Found
 
 ### 1. Duplicate Error Classes
+
 **File:** `src/lib/types.ts` and `src/lib/errors.ts`
 **Issue:** Both files define similar error classes (ValidationError, FileSystemError, etc.)
 **Severity:** High - Could cause import confusion
 
 ### 2. Import Style Inconsistencies
+
 **Files:** Various
 **Issue:** Mix of import styles, some may not follow `consistent-type-imports` rule
 **Severity:** Medium
 
 ### 3. Console Usage
+
 **Files:** `src/lib/errors.ts`, `src/cli.ts`
 **Issue:** Uses `console.error` and `console.log` which may trigger warnings
 **Severity:** Low - Allowed by configuration
@@ -81,11 +85,13 @@ The project uses ESLint 9.0+ with flat configuration format and includes:
 ## Next Steps
 
 To get actual ESLint results, run:
+
 ```bash
 npm run lint
 ```
 
 Or for JSON output:
+
 ```bash
 npx eslint . --format=json
 ```

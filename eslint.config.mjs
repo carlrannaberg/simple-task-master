@@ -75,7 +75,24 @@ export default [
       'eol-last': ['error', 'always'],
       'no-multiple-empty-lines': ['error', { max: 1 }],
       'object-curly-spacing': ['error', 'always'],
-      'array-bracket-spacing': ['error', 'never']
+      'array-bracket-spacing': ['error', 'never'],
+      
+      // Additional formatting rules to match Prettier settings
+      'max-len': ['error', { code: 100, ignoreUrls: true, ignoreStrings: true, ignoreTemplateLiterals: true, ignoreRegExpLiterals: true }],
+      'indent': ['error', 2, { SwitchCase: 1 }],
+      'linebreak-style': ['error', 'unix'],
+      'arrow-parens': ['error', 'always'],
+      'comma-spacing': ['error', { before: false, after: true }],
+      'key-spacing': ['error', { beforeColon: false, afterColon: true }],
+      'keyword-spacing': ['error', { before: true, after: true }],
+      'space-before-blocks': ['error', 'always'],
+      'space-before-function-paren': ['error', { anonymous: 'always', named: 'never', asyncArrow: 'always' }],
+      'space-in-parens': ['error', 'never'],
+      'space-infix-ops': 'error',
+      'no-extra-semi': 'error',
+      'no-mixed-spaces-and-tabs': 'error',
+      'brace-style': ['error', '1tbs', { allowSingleLine: true }],
+      'curly': ['error', 'multi-line']
     }
   },
   {
@@ -155,7 +172,24 @@ export default [
       'eol-last': ['error', 'always'],
       'no-multiple-empty-lines': ['error', { max: 1 }],
       'object-curly-spacing': ['error', 'always'],
-      'array-bracket-spacing': ['error', 'never']
+      'array-bracket-spacing': ['error', 'never'],
+      
+      // Additional formatting rules to match Prettier settings
+      'max-len': ['error', { code: 100, ignoreUrls: true, ignoreStrings: true, ignoreTemplateLiterals: true, ignoreRegExpLiterals: true }],
+      'indent': ['error', 2, { SwitchCase: 1 }],
+      'linebreak-style': ['error', 'unix'],
+      'arrow-parens': ['error', 'always'],
+      'comma-spacing': ['error', { before: false, after: true }],
+      'key-spacing': ['error', { beforeColon: false, afterColon: true }],
+      'keyword-spacing': ['error', { before: true, after: true }],
+      'space-before-blocks': ['error', 'always'],
+      'space-before-function-paren': ['error', { anonymous: 'always', named: 'never', asyncArrow: 'always' }],
+      'space-in-parens': ['error', 'never'],
+      'space-infix-ops': 'error',
+      'no-extra-semi': 'error',
+      'no-mixed-spaces-and-tabs': 'error',
+      'brace-style': ['error', '1tbs', { allowSingleLine: true }],
+      'curly': ['error', 'multi-line']
     }
   },
   {

@@ -1,6 +1,6 @@
 /**
  * Frontmatter Library Replacement Examples
- * 
+ *
  * This file demonstrates how to replace gray-matter with alternatives
  * that preserve content formatting exactly.
  */
@@ -25,7 +25,7 @@ class ContentPreservingFrontmatter {
    */
   static parse(fileContent: string): FrontmatterResult {
     const match = fileContent.match(this.DELIMITER_REGEX);
-    
+
     if (!match) {
       // No frontmatter found
       return {
@@ -36,12 +36,12 @@ class ContentPreservingFrontmatter {
 
     try {
       const yamlContent = match[1];
-      const data = yaml.load(yamlContent) as Record<string, any> || {};
-      
+      const data = (yaml.load(yamlContent) as Record<string, any>) || {};
+
       // Extract content after frontmatter, preserving exact formatting
       const contentStart = match[0].length;
       const content = fileContent.substring(contentStart);
-      
+
       return { data, content };
     } catch (error) {
       throw new Error(`Failed to parse YAML frontmatter: ${error}`);
@@ -59,11 +59,13 @@ class ContentPreservingFrontmatter {
     }
 
     // Dump YAML with consistent formatting
-    const yamlStr = yaml.dump(data, {
-      lineWidth: -1, // Disable line wrapping
-      sortKeys: false, // Preserve key order
-      noRefs: true // Avoid YAML references
-    }).trimEnd(); // Remove trailing newline from YAML
+    const yamlStr = yaml
+      .dump(data, {
+        lineWidth: -1, // Disable line wrapping
+        sortKeys: false, // Preserve key order
+        noRefs: true // Avoid YAML references
+      })
+      .trimEnd(); // Remove trailing newline from YAML
 
     // Construct the full document preserving exact content
     return `${this.DELIMITER}\n${yamlStr}\n${this.DELIMITER}\n${content}`;
@@ -96,11 +98,13 @@ class FrontMatterWrapper {
       return content;
     }
 
-    const yamlStr = yaml.dump(data, {
-      lineWidth: -1,
-      sortKeys: false,
-      noRefs: true
-    }).trimEnd();
+    const yamlStr = yaml
+      .dump(data, {
+        lineWidth: -1,
+        sortKeys: false,
+        noRefs: true
+      })
+      .trimEnd();
 
     return `---\n${yamlStr}\n---\n${content}`;
   }
@@ -129,14 +133,14 @@ class EnhancedFrontmatter {
   parse(fileContent: string): FrontmatterResult & { original: string } {
     const startDelim = this.delimiters[0];
     const endDelim = this.delimiters[1];
-    
+
     // Build regex dynamically based on delimiters
     const regex = new RegExp(
       `^${this.escapeRegex(startDelim)}\\r?\\n([\\s\\S]*?)\\r?\\n${this.escapeRegex(endDelim)}\\r?\\n?`
     );
-    
+
     const match = fileContent.match(regex);
-    
+
     if (!match) {
       return {
         data: {},
@@ -146,9 +150,9 @@ class EnhancedFrontmatter {
     }
 
     const yamlContent = match[1];
-    const data = this.yamlEngine.load(yamlContent) as Record<string, any> || {};
+    const data = (this.yamlEngine.load(yamlContent) as Record<string, any>) || {};
     const content = fileContent.substring(match[0].length);
-    
+
     return {
       data,
       content,
@@ -161,11 +165,13 @@ class EnhancedFrontmatter {
       return content;
     }
 
-    const yamlStr = this.yamlEngine.dump(data, {
-      lineWidth: -1,
-      sortKeys: false,
-      noRefs: true
-    }).trimEnd();
+    const yamlStr = this.yamlEngine
+      .dump(data, {
+        lineWidth: -1,
+        sortKeys: false,
+        noRefs: true
+      })
+      .trimEnd();
 
     const [startDelim, endDelim] = this.delimiters;
     return `${startDelim}\n${yamlStr}\n${endDelim}\n${content}`;
@@ -212,11 +218,11 @@ export function demonstrateContentPreservation() {
   ];
 
   console.log('=== Content Preservation Tests ===\n');
-  
-  testCases.forEach(test => {
+
+  testCases.forEach((test) => {
     const stringified = ContentPreservingFrontmatter.stringify(test.content, test.data);
     const parsed = ContentPreservingFrontmatter.parse(stringified);
-    
+
     console.log(`Test: ${test.name}`);
     console.log(`Original content: ${JSON.stringify(test.content)}`);
     console.log(`Parsed content: ${JSON.stringify(parsed.content)}`);
@@ -254,12 +260,8 @@ export function performanceComparison() {
       bundleSize: '~5KB'
     }
   };
-  
+
   return metrics;
 }
 
-export {
-  ContentPreservingFrontmatter,
-  FrontMatterWrapper,
-  EnhancedFrontmatter
-};
+export { ContentPreservingFrontmatter, FrontMatterWrapper, EnhancedFrontmatter };

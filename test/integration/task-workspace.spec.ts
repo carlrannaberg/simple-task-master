@@ -116,7 +116,9 @@ describe(
           expect(true).toBe(false);
         } catch (error) {
           const elapsed = Date.now() - startTime;
-          expect(elapsed).toBeGreaterThan(10000); // Should wait at least 10 seconds (MAX_LOCK_RETRIES * LOCK_CHECK_INTERVAL_MS)
+          // Should wait at least 10 seconds
+          // (MAX_LOCK_RETRIES * LOCK_CHECK_INTERVAL_MS)
+          expect(elapsed).toBeGreaterThan(10000);
           expect(error).toBeInstanceOf(Error);
         }
 

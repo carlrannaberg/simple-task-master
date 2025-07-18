@@ -34,7 +34,8 @@ export async function createPerformanceTaskManager(
   };
 
   // Create TaskManager with our custom lock manager using the constructor directly
-  // We need to use the constructor directly since the static create method creates its own lock manager
+  // We need to use the constructor directly since the static create method
+  // creates its own lock manager
   const taskManager = new TaskManager(fullConfig, lockManager);
 
   return { taskManager, lockManager };
@@ -61,11 +62,11 @@ export async function batchCreateTasks(
     const batchTasks = tasks.slice(startIdx, endIdx);
 
     // Create tasks in this batch concurrently
-    await Promise.all(batchTasks.map(task => taskManager.create(task)));
+    await Promise.all(batchTasks.map((task) => taskManager.create(task)));
 
     // Small delay between batches to prevent lock contention
     if (batch < numBatches - 1) {
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
     }
   }
 }

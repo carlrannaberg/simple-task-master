@@ -79,7 +79,9 @@ describe('TaskManager', () => {
     it('should handle filesystem-unsafe characters in title', async () => {
       // Characters like <, >, ", |, ?, * are now allowed in titles
       // They will be sanitized when creating filenames
-      await expect(taskManager.create({ title: 'Task with <invalid> chars' })).resolves.toBeTruthy();
+      await expect(
+        taskManager.create({ title: 'Task with <invalid> chars' })
+      ).resolves.toBeTruthy();
 
       // But control characters are still not allowed
       await expect(taskManager.create({ title: 'Task with\x00null' })).rejects.toThrow(
@@ -313,7 +315,24 @@ describe('TaskManager', () => {
 
     it('should handle special characters in title', async () => {
       // These characters are now allowed in titles
-      const specialChars = ['<', '>', '"', '|', '?', '*', '\'', '&', '!', '@', '#', '$', '%', '^', '(', ')'];
+      const specialChars = [
+        '<',
+        '>',
+        '"',
+        '|',
+        '?',
+        '*',
+        '\'',
+        '&',
+        '!',
+        '@',
+        '#',
+        '$',
+        '%',
+        '^',
+        '(',
+        ')'
+      ];
 
       for (const char of specialChars) {
         const task = await taskManager.create({ title: `Task with ${char} char` });

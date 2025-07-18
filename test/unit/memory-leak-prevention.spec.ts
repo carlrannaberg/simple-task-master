@@ -68,8 +68,12 @@ describe('Memory Leak Prevention', () => {
     expect(exitListeners).toBeLessThanOrEqual(initialListenerCounts.exit + 2);
     expect(sigintListeners).toBeLessThanOrEqual(initialListenerCounts.sigint + 2);
     expect(sigtermListeners).toBeLessThanOrEqual(initialListenerCounts.sigterm + 2);
-    expect(uncaughtExceptionListeners).toBeLessThanOrEqual(initialListenerCounts.uncaughtException + 2);
-    expect(unhandledRejectionListeners).toBeLessThanOrEqual(initialListenerCounts.unhandledRejection + 2);
+    expect(uncaughtExceptionListeners).toBeLessThanOrEqual(
+      initialListenerCounts.uncaughtException + 2
+    );
+    expect(unhandledRejectionListeners).toBeLessThanOrEqual(
+      initialListenerCounts.unhandledRejection + 2
+    );
   });
 
   it('should not trigger MaxListenersExceededWarning with multiple TempDirManager instances', () => {
@@ -90,8 +94,12 @@ describe('Memory Leak Prevention', () => {
     expect(exitListeners).toBeLessThanOrEqual(initialListenerCounts.exit + 10);
     expect(sigintListeners).toBeLessThanOrEqual(initialListenerCounts.sigint + 10);
     expect(sigtermListeners).toBeLessThanOrEqual(initialListenerCounts.sigterm + 10);
-    expect(uncaughtExceptionListeners).toBeLessThanOrEqual(initialListenerCounts.uncaughtException + 10);
-    expect(unhandledRejectionListeners).toBeLessThanOrEqual(initialListenerCounts.unhandledRejection + 10);
+    expect(uncaughtExceptionListeners).toBeLessThanOrEqual(
+      initialListenerCounts.uncaughtException + 10
+    );
+    expect(unhandledRejectionListeners).toBeLessThanOrEqual(
+      initialListenerCounts.unhandledRejection + 10
+    );
   });
 
   it('should properly clean up listeners when LockManager is disposed', () => {

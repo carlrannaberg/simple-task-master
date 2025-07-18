@@ -7,7 +7,8 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi, type MockedFunction } from 'vitest';
 import type { Task } from '@lib/types';
-// import { ValidationError, FileSystemError, ConfigurationError } from '@lib/errors'; // Unused for now
+// Unused for now
+// import { ValidationError, FileSystemError, ConfigurationError } from '@lib/errors';
 import { MockTaskStore } from '@test/helpers';
 
 // Mock modules first - with factory functions to ensure fresh instances

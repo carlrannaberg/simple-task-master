@@ -360,7 +360,10 @@ interface Example {
 
       // Update via stdin
       const stdinContent = 'Description updated via stdin';
-      const stdinResult = await runWithStdin(['update', taskId, '--description', '-'], stdinContent);
+      const stdinResult = await runWithStdin(
+        ['update', taskId, '--description', '-'],
+        stdinContent
+      );
       expect(stdinResult.exitCode).toBe(0);
 
       // Update via assignment

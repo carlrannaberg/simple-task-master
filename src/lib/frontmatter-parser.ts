@@ -55,7 +55,9 @@ export class FrontmatterParser {
           const normalizedParsed = parsed === null ? {} : parsed;
           data = this.convertDatesToStrings(normalizedParsed) as T;
         } catch (error) {
-          throw new ValidationError(`Invalid YAML frontmatter: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          throw new ValidationError(
+            `Invalid YAML frontmatter: ${error instanceof Error ? error.message : 'Unknown error'}`
+          );
         }
 
         // Combine attached content with any remaining content
@@ -107,7 +109,9 @@ export class FrontmatterParser {
       // Convert Date objects back to ISO strings to match expected format
       data = this.convertDatesToStrings(normalizedParsed) as T;
     } catch (error) {
-      throw new ValidationError(`Invalid YAML frontmatter: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new ValidationError(
+        `Invalid YAML frontmatter: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
 
     // Preserve exact content including all whitespace
@@ -138,14 +142,16 @@ export class FrontmatterParser {
       return content;
     }
 
-    let matter = yaml.dump(data, {
-      lineWidth: -1,
-      noRefs: true,
-      sortKeys: false,
-      quotingType: '"',
-      forceQuotes: false,
-      condenseFlow: false
-    }).trimEnd();
+    let matter = yaml
+      .dump(data, {
+        lineWidth: -1,
+        noRefs: true,
+        sortKeys: false,
+        quotingType: '"',
+        forceQuotes: false,
+        condenseFlow: false
+      })
+      .trimEnd();
 
     // Post-process to ensure strings with quotes are properly quoted
     matter = this.postProcessYaml(matter);
@@ -158,7 +164,7 @@ export class FrontmatterParser {
    */
   private static postProcessYaml(yamlStr: string): string {
     const lines = yamlStr.split('\n');
-    const processedLines = lines.map(line => {
+    const processedLines = lines.map((line) => {
       // Match YAML key-value pairs
       const match = line.match(/^(\s*)([^:]+):\s*(.+)$/);
       if (match) {
@@ -185,7 +191,7 @@ export class FrontmatterParser {
       return obj.toISOString();
     }
     if (Array.isArray(obj)) {
-      return obj.map(item => this.convertDatesToStrings(item));
+      return obj.map((item) => this.convertDatesToStrings(item));
     }
     if (obj && typeof obj === 'object') {
       const result: Record<string, unknown> = {};
@@ -232,7 +238,10 @@ export class FrontmatterParser {
     if ('title' in task && typeof task.title !== 'string') {
       errors.push('title must be a string');
     }
-    if ('status' in task && (typeof task.status !== 'string' || !['pending', 'in-progress', 'done'].includes(task.status))) {
+    if (
+      'status' in task &&
+      (typeof task.status !== 'string' || !['pending', 'in-progress', 'done'].includes(task.status))
+    ) {
       errors.push('status must be one of: pending, in-progress, done');
     }
 

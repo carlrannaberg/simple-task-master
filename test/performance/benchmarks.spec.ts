@@ -107,7 +107,9 @@ describe(
         console.warn(`  Max Time: ${metrics.maxTime.toFixed(2)}ms`);
         console.warn(`  Operations/Second: ${metrics.operationsPerSecond.toFixed(2)}`);
         console.warn(
-          `  Memory Delta: ${((metrics.memoryUsageEnd - metrics.memoryUsageStart) / 1024 / 1024).toFixed(2)}MB`
+          `  Memory Delta: ${((metrics.memoryUsageEnd - metrics.memoryUsageStart) / 1024 / 1024).toFixed(
+            2
+          )}MB`
         );
 
         return {
@@ -208,7 +210,12 @@ describe(
               'large-dataset',
               'performance-test'
             ],
-            status: taskIndex % 3 === 0 ? 'done' : taskIndex % 3 === 1 ? 'in-progress' : 'pending' as const
+            status:
+              taskIndex % 3 === 0
+                ? 'done'
+                : taskIndex % 3 === 1
+                  ? 'in-progress'
+                  : ('pending' as const)
           });
         }
 
@@ -272,7 +279,8 @@ describe(
           20,
           (metrics) => {
             expect(metrics.averageTime).toBeLessThan(500); // Under 500ms for complex filter
-            expect(metrics.operationsPerSecond).toBeGreaterThan(2); // At least 2 complex filters/sec
+            // At least 2 complex filters/sec
+            expect(metrics.operationsPerSecond).toBeGreaterThan(2);
           }
         );
       });
@@ -426,8 +434,10 @@ describe(
           },
           5,
           (metrics) => {
-            expect(metrics.averageTime).toBeLessThan(3000); // Under 3 seconds for 50 concurrent tasks
-            expect(metrics.operationsPerSecond).toBeGreaterThan(0.3); // At least 0.3 batches/sec
+            // Under 3 seconds for 50 concurrent tasks
+            expect(metrics.averageTime).toBeLessThan(3000);
+            // At least 0.3 batches/sec
+            expect(metrics.operationsPerSecond).toBeGreaterThan(0.3);
           }
         );
       });
@@ -451,10 +461,17 @@ describe(
           await Promise.all(operations);
         };
 
-        await runBenchmark('High Concurrency Load Test', concurrentOperations, 10, (metrics) => {
-          expect(metrics.averageTime).toBeLessThan(5000); // Under 5 seconds for mixed operations
-          expect(metrics.operationsPerSecond).toBeGreaterThan(0.2); // At least 0.2 mixed batches/sec
-        });
+        await runBenchmark(
+          'High Concurrency Load Test',
+          concurrentOperations,
+          10,
+          (metrics) => {
+            // Under 5 seconds for mixed operations
+            expect(metrics.averageTime).toBeLessThan(5000);
+            // At least 0.2 mixed batches/sec
+            expect(metrics.operationsPerSecond).toBeGreaterThan(0.2);
+          }
+        );
       });
     });
 
@@ -508,7 +525,8 @@ describe(
           10,
           (metrics) => {
             expect(metrics.averageTime).toBeLessThan(2000); // Under 2 seconds to read 200+ files
-            expect(metrics.operationsPerSecond).toBeGreaterThan(0.5); // At least 0.5 full reads/sec
+            // At least 0.5 full reads/sec
+            expect(metrics.operationsPerSecond).toBeGreaterThan(0.5);
           }
         );
       });
@@ -579,7 +597,8 @@ describe(
 
         const listingBenchmark = benchmarks.find((b) => b.testName.includes('Listing'));
         if (listingBenchmark?.success) {
-          expect(listingBenchmark.metrics.averageTime).toBeLessThan(50); // 50ms threshold for empty/small lists
+          // 50ms threshold for empty/small lists
+          expect(listingBenchmark.metrics.averageTime).toBeLessThan(50);
         }
       });
     });

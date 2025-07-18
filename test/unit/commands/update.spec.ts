@@ -102,9 +102,10 @@ describe('Update Command Unit Tests', () => {
 
     mockTaskManagerInstance.update.mockImplementation(
       async (id: number, updates: TaskUpdateInput) => {
-        // Important: The update command pre-processes += and -= operations before calling TaskManager.update
-        // It passes the final merged values, not the operations themselves
-        // Our mock should just apply the updates as-is
+        // Important: The update command pre-processes += and -= operations
+        // before calling TaskManager.update. It passes the final merged values,
+        // not the operations themselves. Our mock should just apply the updates
+        // as-is
         const updatedTask = await mockTaskStore.update(id, updates);
         return { ...updatedTask, content: updatedTask.content || '' };
       }
@@ -174,7 +175,8 @@ describe('Update Command Unit Tests', () => {
     assignments: string[] = [],
     options: Record<string, string | boolean> = {}
   ): Promise<void> {
-    // Build command args (without 'update' since we're calling parseAsync on updateCommand directly)
+    // Build command args (without 'update' since we're calling parseAsync
+    // on updateCommand directly)
     const args: string[] = [];
 
     // Add options first
