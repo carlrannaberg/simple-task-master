@@ -31,7 +31,7 @@ export default defineConfig({
       }
     },
     include: ['test/**/*.test.ts', 'test/**/*.spec.ts'],
-    exclude: ['node_modules', 'dist', 'coverage'],
+    exclude: ['node_modules', 'dist', 'coverage', 'test/performance/**'],
     testTimeout: 15000,
     hookTimeout: 20000,
     maxConcurrency: 2,

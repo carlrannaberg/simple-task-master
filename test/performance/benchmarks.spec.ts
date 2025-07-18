@@ -1,3 +1,15 @@
+/**
+ * Performance Benchmark Tests
+ *
+ * These tests are excluded from the default test run (`npm test`) because they:
+ * - Create large datasets (500+ tasks)
+ * - Run multiple iterations for accurate benchmarking
+ * - Take ~3 minutes to complete
+ *
+ * Run these tests separately with: `npm run test:performance`
+ * Run all tests including performance: `npm run test:all`
+ */
+
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { PerformanceTestWorkspace } from '@test/helpers/performance-test-workspace';
 import { CLITestRunner } from '@test/helpers/cli-runner';

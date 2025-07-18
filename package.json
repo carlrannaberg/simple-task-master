@@ -14,6 +14,7 @@
     "build": "tsc && chmod +x bin/stm",
     "dev": "ts-node --esm src/index.ts",
     "test": "vitest",
+    "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e && npm run test:performance",
     "test:unit": "vitest run test/unit",
     "test:integration": "vitest run test/integration --config vitest.integration.config.ts",
     "test:e2e": "vitest run test/e2e --config vitest.e2e.config.ts",
