@@ -348,6 +348,25 @@ All temporary files, debugging scripts, and test artifacts should be organized i
 
 ## Configuration
 
+### Claude Code Settings (.claude Directory)
+
+The `.claude` directory contains Claude Code configuration files with specific version control rules:
+
+#### Version Controlled Files (commit these):
+- `.claude/settings.json` - Shared team settings for hooks, tools, and environment
+- `.claude/commands/*.md` - Custom slash commands available to all team members
+- `.claude/hooks/*.sh` - Hook scripts for automated validations and actions
+
+#### Ignored Files (do NOT commit):
+- `.claude/settings.local.json` - Personal preferences and local overrides
+- Any `*.local.json` files - Personal configuration not meant for sharing
+
+**Important Notes:**
+- Claude Code automatically adds `.claude/settings.local.json` to `.gitignore`
+- The shared `settings.json` should contain team-wide standards (linting, type checking, etc.)
+- Personal preferences or experimental settings belong in `settings.local.json`
+- Hook scripts in `.claude/hooks/` should be executable (`chmod +x`)
+
 ### Environment Setup
 
 ```bash
