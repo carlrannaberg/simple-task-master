@@ -509,10 +509,135 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ### Release Process
 
-- **Semantic versioning**: Follow semver for releases
-- **Changelog**: Update CHANGELOG.md for notable changes
-- **CI/CD**: All tests must pass before release
-- **NPM publishing**: Automated release workflow
+#### Release Readiness Checklist
+
+Before initiating a release, ensure ALL of the following checks pass:
+
+**1. Code Quality Checks:**
+```bash
+npm run lint           # Must pass without errors
+npm run typecheck      # Must pass without errors
+npm run build          # Must compile successfully
+```
+
+**2. Test Suite:**
+```bash
+npm run test:unit      # All unit tests must pass
+npm run test:integration # All integration tests must pass
+npm run test:e2e       # All E2E tests must pass
+npm test               # Full test suite must pass
+```
+
+**3. Git Status:**
+```bash
+git status             # Working directory must be clean
+git log --oneline -5   # Verify recent commits follow conventions
+```
+
+**4. Dependencies:**
+- Remove any unused dependencies from package.json
+- Ensure package-lock.json is up to date
+- Verify no temporary debugging dependencies remain
+
+**5. Documentation:**
+- README.md is current with latest features
+- CHANGELOG.md includes all notable changes
+- API documentation reflects any interface changes
+- Usage examples are tested and working
+
+**6. Version Management:**
+- Current version in package.json is correct
+- Version bump follows semantic versioning:
+  - `patch`: Bug fixes (0.0.x)
+  - `minor`: New features, backward compatible (0.x.0)
+  - `major`: Breaking changes (x.0.0)
+
+**7. Release Blockers:**
+- No `console.log` statements in production code
+- No commented-out code blocks
+- No TODO/FIXME comments (unless intentional)
+- No hardcoded test data or credentials
+- No temporary test files in the repository
+
+#### Release Process Steps
+
+##### Option 1: Using Release Scripts (Recommended)
+
+The project includes AI-powered release preparation scripts that automate the entire process:
+
+```bash
+# For bug fixes and small changes
+npm run release:patch
+
+# For new features (backward compatible)
+npm run release:minor
+
+# For breaking changes
+npm run release:major
+```
+
+These scripts (`scripts/prepare-release.sh`) will:
+- Validate all release readiness checks
+- Generate changelog entries using AI assistance
+- Update version numbers
+- Create appropriate git commits and tags
+- Push changes to trigger the release workflow
+
+##### Option 2: Manual Release
+
+1. **Ensure all checks pass** (see checklist above)
+2. **Update version**: `npm version [patch|minor|major]`
+3. **Update CHANGELOG.md** with release notes
+4. **Commit changes**: `git add -A && git commit -m "chore: release v{version}"`
+5. **Push with tags**: `git push && git push --tags`
+
+##### GitHub Actions Workflows
+
+###### Release Workflow (`.github/workflows/release.yaml`)
+
+Automatically publishes to npm when version changes:
+- **Triggers**: Pushes to main/master or manual dispatch
+- **Process**:
+  1. Checks if version tag already exists (prevents duplicate releases)
+  2. Runs all quality checks (lint, typecheck, tests)
+  3. Builds the package
+  4. Publishes to npm registry
+  5. Creates GitHub release with changelog
+- **Manual dispatch**: Can select release type (patch/minor/major)
+
+###### Version Bump Workflow (`.github/workflows/version-bump.yaml`)
+
+Creates PRs for version updates:
+- **Triggers**: Manual workflow dispatch only
+- **Options**:
+  - Version type: patch, minor, major, prerelease
+  - Prerelease ID: beta, alpha, etc. (for prereleases)
+- **Process**:
+  1. Bumps version in package.json
+  2. Creates PR with version change
+  3. PR includes checklist for release readiness
+- **Usage**: Alternative to local version bumping
+
+**Manual Workflow Dispatch:**
+```bash
+# Both workflows can be triggered from GitHub Actions UI
+# 1. Go to Actions tab → Select workflow → Run workflow
+# 2. Choose options and run
+```
+
+##### Release Verification
+
+After release:
+1. **Check npm**: `npm view simple-task-master@latest`
+2. **Check GitHub**: Verify release appears in GitHub releases
+3. **Test installation**: `npm install -g simple-task-master@latest`
+4. **Verify functionality**: `stm --version`
+
+#### Post-Release
+
+- Monitor npm downloads and issues
+- Address any immediate bugs with patch releases
+- Update project board with completed features
 
 ### Development Workflow
 

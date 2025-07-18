@@ -26,7 +26,10 @@
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist coverage",
     "prepack": "npm run clean && npm run build",
-    "prepublishOnly": "echo 'Skipping prepublish checks for release workflow'"
+    "prepublishOnly": "echo 'Skipping prepublish checks for release workflow'",
+    "release:patch": "./scripts/prepare-release.sh --type patch",
+    "release:minor": "./scripts/prepare-release.sh --type minor",
+    "release:major": "./scripts/prepare-release.sh --type major"
   },
   "keywords": [
     "task",
