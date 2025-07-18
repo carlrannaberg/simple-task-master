@@ -20,17 +20,16 @@ npm run dev            # Development mode with ts-node
 npm run typecheck      # TypeScript type checking
 
 # Code quality
-npm run lint           # ESLint code analysis
-npm run lint:fix       # Auto-fix linting issues
-npm run format         # Prettier code formatting
-npm run format:check   # Check code formatting compliance
+npm run lint           # ESLint code analysis (includes formatting rules)
+npm run lint:fix       # Auto-fix linting and formatting issues
 
 # Testing
-npm test               # Run all tests
+npm test               # Run all tests (excludes performance tests)
+npm run test:all       # Run ALL tests including performance
 npm run test:unit      # Unit tests only
 npm run test:integration # Integration tests only
 npm run test:e2e       # End-to-end tests only
-npm run test:performance # Performance benchmarks
+npm run test:performance # Performance benchmarks (~3 min runtime)
 npm run test:watch     # Watch mode for development
 npm run test:coverage  # Coverage reporting
 
@@ -39,6 +38,30 @@ npm test -- test/unit/specific-test.spec.ts
 npm run test:unit -- --grep "specific test name"
 npm run test:e2e -- test/e2e/specific-e2e.spec.ts
 ```
+
+### Important: Script Synchronization
+
+**When modifying npm scripts in package.json, ensure all references are updated:**
+
+1. **GitHub Workflows** (`.github/workflows/*.yaml`)
+   - Test workflow uses individual test commands
+   - Build/release workflows may reference build commands
+   - Update any script that was renamed or removed
+
+2. **Documentation**
+   - README.md installation and usage sections
+   - AGENT.md command reference (this file)
+   - Any other docs referencing npm scripts
+
+3. **CI/CD Configuration**
+   - Check for hardcoded script names in CI configs
+   - Verify all test suites are still being run
+   - Update timeout values if test duration changes
+
+4. **Example**: When we removed Prettier
+   - Removed `format` and `format:check` from package.json
+   - Updated GitHub workflow to remove `format:check` step
+   - Updated this documentation to remove format commands
 
 ### Binary Usage
 

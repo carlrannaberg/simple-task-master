@@ -562,13 +562,15 @@ npm test
 
 - `npm run build` - Compile TypeScript to JavaScript
 - `npm run dev` - Run in development mode with ts-node
-- `npm test` - Run all tests
+- `npm test` - Run all tests (excludes performance tests)
+- `npm run test:all` - Run ALL tests including performance
 - `npm run test:unit` - Run unit tests only
 - `npm run test:integration` - Run integration tests only
 - `npm run test:e2e` - Run end-to-end tests only
+- `npm run test:performance` - Run performance benchmarks (~3 min)
 - `npm run test:coverage` - Run tests with coverage report
-- `npm run lint` - Lint code with ESLint
-- `npm run format` - Format code with Prettier
+- `npm run lint` - Lint code with ESLint (includes formatting rules)
+- `npm run lint:fix` - Auto-fix linting and formatting issues
 - `npm run typecheck` - Type check with TypeScript
 
 ### Testing
