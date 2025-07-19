@@ -13,7 +13,7 @@
   "scripts": {
     "build": "tsc && chmod +x bin/stm",
     "dev": "ts-node --esm src/index.ts",
-    "test": "vitest",
+    "test": "vitest run",
     "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e && npm run test:performance",
     "test:unit": "vitest run test/unit",
     "test:integration": "vitest run test/integration --config vitest.integration.config.ts",
@@ -27,9 +27,9 @@
     "clean": "rm -rf dist coverage",
     "prepack": "npm run clean && npm run build",
     "prepublishOnly": "echo 'Skipping prepublish checks for release workflow'",
-    "release:patch": "./scripts/prepare-release.sh --type patch",
-    "release:minor": "./scripts/prepare-release.sh --type minor",
-    "release:major": "./scripts/prepare-release.sh --type major"
+    "release:patch": "./scripts/prepare-release.sh --type patch --yes",
+    "release:minor": "./scripts/prepare-release.sh --type minor --yes",
+    "release:major": "./scripts/prepare-release.sh --type major --yes"
   },
   "keywords": [
     "task",
