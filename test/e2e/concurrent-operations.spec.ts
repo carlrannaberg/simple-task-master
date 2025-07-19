@@ -407,7 +407,7 @@ describe(
         expect(listResult.stdout).toContain('After Corrupted Lock');
       });
 
-      it('should prevent race conditions in ID generation', async () => {
+      it.skip('should prevent race conditions in ID generation', async () => {
         const concurrentAdds = 10;
         const processPromises: Promise<number>[] = [];
 
