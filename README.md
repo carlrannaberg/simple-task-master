@@ -64,6 +64,77 @@ npx simple-task-master init
    stm update 1 --status=in-progress
    ```
 
+## 📝 Task Structure
+
+STM tasks use three main content sections to organize information clearly:
+
+### Section Purposes
+
+- **Description** (`--description`): **Why & What**
+  - Problem context and background
+  - Solution overview and approach
+  - Acceptance criteria and definition of done
+  
+- **Details** (`--details`): **How**
+  - Implementation approach and technical design
+  - Architecture notes and design decisions
+  - Step-by-step implementation plan
+
+- **Validation** (`--validation`): **Verification**
+  - Testing strategy and approach
+  - Verification steps and quality checks
+  - Manual testing procedures and checklists
+
+### Example Task Structure
+
+```markdown
+---
+id: 1
+title: 'Implement user authentication'
+status: 'pending'
+---
+
+# Implement user authentication
+
+## Description
+
+**Problem**: Users currently cannot securely access the application.
+
+**Solution**: Implement JWT-based authentication with secure password handling.
+
+**Acceptance Criteria**:
+- [ ] Users can register with email/password
+- [ ] Users can login and receive JWT tokens
+- [ ] Protected routes require valid tokens
+- [ ] Passwords are securely hashed
+
+## Details
+
+**Implementation approach**:
+- Use bcrypt for password hashing (salt rounds: 12)
+- JWT tokens with 24-hour expiration
+- Express middleware for route protection
+- Database schema: users table with email, password_hash, created_at
+
+**Architecture**:
+- auth.ts: Core authentication logic
+- middleware/auth.ts: Route protection
+- routes/auth.ts: Login/register endpoints
+
+## Validation
+
+**Testing strategy**:
+- Unit tests for password hashing/verification
+- Integration tests for auth endpoints
+- E2E tests for complete login flow
+
+**Manual verification**:
+- [ ] Register new user via API
+- [ ] Login returns valid JWT
+- [ ] Protected routes reject invalid tokens
+- [ ] Password reset flow works end-to-end
+```
+
 ## 📖 Command Reference
 
 ### `stm init`

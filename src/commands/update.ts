@@ -66,7 +66,7 @@ function validateFieldName(key: string): void {
     'status',
     'tags',
     'dependencies',
-    'desc',
+    'description',
     'details',
     'validation'
   ];
@@ -84,7 +84,7 @@ function parseValue(key: string, value: string): unknown {
   switch (key) {
     case 'title':
     case 'content':
-    case 'desc':
+    case 'description':
     case 'details':
     case 'validation':
       if (value.length === 0) {
@@ -311,14 +311,14 @@ async function updateTask(
         const parsedValue = parseValue(key, value);
 
         // Handle body section fields
-        if (key === 'desc' || key === 'details' || key === 'validation') {
+        if (key === 'description' || key === 'details' || key === 'validation') {
           if (!contentModified) {
             updatedContent = currentTask.content || '';
             contentModified = true;
           }
           updatedContent = updateBodySection(
             updatedContent,
-            key === 'desc' ? 'description' : key,
+            key,
             parsedValue as string
           );
           updates.content = updatedContent;
@@ -446,9 +446,9 @@ export const updateCommand = new Command('update')
   .argument('<id>', 'Task ID')
   .argument('[assignments...]', 'Field assignments (key=value, key+=value, key-=value)')
   .option('-t, --title <title>', 'Update task title')
-  .option('-d, --description <text>', 'Update description section (use - for stdin)')
-  .option('--details <text>', 'Update details section (use - for stdin)')
-  .option('--validation <text>', 'Update validation section (use - for stdin)')
+  .option('-d, --description <text>', 'Update description: why & what - problem context, solution overview, and acceptance criteria (use - for stdin)')
+  .option('--details <text>', 'Update details: how - implementation approach, technical design, and architecture notes (use - for stdin)')
+  .option('--validation <text>', 'Update validation: testing strategy, verification steps, and quality checks (use - for stdin)')
   .option('-s, --status <status>', 'Update task status (pending, in-progress, done)')
   .option('--tags <tags>', 'Set task tags (comma-separated)')
   .option('--deps <dependencies>', 'Set task dependencies (comma-separated IDs)')

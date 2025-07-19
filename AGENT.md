@@ -8,6 +8,29 @@ This file provides guidance to AI coding assistants working in this repository.
 
 Simple Task Master is a sophisticated command-line task management tool built in TypeScript that stores tasks as markdown files with YAML frontmatter. This approach makes tasks both human-readable and version control-friendly, targeting developers who prefer markdown-based workflows.
 
+## Task Content Structure
+
+STM tasks use a structured approach to organize information across three main content sections:
+
+### Section Purposes
+
+- **Description** (`--description`): **Why & What**
+  - Problem context and background explaining why the task exists
+  - Solution overview describing what needs to be built/done
+  - Acceptance criteria defining when the task is complete
+  
+- **Details** (`--details`): **How**
+  - Implementation approach and technical design decisions
+  - Architecture notes and system design considerations  
+  - Step-by-step implementation plan and technical specifications
+
+- **Validation** (`--validation`): **Verification**
+  - Testing strategy outlining how to verify correctness
+  - Quality assurance procedures and verification steps
+  - Manual testing checklists and automated test requirements
+
+This structure ensures tasks capture the complete context (why), solution approach (how), and verification strategy (validation) in a consistent, developer-friendly format.
+
 ## Build & Commands
 
 ### Core Development Commands
