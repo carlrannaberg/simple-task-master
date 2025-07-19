@@ -423,7 +423,7 @@ STM stores its configuration in `.simple-task-master/config.json`. You can custo
 
 ```json
 {
-  "schema": "1.0.0",
+  "schema": 1,
   "lockTimeoutMs": 30000,
   "maxTaskSizeBytes": 1048576
 }
