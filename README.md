@@ -682,16 +682,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Discussions**: [GitHub Discussions](https://github.com/your-username/simple-task-master/discussions)
 - **Documentation**: This README and inline code documentation
 
-## 🗺️ Roadmap
-
-- [ ] Task dependencies and relationships
-- [ ] Time tracking and reporting
-- [ ] Integration with popular IDEs
-- [ ] Sync capabilities between machines
-- [ ] Advanced filtering and queries
-- [ ] Task templates and automation
-- [ ] Integration with CI/CD pipelines
-
 ---
 
 <div align="center">
