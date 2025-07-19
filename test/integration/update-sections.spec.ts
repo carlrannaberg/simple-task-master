@@ -123,7 +123,7 @@ describe('Update Command Section Integration Tests', () => {
     const updateResult = await cli.run([
       'update',
       taskId,
-      'desc=Assignment description',
+      'description=Assignment description',
       'details=Assignment details',
       'validation=Assignment validation'
     ]);

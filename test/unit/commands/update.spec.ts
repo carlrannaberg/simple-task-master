@@ -293,9 +293,9 @@ describe('Update Command Unit Tests', () => {
       expect(task?.content).toBe('Multiple assignments test');
     });
 
-    it('should handle field aliases (desc, details, validation)', async () => {
-      // Test desc updates the description section
-      await executeUpdate('1', ['desc=Description via alias']);
+    it('should handle field aliases (description, details, validation)', async () => {
+      // Test description updates the description section
+      await executeUpdate('1', ['description=Description via alias']);
       const task = await mockTaskStore.get(1);
       expect(task?.content).toBe('Description via alias');
 
@@ -802,8 +802,8 @@ Custom notes section.`
   });
 
   describe('backward compatibility with assignment syntax', () => {
-    it('should support legacy desc= assignment syntax', async () => {
-      await executeUpdate('1', ['desc=Description via assignment']);
+    it('should support description= assignment syntax', async () => {
+      await executeUpdate('1', ['description=Description via assignment']);
 
       const task = await mockTaskStore.get(1);
       expect(task?.content).toBe('Description via assignment');
@@ -826,7 +826,7 @@ Custom notes section.`
     });
 
     it('should handle mixed option and assignment syntax', async () => {
-      await executeUpdate('1', ['desc=Assignment description'], {
+      await executeUpdate('1', ['description=Assignment description'], {
         details: 'Option details'
       });
 
@@ -849,10 +849,10 @@ Custom notes section.`
   });
 
   describe('enhanced field validation', () => {
-    it('should validate desc field cannot be empty', async () => {
-      await expect(executeUpdate('1', ['desc='])).rejects.toThrow('Process.exit(1)');
+    it('should validate description field cannot be empty', async () => {
+      await expect(executeUpdate('1', ['description='])).rejects.toThrow('Process.exit(1)');
       expect(mockedPrintError).toHaveBeenCalledWith(
-        expect.stringContaining('desc cannot be empty')
+        expect.stringContaining('description cannot be empty')
       );
       expect(exitCode).toBe(1);
     });
@@ -873,8 +873,8 @@ Custom notes section.`
       expect(exitCode).toBe(1);
     });
 
-    it('should accept valid desc field values', async () => {
-      await executeUpdate('1', ['desc=Valid description content']);
+    it('should accept valid description field values', async () => {
+      await executeUpdate('1', ['description=Valid description content']);
 
       const task = await mockTaskStore.get(1);
       expect(task?.content).toBe('Valid description content');
@@ -997,7 +997,7 @@ Normal text`;
     it('should handle Unicode and special characters', async () => {
       const unicodeContent = 'Content with émojis 🚀 and spëcial chars: üñíçödé';
 
-      await executeUpdate('1', [`desc=${unicodeContent}`]);
+      await executeUpdate('1', [`description=${unicodeContent}`]);
 
       const task = await mockTaskStore.get(1);
       expect(task?.content).toBe(unicodeContent);
@@ -1043,7 +1043,7 @@ More content.`
     it('should handle large content updates', async () => {
       const largeContent = 'A'.repeat(50000); // 50KB content
 
-      await executeUpdate('1', [`desc=${largeContent}`]);
+      await executeUpdate('1', [`description=${largeContent}`]);
 
       const task = await mockTaskStore.get(1);
       expect(task?.content).toBe(largeContent);
@@ -1065,7 +1065,7 @@ More content.`
       const detailsOption = options.find((opt) => opt.long === '--details');
 
       expect(detailsOption).toBeDefined();
-      expect(detailsOption?.description).toContain('details section');
+      expect(detailsOption?.description).toContain('how - implementation');
     });
 
     it('should accept new --validation option', async () => {
@@ -1073,7 +1073,7 @@ More content.`
       const validationOption = options.find((opt) => opt.long === '--validation');
 
       expect(validationOption).toBeDefined();
-      expect(validationOption?.description).toContain('validation section');
+      expect(validationOption?.description).toContain('testing strategy');
     });
 
     it('should have --description option with -d shorthand', async () => {
@@ -1082,7 +1082,7 @@ More content.`
 
       expect(descOption).toBeDefined();
       expect(descOption?.short).toBe('-d');
-      expect(descOption?.description).toContain('description section');
+      expect(descOption?.description).toContain('why & what');
     });
 
     it('should support --no-editor option', async () => {

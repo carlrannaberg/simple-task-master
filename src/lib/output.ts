@@ -143,15 +143,17 @@ export function formatAsTable(tasks: Task[], options: TableOptions = {}): string
     return '';
   }
 
-  const { headers = true, borders = true, padding = 1, maxWidth = 80 } = options;
+  // Default to terminal width, fallback to 120 if not available
+  const defaultWidth = (process.stdout.isTTY ? process.stdout.columns : undefined) || 120;
+  const { headers = true, borders = true, padding = 1, maxWidth = defaultWidth } = options;
 
-  // Define columns
+  // Define columns with flexible widths
   const columns = [
-    { key: 'id', title: 'ID', width: 4 },
-    { key: 'title', title: 'Title', width: 30 },
-    { key: 'status', title: 'Status', width: 12 },
-    { key: 'tags', title: 'Tags', width: 20 },
-    { key: 'updated', title: 'Updated', width: 12 }
+    { key: 'id', title: 'ID', width: 4, minWidth: 4, flexible: false },
+    { key: 'title', title: 'Title', width: 40, minWidth: 20, flexible: true },
+    { key: 'status', title: 'Status', width: 12, minWidth: 10, flexible: false },
+    { key: 'tags', title: 'Tags', width: 25, minWidth: 15, flexible: true },
+    { key: 'updated', title: 'Updated', width: 12, minWidth: 10, flexible: false }
   ];
 
   // Adjust column widths based on maxWidth
@@ -160,10 +162,42 @@ export function formatAsTable(tasks: Task[], options: TableOptions = {}): string
   const availableWidth = maxWidth - totalBorderWidth - totalPadding;
 
   if (availableWidth > 0) {
-    const ratio = availableWidth / columns.reduce((sum, col) => sum + col.width, 0);
-    columns.forEach((col) => {
-      col.width = Math.floor(col.width * ratio);
-    });
+    const totalPreferredWidth = columns.reduce((sum, col) => sum + col.width, 0);
+    
+    if (totalPreferredWidth <= availableWidth) {
+      // If preferred widths fit, distribute extra space to flexible columns
+      const flexibleColumns = columns.filter(col => col.flexible);
+      const extraSpace = availableWidth - totalPreferredWidth;
+      const extraPerFlexible = Math.floor(extraSpace / flexibleColumns.length);
+      
+      flexibleColumns.forEach(col => {
+        col.width += extraPerFlexible;
+      });
+    } else {
+      // If preferred widths don't fit, scale down proportionally but respect minimums
+      const totalMinWidth = columns.reduce((sum, col) => sum + (col.minWidth || col.width), 0);
+      
+      if (totalMinWidth <= availableWidth) {
+        // Scale down to minimums first, then distribute remaining space
+        columns.forEach(col => {
+          col.width = col.minWidth || col.width;
+        });
+        
+        const remainingSpace = availableWidth - totalMinWidth;
+        const flexibleColumns = columns.filter(col => col.flexible);
+        const extraPerFlexible = Math.floor(remainingSpace / flexibleColumns.length);
+        
+        flexibleColumns.forEach(col => {
+          col.width += extraPerFlexible;
+        });
+      } else {
+        // Even minimums don't fit, scale everything down proportionally
+        const ratio = availableWidth / totalMinWidth;
+        columns.forEach(col => {
+          col.width = Math.max(3, Math.floor((col.minWidth || col.width) * ratio));
+        });
+      }
+    }
   }
 
   // Helper function to truncate and pad text
@@ -208,7 +242,20 @@ export function formatAsTable(tasks: Task[], options: TableOptions = {}): string
             value = task.tags?.join(', ') || '';
             break;
           case 'updated':
-            value = new Date(task.updated).toLocaleDateString();
+            // More compact date format
+            const date = new Date(task.updated);
+            const now = new Date();
+            const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 0) {
+              value = 'Today';
+            } else if (diffDays === 1) {
+              value = 'Yesterday';
+            } else if (diffDays < 7) {
+              value = `${diffDays}d ago`;
+            } else {
+              value = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            }
             break;
           default:
             value = '';
