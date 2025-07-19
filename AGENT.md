@@ -24,7 +24,7 @@ STM tasks use a structured approach to organize information across three main co
   - Architecture notes and system design considerations  
   - Step-by-step implementation plan and technical specifications
 
-- **Validation** (`--validation`): **Verification**
+- **Validation** (`--validation`): **Quality Assurance**
   - Testing strategy outlining how to verify correctness
   - Quality assurance procedures and verification steps
   - Manual testing checklists and automated test requirements

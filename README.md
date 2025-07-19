@@ -80,7 +80,7 @@ STM tasks use three main content sections to organize information clearly:
   - Architecture notes and design decisions
   - Step-by-step implementation plan
 
-- **Validation** (`--validation`): **Verification**
+- **Validation** (`--validation`): **Quality Assurance**
   - Testing strategy and approach
   - Verification steps and quality checks
   - Manual testing procedures and checklists
