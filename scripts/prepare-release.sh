@@ -84,9 +84,9 @@ detect_ai_cli() {
     
     if command -v claude &> /dev/null; then
         AI_CLI="claude"
-        AI_MODEL="--model claude-3-5-sonnet-20241022"
+        AI_MODEL="--model claude-sonnet-4-20250514"
         AI_FLAGS='--output-format stream-json --verbose --max-turns 30 --allowedTools "Edit" "MultiEdit" "Read" "Write"'
-        print_success "Found Claude CLI with Sonnet 3.5 model"
+        print_success "Found Claude CLI with Sonnet 4 model"
     elif command -v gemini &> /dev/null; then
         AI_CLI="gemini"
         AI_MODEL="--model gemini-2.5-flash"

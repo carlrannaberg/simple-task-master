@@ -31,6 +31,33 @@ STM tasks use a structured approach to organize information across three main co
 
 This structure ensures tasks capture the complete context (why), solution approach (how), and verification strategy (validation) in a consistent, developer-friendly format.
 
+## Latest Anthropic Model Names (2025)
+
+For API calls and Claude Code usage, use these exact model identifiers:
+
+### Claude 4 Family (Latest - Released May 2025)
+- **Claude Opus 4**: `claude-opus-4-20250514` 
+  - Best coding model, excels at complex long-running tasks
+  - $15/$75 per million tokens (input/output)
+  - 200K input / 32K output tokens
+  
+- **Claude Sonnet 4**: `claude-sonnet-4-20250514`
+  - State-of-the-art coding (72.7% on SWE-bench)
+  - $3/$15 per million tokens (input/output) 
+  - 200K input / 64K output tokens
+
+### Claude 3 Family
+- **Claude 3.7 Sonnet**: `claude-3-7-sonnet-20250219`
+  - Hybrid reasoning model with thinking modes
+  
+- **Claude 3.5 Sonnet**: `claude-3-5-sonnet-20241022`
+  - Previous flagship model
+  
+- **Claude 3.5 Haiku**: `claude-3-5-haiku-20241022`
+  - Fast and cost-effective
+
+**Note**: While aliases like `claude-sonnet-4-0` exist, always use the specific dated versions in production for consistency.
+
 ## Build & Commands
 
 ### Core Development Commands
