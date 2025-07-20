@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2025-01-20
+
+### Added
+
+- **Delete Command (`stm delete`)**
+  - Complete CRUD functionality with task deletion capability
+  - Dependency validation to prevent breaking task relationships
+  - Support for both standard `dependencies` and unknown field `depends_on` formats
+  - Force flag (`--force`) to bypass dependency checks when needed
+  - Comprehensive error handling with proper exit codes
+  - Full test coverage including unit, integration, and E2E tests
+
 ## [0.1.2] - 2025-01-20
 
 ### Added
