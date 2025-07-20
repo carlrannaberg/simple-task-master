@@ -217,6 +217,7 @@ export class CLITestRunner {
       description?: string;
       tags?: string[];
       status?: string;
+      dependencies?: number[];
     } = {}
   ): Promise<{ result: CLIResult; taskId: number }> {
     const args = ['add', title];
@@ -233,6 +234,10 @@ export class CLITestRunner {
 
     if (options.status) {
       args.push('--status', options.status);
+    }
+
+    if (options.dependencies && options.dependencies.length > 0) {
+      args.push('--deps', options.dependencies.join(','));
     }
 
     const result = await this.runSuccess(args);

@@ -419,6 +419,24 @@ stm export --format=csv --fields=id,title,status,tags
 - `--tags, -t <tags>`: Filter by tags
 - `--fields <fields>`: Comma-separated fields to include in export
 
+### `stm delete <id>`
+
+Delete a task permanently.
+
+```bash
+# Delete a task
+stm delete 123
+
+# Force delete (bypass dependency checks)
+stm delete 123 --force
+```
+
+**Note**: Deletion is permanent. Tasks that depend on the deleted task may become invalid unless `--force` is used.
+
+**Options:**
+
+- `--force, -f`: Force deletion even if other tasks depend on this task
+
 ## ⚙️ Configuration
 
 STM stores its configuration in `.simple-task-master/config.json`. You can customize:

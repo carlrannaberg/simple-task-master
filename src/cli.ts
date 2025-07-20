@@ -6,6 +6,7 @@ import { handleGlobalError } from './lib/errors';
 // Import commands
 import { initCommand } from './commands/init';
 import { addCommand } from './commands/add';
+import { deleteCommand } from './commands/delete';
 import { listCommand } from './commands/list';
 import { showCommand } from './commands/show';
 import { updateCommand } from './commands/update';
@@ -63,6 +64,7 @@ program
 // Register commands
 program.addCommand(initCommand);
 program.addCommand(addCommand);
+program.addCommand(deleteCommand);
 program.addCommand(listCommand);
 program.addCommand(showCommand);
 program.addCommand(updateCommand);
