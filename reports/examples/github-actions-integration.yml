@@ -1,0 +1,272 @@
+# GitHub Actions Integration Example for Simple Task Master
+#
+# This workflow demonstrates how to integrate GitHub Actions with STM
+# by updating task metadata during CI/CD pipeline execution.
+
+name: STM Task Update on CI/CD
+
+on:
+  pull_request:
+    types: [opened, synchronize, closed]
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      task_id:
+        description: 'STM Task ID to update'
+        required: true
+        type: string
+
+env:
+  # STM workspace location (can be a separate repo)
+  STM_WORKSPACE: ./stm-tasks
+  # Map PR labels to STM task IDs
+  LABEL_TASK_MAP: |
+    task-123: 123
+    task-456: 456
+    feature-789: 789
+
+jobs:
+  update-stm-task:
+    name: Update STM Task
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Checkout STM workspace
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/stm-workspace
+          path: ${{ env.STM_WORKSPACE }}
+          token: ${{ secrets.STM_WORKSPACE_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install Simple Task Master
+        run: npm install -g simple-task-master
+
+      - name: Determine Task ID
+        id: get-task-id
+        run: |
+          # Priority: workflow input > PR label > branch mapping
+          if [ -n "${{ github.event.inputs.task_id }}" ]; then
+            echo "task_id=${{ github.event.inputs.task_id }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            # Extract task ID from PR labels
+            LABELS='${{ toJson(github.event.pull_request.labels.*.name) }}'
+            for label in $(echo "$LABELS" | jq -r '.[]'); do
+              TASK_ID=$(echo "$LABEL_TASK_MAP" | grep "^$label:" | cut -d: -f2 | tr -d ' ')
+              if [ -n "$TASK_ID" ]; then
+                echo "task_id=$TASK_ID" >> $GITHUB_OUTPUT
+                break
+              fi
+            done
+          fi
+          
+          # Fallback: try to extract from branch name (e.g., feature/task-123-description)
+          if [ -z "$TASK_ID" ]; then
+            BRANCH="${{ github.ref_name }}"
+            TASK_ID=$(echo "$BRANCH" | grep -oE 'task-([0-9]+)' | grep -oE '[0-9]+' || true)
+            if [ -n "$TASK_ID" ]; then
+              echo "task_id=$TASK_ID" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Update task with workflow information
+        if: steps.get-task-id.outputs.task_id
+        working-directory: ${{ env.STM_WORKSPACE }}
+        run: |
+          TASK_ID="${{ steps.get-task-id.outputs.task_id }}"
+          
+          # Update GitHub workflow metadata
+          stm update $TASK_ID \
+            "github_workflow.workflow_name=${{ github.workflow }}" \
+            "github_workflow.run_id=${{ github.run_id }}" \
+            "github_workflow.run_number=${{ github.run_number }}" \
+            "github_workflow.run_attempt=${{ github.run_attempt }}" \
+            "github_workflow.actor=${{ github.actor }}" \
+            "github_workflow.event=${{ github.event_name }}" \
+            "github_workflow.ref=${{ github.ref }}" \
+            "github_workflow.sha=${{ github.sha }}" \
+            "github_workflow.repository=${{ github.repository }}" \
+            "github_workflow.started_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            "github_workflow.status=in_progress" \
+            "github_workflow.html_url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+      - name: Update PR-specific metadata
+        if: github.event_name == 'pull_request' && steps.get-task-id.outputs.task_id
+        working-directory: ${{ env.STM_WORKSPACE }}
+        run: |
+          TASK_ID="${{ steps.get-task-id.outputs.task_id }}"
+          
+          stm update $TASK_ID \
+            "github_pr.number=${{ github.event.pull_request.number }}" \
+            "github_pr.title=${{ github.event.pull_request.title }}" \
+            "github_pr.state=${{ github.event.pull_request.state }}" \
+            "github_pr.draft=${{ github.event.pull_request.draft }}" \
+            "github_pr.merged=${{ github.event.pull_request.merged }}" \
+            "github_pr.author=${{ github.event.pull_request.user.login }}" \
+            "github_pr.base_branch=${{ github.event.pull_request.base.ref }}" \
+            "github_pr.head_branch=${{ github.event.pull_request.head.ref }}" \
+            "github_pr.html_url=${{ github.event.pull_request.html_url }}"
+
+      - name: Run tests
+        id: tests
+        continue-on-error: true
+        run: |
+          npm ci
+          npm test -- --reporter=json > test-results.json
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+
+      - name: Run build
+        id: build
+        continue-on-error: true
+        run: |
+          npm run build
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+
+      - name: Run security scan
+        id: security
+        continue-on-error: true
+        run: |
+          npm audit --json > audit-results.json || true
+          VULNS=$(jq '.metadata.vulnerabilities.total' audit-results.json)
+          echo "vulnerabilities=$VULNS" >> $GITHUB_OUTPUT
+
+      - name: Calculate code coverage
+        id: coverage
+        continue-on-error: true
+        run: |
+          npm run test:coverage -- --reporter=json
+          COVERAGE=$(jq '.total.lines.pct' coverage/coverage-summary.json)
+          echo "percentage=$COVERAGE" >> $GITHUB_OUTPUT
+
+      - name: Update task with CI results
+        if: always() && steps.get-task-id.outputs.task_id
+        working-directory: ${{ env.STM_WORKSPACE }}
+        run: |
+          TASK_ID="${{ steps.get-task-id.outputs.task_id }}"
+          
+          # Determine overall status
+          if [ "${{ steps.tests.outcome }}" = "success" ] && [ "${{ steps.build.outcome }}" = "success" ]; then
+            STATUS="success"
+          elif [ "${{ steps.tests.outcome }}" = "failure" ] || [ "${{ steps.build.outcome }}" = "failure" ]; then
+            STATUS="failure"
+          else
+            STATUS="error"
+          fi
+          
+          # Update workflow status
+          stm update $TASK_ID \
+            "github_workflow.status=completed" \
+            "github_workflow.conclusion=$STATUS" \
+            "github_workflow.completed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          
+          # Update CI results
+          stm update $TASK_ID \
+            "ci_results.tests_passed=${{ steps.tests.outcome == 'success' && 'true' || 'false' }}" \
+            "ci_results.build_passed=${{ steps.build.outcome == 'success' && 'true' || 'false' }}" \
+            "ci_results.security_vulnerabilities=${{ steps.security.outputs.vulnerabilities || '0' }}" \
+            "ci_results.code_coverage=${{ steps.coverage.outputs.percentage || '0' }}" \
+            "ci_results.last_updated=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+      - name: Update task status on success
+        if: success() && steps.get-task-id.outputs.task_id && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        working-directory: ${{ env.STM_WORKSPACE }}
+        run: |
+          # Automatically mark task as done when merged to main
+          TASK_ID="${{ steps.get-task-id.outputs.task_id }}"
+          stm update $TASK_ID --status done
+
+      - name: Add CI comment to task
+        if: always() && steps.get-task-id.outputs.task_id
+        working-directory: ${{ env.STM_WORKSPACE }}
+        run: |
+          TASK_ID="${{ steps.get-task-id.outputs.task_id }}"
+          
+          # Create a validation entry with CI results
+          VALIDATION_CONTENT=$(cat <<EOF
+          ## CI/CD Results - Run #${{ github.run_number }}
+          
+          **Date**: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+          **Commit**: ${{ github.sha }}
+          **Actor**: ${{ github.actor }}
+          **Workflow**: [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          
+          ### Test Results
+          - Tests: ${{ steps.tests.outcome == 'success' && '✅ Passed' || '❌ Failed' }}
+          - Build: ${{ steps.build.outcome == 'success' && '✅ Passed' || '❌ Failed' }}
+          - Security: ${{ steps.security.outputs.vulnerabilities || '0' }} vulnerabilities found
+          - Coverage: ${{ steps.coverage.outputs.percentage || 'N/A' }}%
+          
+          EOF
+          )
+          
+          # Append to validation section
+          echo "$VALIDATION_CONTENT" | stm update $TASK_ID --validation -
+
+      - name: Commit and push STM updates
+        if: always() && steps.get-task-id.outputs.task_id
+        working-directory: ${{ env.STM_WORKSPACE }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add -A
+          git diff --staged --quiet || git commit -m "Update task ${{ steps.get-task-id.outputs.task_id }} from GitHub Actions
+
+          Workflow: ${{ github.workflow }}
+          Run: ${{ github.run_id }}
+          Repository: ${{ github.repository }}
+          Ref: ${{ github.ref }}"
+          
+          git push
+
+  # Separate job for deployment tracking
+  deploy-tracking:
+    name: Track Deployment
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: update-stm-task
+    
+    steps:
+      - name: Checkout STM workspace
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/stm-workspace
+          path: ${{ env.STM_WORKSPACE }}
+          token: ${{ secrets.STM_WORKSPACE_TOKEN }}
+
+      - name: Install STM
+        run: npm install -g simple-task-master
+
+      - name: Update deployment metadata
+        working-directory: ${{ env.STM_WORKSPACE }}
+        run: |
+          # Find tasks marked for deployment
+          DEPLOY_TASKS=$(stm list --json | jq -r '.[] | select(.tags | contains(["deploy-ready"])) | .id')
+          
+          for TASK_ID in $DEPLOY_TASKS; do
+            stm update $TASK_ID \
+              "deployment.environment=production" \
+              "deployment.version=${{ github.sha }}" \
+              "deployment.deployed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+              "deployment.deployed_by=github-actions[bot]" \
+              "deployment.status=in_progress"
+          done
+
+# Reusable workflow for other repos
+# Save as .github/workflows/stm-update.yml in a shared workflows repository
+# Other repos can use:
+# jobs:
+#   update-stm:
+#     uses: org/shared-workflows/.github/workflows/stm-update.yml@main
+#     with:
+#       task_id: 123
+#     secrets: inherit

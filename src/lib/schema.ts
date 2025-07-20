@@ -3,6 +3,7 @@
  */
 
 import { isTask, isConfig, isLockFile, type Task, type Config, type LockFile } from './types';
+import { FILE_LIMITS, ERROR_MESSAGES } from './constants';
 
 // Re-export type guards from types
 export { isTask, isConfig, isLockFile };
@@ -26,6 +27,20 @@ export class SchemaValidationError extends Error {
 }
 
 /**
+ * Core STM fields with their expected types for validation
+ */
+const STM_CORE_FIELDS = {
+  id: 'number',
+  title: 'string',
+  status: 'string',
+  schema: 'number',
+  created: 'string',
+  updated: 'string',
+  tags: 'array',
+  dependencies: 'array'
+} as const;
+
+/**
  * Required fields for Task schema
  */
 const REQUIRED_TASK_FIELDS = [
@@ -40,19 +55,9 @@ const REQUIRED_TASK_FIELDS = [
 ] as const;
 
 /**
- * Allowed fields for Task schema (fail-fast on unknown fields)
- */
-const ALLOWED_TASK_FIELDS = new Set(REQUIRED_TASK_FIELDS);
-
-/**
  * Required fields for Config schema
  */
 const REQUIRED_CONFIG_FIELDS = ['schema', 'lockTimeoutMs', 'maxTaskSizeBytes'] as const;
-
-/**
- * Allowed fields for Config schema
- */
-const ALLOWED_CONFIG_FIELDS = new Set(REQUIRED_CONFIG_FIELDS);
 
 /**
  * Required fields for LockFile schema
@@ -60,33 +65,48 @@ const ALLOWED_CONFIG_FIELDS = new Set(REQUIRED_CONFIG_FIELDS);
 const REQUIRED_LOCK_FIELDS = ['pid', 'command', 'timestamp'] as const;
 
 /**
- * Allowed fields for LockFile schema
- */
-const ALLOWED_LOCK_FIELDS = new Set(REQUIRED_LOCK_FIELDS);
-
-/**
- * Validates that an object has all required fields and no unknown fields
+ * Validates that an object has all required core fields and validates types for known core fields
+ * Unknown fields are preserved without validation
  */
 function validateFields(
   obj: Record<string, unknown>,
   requiredFields: readonly string[],
-  allowedFields: Set<string>,
+  coreFields: Record<string, string>,
   schemaName: string
 ): void {
-  // Check for required fields
+  // Check for required core fields
   for (const field of requiredFields) {
     if (!(field in obj)) {
-      throw new SchemaValidationError(`Missing required field '${field}' in ${schemaName}`, field);
+      throw new SchemaValidationError(`Missing required core field '${field}' in ${schemaName}`, field);
     }
   }
 
-  // Check for unknown fields (fail-fast)
-  for (const field of Object.keys(obj)) {
-    if (!allowedFields.has(field)) {
-      throw new SchemaValidationError(
-        `Unknown field '${field}' in ${schemaName}. Allowed fields: ${Array.from(allowedFields).join(', ')}`,
-        field
-      );
+  // Validate types for known core fields (unknown fields are preserved)
+  for (const [field, expectedType] of Object.entries(coreFields)) {
+    if (field in obj) {
+      const value = obj[field];
+      let isValidType = false;
+      
+      switch (expectedType) {
+        case 'number':
+          isValidType = typeof value === 'number';
+          break;
+        case 'string':
+          isValidType = typeof value === 'string';
+          break;
+        case 'array':
+          isValidType = Array.isArray(value);
+          break;
+        default:
+          isValidType = true; // Unknown type, skip validation
+      }
+      
+      if (!isValidType) {
+        throw new SchemaValidationError(
+          `Core field '${field}' in ${schemaName} must be of type ${expectedType}, got ${Array.isArray(value) ? 'array' : typeof value}`,
+          field
+        );
+      }
     }
   }
 }
@@ -101,8 +121,16 @@ export function validateTask(obj: unknown): Task {
 
   const task = obj as Record<string, unknown>;
 
-  // Validate required fields and reject unknown fields
-  validateFields(task, REQUIRED_TASK_FIELDS, ALLOWED_TASK_FIELDS, 'Task');
+  // Validate field count limit
+  const fieldCount = Object.keys(task).length;
+  if (fieldCount > FILE_LIMITS.MAX_TOTAL_FIELDS) {
+    throw new SchemaValidationError(
+      `${ERROR_MESSAGES.TOO_MANY_FIELDS} (found ${fieldCount} fields)`
+    );
+  }
+
+  // Validate required core fields and validate types for known core fields
+  validateFields(task, REQUIRED_TASK_FIELDS, STM_CORE_FIELDS, 'Task');
 
   // Validate schema version
   if (task.schema !== CURRENT_SCHEMA_VERSION) {
@@ -170,8 +198,19 @@ export function validateConfig(obj: unknown): Config {
 
   const config = obj as Record<string, unknown>;
 
-  // Validate required fields and reject unknown fields
-  validateFields(config, REQUIRED_CONFIG_FIELDS, ALLOWED_CONFIG_FIELDS, 'Config');
+  // Validate required fields (Config validation unchanged - still strict)
+  validateFields(config, REQUIRED_CONFIG_FIELDS, {}, 'Config');
+  
+  // Additional validation for unknown fields in Config (maintain strict validation)
+  const allowedConfigFields = new Set(REQUIRED_CONFIG_FIELDS as readonly string[]);
+  for (const field of Object.keys(config)) {
+    if (!allowedConfigFields.has(field)) {
+      throw new SchemaValidationError(
+        `Unknown field '${field}' in Config. Allowed fields: ${Array.from(allowedConfigFields).join(', ')}`,
+        field
+      );
+    }
+  }
 
   // Validate schema version
   if (config.schema !== CURRENT_SCHEMA_VERSION) {
@@ -218,8 +257,19 @@ export function validateLockFile(obj: unknown): LockFile {
 
   const lock = obj as Record<string, unknown>;
 
-  // Validate required fields and reject unknown fields
-  validateFields(lock, REQUIRED_LOCK_FIELDS, ALLOWED_LOCK_FIELDS, 'LockFile');
+  // Validate required fields (LockFile validation unchanged - still strict)
+  validateFields(lock, REQUIRED_LOCK_FIELDS, {}, 'LockFile');
+  
+  // Additional validation for unknown fields in LockFile (maintain strict validation)
+  const allowedLockFields = new Set(REQUIRED_LOCK_FIELDS as readonly string[]);
+  for (const field of Object.keys(lock)) {
+    if (!allowedLockFields.has(field)) {
+      throw new SchemaValidationError(
+        `Unknown field '${field}' in LockFile. Allowed fields: ${Array.from(allowedLockFields).join(', ')}`,
+        field
+      );
+    }
+  }
 
   // Validate field types
   if (!isLockFile(lock)) {

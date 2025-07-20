@@ -163,37 +163,37 @@ export function formatAsTable(tasks: Task[], options: TableOptions = {}): string
 
   if (availableWidth > 0) {
     const totalPreferredWidth = columns.reduce((sum, col) => sum + col.width, 0);
-    
+
     if (totalPreferredWidth <= availableWidth) {
       // If preferred widths fit, distribute extra space to flexible columns
-      const flexibleColumns = columns.filter(col => col.flexible);
+      const flexibleColumns = columns.filter((col) => col.flexible);
       const extraSpace = availableWidth - totalPreferredWidth;
       const extraPerFlexible = Math.floor(extraSpace / flexibleColumns.length);
-      
-      flexibleColumns.forEach(col => {
+
+      flexibleColumns.forEach((col) => {
         col.width += extraPerFlexible;
       });
     } else {
       // If preferred widths don't fit, scale down proportionally but respect minimums
       const totalMinWidth = columns.reduce((sum, col) => sum + (col.minWidth || col.width), 0);
-      
+
       if (totalMinWidth <= availableWidth) {
         // Scale down to minimums first, then distribute remaining space
-        columns.forEach(col => {
+        columns.forEach((col) => {
           col.width = col.minWidth || col.width;
         });
-        
+
         const remainingSpace = availableWidth - totalMinWidth;
-        const flexibleColumns = columns.filter(col => col.flexible);
+        const flexibleColumns = columns.filter((col) => col.flexible);
         const extraPerFlexible = Math.floor(remainingSpace / flexibleColumns.length);
-        
-        flexibleColumns.forEach(col => {
+
+        flexibleColumns.forEach((col) => {
           col.width += extraPerFlexible;
         });
       } else {
         // Even minimums don't fit, scale everything down proportionally
         const ratio = availableWidth / totalMinWidth;
-        columns.forEach(col => {
+        columns.forEach((col) => {
           col.width = Math.max(3, Math.floor((col.minWidth || col.width) * ratio));
         });
       }
@@ -241,12 +241,12 @@ export function formatAsTable(tasks: Task[], options: TableOptions = {}): string
           case 'tags':
             value = task.tags?.join(', ') || '';
             break;
-          case 'updated':
+          case 'updated': {
             // More compact date format
             const date = new Date(task.updated);
             const now = new Date();
             const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-            
+
             if (diffDays === 0) {
               value = 'Today';
             } else if (diffDays === 1) {
@@ -257,6 +257,7 @@ export function formatAsTable(tasks: Task[], options: TableOptions = {}): string
               value = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
             }
             break;
+          }
           default:
             value = '';
         }

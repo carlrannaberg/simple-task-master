@@ -6,6 +6,7 @@ import slugify from 'slugify';
 import { LockManager } from './lock-manager';
 import { getTasksDirectory, getWorkspaceRoot } from './workspace';
 import { ValidationError, FileSystemError, NotFoundError } from './errors';
+import * as schema from './schema';
 import type {
   Task,
   TaskCreateInput,
@@ -76,16 +77,29 @@ export class TaskManager {
 
         // Create task object
         const now = new Date().toISOString();
+        // Extract known fields and preserve unknown fields
+        const { title, status, tags, dependencies, content: _content, ...unknownFields } = input;
         const task: Task = {
           schema: 1,
           id,
-          title: input.title,
-          status: input.status ?? 'pending',
+          title,
+          status: status ?? 'pending',
           created: now,
           updated: now,
-          tags: input.tags ?? [],
-          dependencies: input.dependencies ?? []
+          tags: tags ?? [],
+          dependencies: dependencies ?? [],
+          ...unknownFields // Preserve any unknown fields from input
         };
+        
+        // Validate the task object (including field count limit)
+        try {
+          schema.validateTask(task);
+        } catch (error) {
+          if (error instanceof schema.SchemaValidationError) {
+            throw new ValidationError(error.message);
+          }
+          throw error;
+        }
 
         // Create filename
         const filename = this.generateFilename(id, task.title);
@@ -148,8 +162,11 @@ export class TaskManager {
             throw new Error(`File ${filename} not visible in directory after creation`);
           }
 
-          // Success! Return the task
-          return task;
+          // Success! Return the task with content
+          return {
+            ...task,
+            content
+          };
         } catch (error) {
           if ((error as { code?: string }).code === 'EEXIST') {
             // File already exists - this shouldn't happen after our check above
@@ -206,18 +223,7 @@ export class TaskManager {
     for (const file of files) {
       try {
         const filepath = path.join(this.config.tasksDir, file);
-        const taskContent = await this.readTaskFile(filepath);
-        const task: Task = {
-          schema: taskContent.schema,
-          id: taskContent.id,
-          title: taskContent.title,
-          status: taskContent.status,
-          created: taskContent.created,
-          updated: taskContent.updated,
-          tags: taskContent.tags,
-          dependencies: taskContent.dependencies,
-          content: taskContent.content
-        };
+        const task = await this.readTaskFile(filepath);
 
         // Apply filters
         if (filters?.status && task.status !== filters.status) continue;
@@ -225,7 +231,7 @@ export class TaskManager {
         if (filters?.search) {
           const searchLower = filters.search.toLowerCase();
           const titleMatch = task.title.toLowerCase().includes(searchLower);
-          const contentMatch = (taskContent.content || '').toLowerCase().includes(searchLower);
+          const contentMatch = (task.content || '').toLowerCase().includes(searchLower);
           if (!titleMatch && !contentMatch) continue;
         }
 
@@ -260,13 +266,13 @@ export class TaskManager {
         throw new NotFoundError(`Task not found: ${id}`);
       }
 
-      // Apply updates
+      // Apply updates (preserve unknown fields from currentTask and add new ones from updates)
       const updatedTask: Task = {
-        schema: currentTask.schema,
-        id: currentTask.id,
+        ...currentTask, // Preserve all existing fields, including unknown ones
+        ...updates, // Apply all updates, including arbitrary fields
+        // Override specific core fields to handle undefined values correctly
         title: updates.title ?? currentTask.title,
         status: updates.status ?? currentTask.status,
-        created: currentTask.created,
         updated: new Date().toISOString(),
         tags: updates.tags ?? currentTask.tags,
         dependencies: updates.dependencies ?? currentTask.dependencies
@@ -274,6 +280,16 @@ export class TaskManager {
 
       // Validate updated task
       this.validateTitle(updatedTask.title);
+      
+      // Validate the updated task object (including field count limit)
+      try {
+        schema.validateTask(updatedTask);
+      } catch (error) {
+        if (error instanceof schema.SchemaValidationError) {
+          throw new ValidationError(error.message);
+        }
+        throw error;
+      }
 
       // Build updated content
       const updatedContent = updates.content ?? currentTask.content ?? '';

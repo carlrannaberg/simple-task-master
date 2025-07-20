@@ -46,7 +46,10 @@ export const FILE_LIMITS = {
   MAX_TAGS: 50,
 
   /** Maximum number of dependencies per task */
-  MAX_DEPENDENCIES: 100
+  MAX_DEPENDENCIES: 100,
+
+  /** Maximum number of total fields (including unknown fields) per task */
+  MAX_TOTAL_FIELDS: 100
 } as const;
 
 /**
@@ -97,6 +100,7 @@ export const ERROR_MESSAGES = {
   CIRCULAR_DEPENDENCY: 'Circular dependency detected',
   TOO_MANY_TAGS: `Task cannot have more than ${FILE_LIMITS.MAX_TAGS} tags`,
   TOO_MANY_DEPENDENCIES: `Task cannot have more than ${FILE_LIMITS.MAX_DEPENDENCIES} dependencies`,
+  TOO_MANY_FIELDS: `Task cannot have more than ${FILE_LIMITS.MAX_TOTAL_FIELDS} total fields`,
 
   // File system errors
   TASK_FILE_TOO_LARGE: `Task file exceeds maximum size of ${FILE_LIMITS.MAX_TASK_SIZE} bytes`,

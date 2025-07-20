@@ -57,6 +57,8 @@ export class MockTaskStore {
 
     const updated: Task = {
       ...existing,
+      ...updates, // Apply all updates including arbitrary fields
+      // Override specific core fields to handle undefined values correctly
       title: updates.title ?? existing.title,
       status: updates.status ?? existing.status,
       tags: updates.tags ?? existing.tags,

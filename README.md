@@ -16,6 +16,7 @@ A powerful, lightweight command-line task management tool built for developers w
 - **⚡ Fast performance**: Optimized for handling thousands of tasks
 - **🎯 Simple workflow**: Initialize, add, list, update - that's it!
 - **🔄 Export capabilities**: Export tasks to various formats for reporting
+- **🔧 Custom metadata fields**: Add any custom fields for external tool integration
 
 ## 🚀 Quick Start
 
@@ -365,6 +366,7 @@ stm update 42 status=in-progress tags+=urgent,hotfix desc="Critical bug fix in p
 - `desc`: Description section content
 - `details`: Details section content
 - `validation`: Validation section content
+- **Any custom field**: You can add custom metadata fields for external tool integration
 
 ### `stm grep <pattern>`
 
@@ -465,6 +467,10 @@ tags:
 created: '2024-01-15T10:30:00.000Z'
 updated: '2024-01-15T10:30:00.000Z'
 dueDate: '2024-01-31'
+# Custom fields (added by external tools or workflows)
+external_id: 'JIRA-456'
+sprint: '2024-Q1-Sprint-2'
+story_points: 8
 ---
 
 # Implement user authentication
@@ -605,6 +611,37 @@ echo "In Progress: $(stm list --status=in-progress --format=json | jq length)"
 echo "Done: $(stm list --status=done --format=json | jq length)"
 ```
 
+### Custom Metadata Fields
+
+STM allows you to add custom metadata fields to tasks, enabling seamless integration with external tools and workflows:
+
+```bash
+# Add custom fields for external tool integration
+stm update 42 external_id="JIRA-1234" priority="P1"
+
+# Track AutoAgent execution metadata
+stm update 56 agent_id="agent-123" execution_time="45s" success=true
+
+# Add project management metadata
+stm update 78 sprint="2024-Q1-Sprint-3" story_points=5 assignee="john.doe"
+
+# Complex metadata with JSON values
+stm update 90 metadata='{"tool":"vscode","extensions":["prettier","eslint"]}'
+
+# View tasks with custom fields (shown in JSON output)
+stm show 42 --format=json
+# Output includes all fields, both core and custom
+
+# Export with custom fields preserved
+stm export --format=json > tasks-with-metadata.json
+```
+
+Custom fields are:
+- **Preserved**: Maintained through all operations (create, update, show, export)
+- **Flexible**: Accept any valid string value
+- **Tool-friendly**: Enable external tools to store their own metadata
+- **Non-validated**: STM doesn't validate custom field values (tools manage their own data)
+
 ## 🔧 Development
 
 ### Prerequisites
@@ -707,6 +744,55 @@ STM is optimized for performance with the following characteristics:
 - Recommended maximum tasks: 50,000 per repository
 - Lock timeout: 30 seconds (configurable)
 - Node.js requirement: >= 18.0.0
+
+## 📚 API Behavior for Custom Fields
+
+STM's API allows custom metadata fields in task frontmatter, enabling external tools to extend tasks with their own data:
+
+### Field Validation Behavior
+
+**Core Fields** (strictly validated):
+- `id`, `title`, `status`, `created`, `updated`: Required with specific types
+- `tags`, `dependencies`: Optional arrays with validation
+- `priority`, `dueDate`: Optional with format validation
+
+**Custom Fields** (flexibly handled):
+- **Any field name**: Allowed except those containing newlines or control characters
+- **Any value type**: Stored as-is without validation
+- **Preservation**: Maintained through all operations (create, update, list, show, export)
+- **No STM validation**: External tools manage their own field semantics
+
+### Integration Guidelines
+
+When integrating with STM:
+
+1. **Choose unique field names**: Prefix with your tool name (e.g., `jira_id`, `github_issue`)
+2. **Handle your own validation**: STM won't validate custom field values
+3. **Use consistent formats**: Maintain your data format across operations
+4. **Document your fields**: Let users know what custom fields your tool adds
+
+### Example Integration
+
+```javascript
+// External tool adding custom metadata
+const task = {
+  title: 'Implement feature',
+  status: 'pending',
+  // Custom fields for integration
+  jira_id: 'PROJ-123',
+  github_pr: 456,
+  ci_status: 'passing',
+  metrics: {
+    complexity: 'high',
+    estimated_hours: 8
+  }
+};
+
+// STM preserves all custom fields
+const updated = await taskManager.create(task);
+console.log(updated.jira_id); // 'PROJ-123'
+console.log(updated.metrics); // { complexity: 'high', estimated_hours: 8 }
+```
 
 ## 🔒 Security
 

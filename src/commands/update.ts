@@ -11,6 +11,31 @@ import { readInput, launchEditor } from '../lib/utils';
 import type { TaskUpdateInput, TaskStatus } from '../lib/types';
 
 /**
+ * Validate field name
+ */
+function validateFieldName(key: string): void {
+  // Check for newlines and carriage returns
+  if (key.includes('\n') || key.includes('\r')) {
+    throw new ValidationError('Field names cannot contain newlines');
+  }
+  
+  // Check for leading/trailing whitespace
+  if (key.trim() !== key) {
+    throw new ValidationError('Field names cannot have leading/trailing whitespace');
+  }
+  
+  // Check for control characters (ASCII 0-31 except tab, newline, carriage return which are handled above)
+  for (let i = 0; i < key.length; i++) {
+    const charCode = key.charCodeAt(i);
+    if (charCode < 32 && charCode !== 9) { // Allow tab (9), block other control chars
+      throw new ValidationError('Field names cannot contain control characters');
+    }
+  }
+  
+  // All other field names are allowed
+}
+
+/**
  * Parse a key=value assignment
  */
 function parseAssignment(assignment: string): {
@@ -26,7 +51,8 @@ function parseAssignment(assignment: string): {
     if (!key) {
       throw new ValidationError(`Invalid += assignment format: ${assignment}`);
     }
-    return { key: key.trim(), value: value.trim(), operation: 'add' };
+    validateFieldName(key);
+    return { key: key, value: value.trim(), operation: 'add' };
   }
 
   // Check for -= operation (remove from array)
@@ -37,7 +63,8 @@ function parseAssignment(assignment: string): {
     if (!key) {
       throw new ValidationError(`Invalid -= assignment format: ${assignment}`);
     }
-    return { key: key.trim(), value: value.trim(), operation: 'remove' };
+    validateFieldName(key);
+    return { key: key, value: value.trim(), operation: 'remove' };
   }
 
   // Default = operation (set value)
@@ -48,7 +75,8 @@ function parseAssignment(assignment: string): {
     if (!key) {
       throw new ValidationError(`Invalid = assignment format: ${assignment}`);
     }
-    return { key: key.trim(), value: value.trim(), operation: 'set' };
+    validateFieldName(key);
+    return { key: key, value: value.trim(), operation: 'set' };
   }
 
   throw new ValidationError(
@@ -57,30 +85,9 @@ function parseAssignment(assignment: string): {
 }
 
 /**
- * Validate field name
- */
-function validateFieldName(key: string): void {
-  const validFields = [
-    'title',
-    'content',
-    'status',
-    'tags',
-    'dependencies',
-    'description',
-    'details',
-    'validation'
-  ];
-  if (!validFields.includes(key)) {
-    throw new ValidationError(`Unknown field: ${key}. Valid fields: ${validFields.join(', ')}`);
-  }
-}
-
-/**
  * Parse value based on field type
  */
 function parseValue(key: string, value: string): unknown {
-  validateFieldName(key);
-
   switch (key) {
     case 'title':
     case 'content':
@@ -127,7 +134,9 @@ function parseValue(key: string, value: string): unknown {
       });
 
     default:
-      throw new ValidationError(`Unknown field: ${key}`);
+      // For arbitrary field names, treat as string values
+      // Allow empty values for custom fields (unlike core fields)
+      return value;
   }
 }
 
@@ -351,7 +360,7 @@ async function updateTask(
           updates.dependencies = [...new Set([...existingDeps, ...newDeps])]; // Remove duplicates
         } else {
           throw new ValidationError(
-            `Cannot add to field: ${key}. Only tags and dependencies support += operation`
+            `Cannot add to field '${key}'. The += operation is only supported for array fields (tags, dependencies). For custom fields, use = to set the value.`
           );
         }
       } else if (operation === 'remove') {
@@ -372,7 +381,7 @@ async function updateTask(
           updates.dependencies = existingDeps.filter((dep: number) => !depsToRemove.includes(dep));
         } else {
           throw new ValidationError(
-            `Cannot remove from field: ${key}. Only tags and dependencies support -= operation`
+            `Cannot remove from field '${key}'. The -= operation is only supported for array fields (tags, dependencies). For custom fields, use = to set or clear the value.`
           );
         }
       }
@@ -444,7 +453,7 @@ export const updateCommand = new Command('update')
     'Update a task with flexible options for metadata, content sections, and editor integration'
   )
   .argument('<id>', 'Task ID')
-  .argument('[assignments...]', 'Field assignments (key=value, key+=value, key-=value)')
+  .argument('[assignments...]', 'Field assignments (field=value, field+=value, field-=value). Any field name is allowed, including custom metadata fields for external tool integration')
   .option('-t, --title <title>', 'Update task title')
   .option('-d, --description <text>', 'Update description: why & what - problem context, solution overview, and acceptance criteria (use - for stdin)')
   .option('--details <text>', 'Update details: how - implementation approach, technical design, and architecture notes (use - for stdin)')

@@ -23,6 +23,8 @@ export interface Task {
   dependencies: number[];
   /** Markdown content body (description, details, validation) */
   content?: string;
+  /** Allow arbitrary fields for external tool integration */
+  [key: string]: unknown;
 }
 
 export interface TaskCreateInput {
@@ -31,6 +33,8 @@ export interface TaskCreateInput {
   tags?: string[];
   dependencies?: number[];
   status?: TaskStatus;
+  /** Allow arbitrary fields for external tool integration */
+  [key: string]: unknown;
 }
 
 export interface TaskUpdateInput {
@@ -39,6 +43,8 @@ export interface TaskUpdateInput {
   tags?: string[];
   dependencies?: number[];
   content?: string;
+  /** Allow arbitrary fields for external tool integration */
+  [key: string]: unknown;
 }
 
 export interface TaskListFilters {

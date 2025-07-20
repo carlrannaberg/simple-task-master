@@ -425,12 +425,71 @@ describe('Update Command Unit Tests', () => {
       expect(exitCode).toBe(1);
     });
 
-    it('should reject unknown field names', async () => {
-      await expect(executeUpdate('1', ['unknown=value'])).rejects.toThrow('Process.exit(1)');
-      expect(mockedPrintError).toHaveBeenCalledWith(
-        expect.stringContaining('Unknown field: unknown')
-      );
+    it('should accept arbitrary field names', async () => {
+      await executeUpdate('1', ['priority=high', 'external_id=JIRA-123']);
+
+      const task = await mockTaskStore.get(1);
+      expect((task as any)?.priority).toBe('high');
+      expect((task as any)?.external_id).toBe('JIRA-123');
+      expect(mockedPrintSuccess).toHaveBeenCalledWith('Updated task 1');
+    });
+
+    it('should accept field names with various characters', async () => {
+      await executeUpdate('1', [
+        'field_with_underscores=value1',
+        'field-with-dashes=value2',
+        'field.with.dots=value3',
+        'FieldWithNumbers123=value4',
+        'UPPERCASE_FIELD=value5'
+      ]);
+
+      const task = await mockTaskStore.get(1);
+      expect((task as any)?.field_with_underscores).toBe('value1');
+      expect((task as any)?.['field-with-dashes']).toBe('value2');
+      expect((task as any)?.['field.with.dots']).toBe('value3');
+      expect((task as any)?.FieldWithNumbers123).toBe('value4');
+      expect((task as any)?.UPPERCASE_FIELD).toBe('value5');
+    });
+
+    it('should reject field names with newlines', async () => {
+      await expect(executeUpdate('1', ['field\nwith\nnewlines=value'])).rejects.toThrow('Process.exit(1)');
+      expect(mockedPrintError).toHaveBeenCalledWith('Field names cannot contain newlines');
       expect(exitCode).toBe(1);
+    });
+
+    it('should reject field names with leading/trailing whitespace', async () => {
+      await expect(executeUpdate('1', [' field=value'])).rejects.toThrow('Process.exit(1)');
+      expect(mockedPrintError).toHaveBeenCalledWith('Field names cannot have leading/trailing whitespace');
+      expect(exitCode).toBe(1);
+
+      mockedPrintError.mockClear();
+      exitCode = undefined;
+
+      await expect(executeUpdate('1', ['field =value'])).rejects.toThrow('Process.exit(1)');
+      expect(mockedPrintError).toHaveBeenCalledWith('Field names cannot have leading/trailing whitespace');
+      expect(exitCode).toBe(1);
+    });
+
+    it('should reject field names with control characters', async () => {
+      // Test with ASCII control character (bell character, ASCII 7)
+      await expect(executeUpdate('1', ['field\x07name=value'])).rejects.toThrow('Process.exit(1)');
+      expect(mockedPrintError).toHaveBeenCalledWith('Field names cannot contain control characters');
+      expect(exitCode).toBe(1);
+    });
+
+    it('should allow field names with tabs', async () => {
+      // Tab character should be allowed
+      await executeUpdate('1', ['field\tname=value']);
+
+      const task = await mockTaskStore.get(1);
+      expect((task as any)?.['field\tname']).toBe('value');
+    });
+
+    it('should allow empty values for arbitrary fields', async () => {
+      await executeUpdate('1', ['custom_field=']);
+
+      const task = await mockTaskStore.get(1);
+      expect((task as any)?.custom_field).toBe('');
     });
 
     it('should reject empty values for required fields', async () => {
@@ -454,7 +513,7 @@ describe('Update Command Unit Tests', () => {
     it('should reject += operation on non-array fields', async () => {
       await expect(executeUpdate('1', ['title+=extra'])).rejects.toThrow('Process.exit(1)');
       expect(mockedPrintError).toHaveBeenCalledWith(
-        expect.stringContaining('Cannot add to field: title')
+        expect.stringContaining("Cannot add to field 'title'")
       );
       expect(exitCode).toBe(1);
     });
@@ -462,7 +521,7 @@ describe('Update Command Unit Tests', () => {
     it('should reject -= operation on non-array fields', async () => {
       await expect(executeUpdate('1', ['status-=pending'])).rejects.toThrow('Process.exit(1)');
       expect(mockedPrintError).toHaveBeenCalledWith(
-        expect.stringContaining('Cannot remove from field: status')
+        expect.stringContaining("Cannot remove from field 'status'")
       );
       expect(exitCode).toBe(1);
     });
@@ -544,8 +603,8 @@ describe('Update Command Unit Tests', () => {
       expect(task?.tags).toEqual(['original', 'test']);
     });
 
-    it('should handle whitespace in assignments', async () => {
-      await executeUpdate('1', ['tags += new1 , new2 ']);
+    it('should handle whitespace in assignment values', async () => {
+      await executeUpdate('1', ['tags+= new1 , new2 ']);
 
       const task = await mockTaskStore.get(1);
       expect(task?.tags).toContain('new1');
@@ -1091,6 +1150,331 @@ More content.`
 
       expect(editorOption).toBeDefined();
       expect(editorOption?.description).toContain('editor fallback');
+    });
+  });
+
+  describe('unknown field support via update command', () => {
+    /**
+     * Tests for update command's handling of unknown/arbitrary fields.
+     * These tests validate that the update command accepts arbitrary field names
+     * and that those fields are preserved in the task data.
+     * 
+     * Purpose: Ensure CLI users can add custom metadata fields to tasks
+     */
+    
+    it('should accept and preserve simple unknown fields', async () => {
+      await executeUpdate('1', [
+        'priority=high',
+        'external_id=JIRA-123',
+        'assignee=john.doe@example.com'
+      ]);
+
+      const task = await mockTaskStore.get(1);
+      expect((task as any)?.priority).toBe('high');
+      expect((task as any)?.external_id).toBe('JIRA-123');
+      expect((task as any)?.assignee).toBe('john.doe@example.com');
+      expect(mockedPrintSuccess).toHaveBeenCalledWith('Updated task 1');
+    });
+
+    it('should accept unknown fields with complex values', async () => {
+      await executeUpdate('1', [
+        'metadata={"team":"backend","sprint":5}',
+        'url=https://example.com/task/123',
+        'estimated_hours=8.5',
+        'blockers=dependency,review,testing'
+      ]);
+
+      const task = await mockTaskStore.get(1);
+      expect((task as any)?.metadata).toBe('{"team":"backend","sprint":5}');
+      expect((task as any)?.url).toBe('https://example.com/task/123');
+      expect((task as any)?.estimated_hours).toBe('8.5');
+      expect((task as any)?.blockers).toBe('dependency,review,testing');
+    });
+
+    it('should preserve unknown fields alongside core field updates', async () => {
+      await executeUpdate('1', [
+        'title=Updated Task Title',
+        'status=in-progress',
+        'priority=urgent',
+        'reviewer=jane.doe@example.com',
+        'tags+=custom,metadata'
+      ]);
+
+      const task = await mockTaskStore.get(1);
+      // Core fields should be updated
+      expect(task?.title).toBe('Updated Task Title');
+      expect(task?.status).toBe('in-progress');
+      expect(task?.tags).toContain('custom');
+      expect(task?.tags).toContain('metadata');
+      
+      // Unknown fields should be preserved
+      expect((task as any)?.priority).toBe('urgent');
+      expect((task as any)?.reviewer).toBe('jane.doe@example.com');
+    });
+
+    it('should handle field names with special characters', async () => {
+      await executeUpdate('1', [
+        'field-with-dashes=dash-value',
+        'field_with_underscores=underscore_value',
+        'field.with.dots=dot.value',
+        'FieldWithNumbers123=mixed123',
+        'UPPERCASE_FIELD=UPPER_VALUE'
+      ]);
+
+      const task = await mockTaskStore.get(1);
+      expect((task as any)?.['field-with-dashes']).toBe('dash-value');
+      expect((task as any)?.field_with_underscores).toBe('underscore_value');
+      expect((task as any)?.['field.with.dots']).toBe('dot.value');
+      expect((task as any)?.FieldWithNumbers123).toBe('mixed123');
+      expect((task as any)?.UPPERCASE_FIELD).toBe('UPPER_VALUE');
+    });
+
+    it('should handle unknown fields with special characters', async () => {
+      await executeUpdate('1', [
+        'special_chars=@#$%^&*()[]{}|;:,.<>?',
+        'number_field=123',
+        'boolean_string=true'
+      ]);
+
+      const task = await mockTaskStore.get(1);
+      expect((task as any)?.special_chars).toBe('@#$%^&*()[]{}|;:,.<>?');
+      expect((task as any)?.number_field).toBe('123');
+      expect((task as any)?.boolean_string).toBe('true');
+    });
+
+    it('should handle equals signs in unknown field values', async () => {
+      await executeUpdate('1', [
+        'formula=x = y + z',
+        'equation=a + b = c',
+        'url_with_equals=https://example.com?param=value'
+      ]);
+
+      const task = await mockTaskStore.get(1);
+      expect((task as any)?.formula).toBe('x = y + z');
+      expect((task as any)?.equation).toBe('a + b = c');
+      expect((task as any)?.url_with_equals).toBe('https://example.com?param=value');
+    });
+
+    it('should preserve unknown fields through multiple updates', async () => {
+      // First update: Add unknown fields
+      await executeUpdate('1', [
+        'priority=high',
+        'external_id=JIRA-123'
+      ]);
+
+      // Second update: Modify core field and add another unknown field
+      await executeUpdate('1', [
+        'status=in-progress',
+        'assignee=john.doe@example.com'
+      ]);
+
+      // Third update: Modify one unknown field
+      await executeUpdate('1', [
+        'priority=urgent'
+      ]);
+
+      const task = await mockTaskStore.get(1);
+      expect(task?.status).toBe('in-progress');
+      expect((task as any)?.priority).toBe('urgent'); // Updated
+      expect((task as any)?.external_id).toBe('JIRA-123'); // Preserved
+      expect((task as any)?.assignee).toBe('john.doe@example.com'); // Preserved
+    });
+
+    it('should handle unknown fields with empty values', async () => {
+      await executeUpdate('1', [
+        'empty_field=',
+        'normal_field=value'
+      ]);
+
+      const task = await mockTaskStore.get(1);
+      expect((task as any)?.empty_field).toBe('');
+      expect((task as any)?.normal_field).toBe('value');
+    });
+
+    it('should handle unknown fields with multiline values', async () => {
+      const multilineValue = 'Line 1\nLine 2\nLine 3';
+      await executeUpdate('1', [
+        `notes=${multilineValue}`,
+        'type=multiline'
+      ]);
+
+      const task = await mockTaskStore.get(1);
+      expect((task as any)?.notes).toBe(multilineValue);
+      expect((task as any)?.type).toBe('multiline');
+    });
+
+    it('should validate field names while allowing unknown field names', async () => {
+      // These should still be rejected (field name validation)
+      await expect(executeUpdate('1', ['field\nwith\nnewlines=value'])).rejects.toThrow('Process.exit(1)');
+      expect(mockedPrintError).toHaveBeenCalledWith('Field names cannot contain newlines');
+      expect(exitCode).toBe(1);
+
+      // Reset for next test
+      mockedPrintError.mockClear();
+      exitCode = undefined;
+
+      await expect(executeUpdate('1', [' field=value'])).rejects.toThrow('Process.exit(1)');
+      expect(mockedPrintError).toHaveBeenCalledWith('Field names cannot have leading/trailing whitespace');
+    });
+
+    it('should handle large numbers of unknown fields efficiently', async () => {
+      // Create 20 unknown field assignments
+      const assignments = Array.from({ length: 20 }, (_, i) => `custom_field_${i}=value_${i}`);
+      
+      const startTime = Date.now();
+      await executeUpdate('1', assignments);
+      const endTime = Date.now();
+      
+      const task = await mockTaskStore.get(1);
+      
+      // Verify all fields were preserved
+      for (let i = 0; i < 20; i++) {
+        expect((task as any)?.[`custom_field_${i}`]).toBe(`value_${i}`);
+      }
+      
+      // Performance check: Should complete quickly
+      expect(endTime - startTime).toBeLessThan(1000); // Should be much faster, but allowing 1s buffer
+      expect(mockedPrintSuccess).toHaveBeenCalledWith('Updated task 1');
+    });
+
+    it('should mix unknown fields with array operations', async () => {
+      await executeUpdate('1', [
+        'priority=high',
+        'tags+=unknown,custom',
+        'external_id=JIRA-123',
+        'dependencies+=2',
+        'assignee=john.doe@example.com'
+      ]);
+
+      const task = await mockTaskStore.get(1);
+      
+      // Core array operations should work
+      expect(task?.tags).toContain('unknown');
+      expect(task?.tags).toContain('custom');
+      expect(task?.dependencies).toContain(2);
+      
+      // Unknown fields should be preserved
+      expect((task as any)?.priority).toBe('high');
+      expect((task as any)?.external_id).toBe('JIRA-123');
+      expect((task as any)?.assignee).toBe('john.doe@example.com');
+    });
+
+    it('should handle JSON-like values in unknown fields', async () => {
+      await executeUpdate('1', [
+        'metadata={"team":"backend","priority":1,"active":true}',
+        'config=[{"name":"setting1","value":"enabled"},{"name":"setting2","value":"disabled"}]',
+        'simple_object={"key":"value"}'
+      ]);
+
+      const task = await mockTaskStore.get(1);
+      expect((task as any)?.metadata).toBe('{"team":"backend","priority":1,"active":true}');
+      expect((task as any)?.config).toBe('[{"name":"setting1","value":"enabled"},{"name":"setting2","value":"disabled"}]');
+      expect((task as any)?.simple_object).toBe('{"key":"value"}');
+    });
+
+    it('should handle unknown fields with URL and path values', async () => {
+      await executeUpdate('1', [
+        'repo_url=https://github.com/user/repo',
+        'branch=feature/unknown-fields',
+        'local_path=/path/to/local/file',
+        'api_endpoint=https://api.example.com/v1/tasks/123',
+        'file_path=./src/components/TaskManager.tsx'
+      ]);
+
+      const task = await mockTaskStore.get(1);
+      expect((task as any)?.repo_url).toBe('https://github.com/user/repo');
+      expect((task as any)?.branch).toBe('feature/unknown-fields');
+      expect((task as any)?.local_path).toBe('/path/to/local/file');
+      expect((task as any)?.api_endpoint).toBe('https://api.example.com/v1/tasks/123');
+      expect((task as any)?.file_path).toBe('./src/components/TaskManager.tsx');
+    });
+  });
+
+  describe('performance tests with unknown fields', () => {
+    /**
+     * Performance tests for unknown field handling.
+     * These tests ensure that adding many unknown fields doesn't significantly
+     * impact update performance.
+     * 
+     * Purpose: Validate that unknown field support scales reasonably
+     */
+    
+    it('should handle 50+ unknown fields efficiently', async () => {
+      // Create 50 unknown field assignments
+      const assignments = Array.from({ length: 50 }, (_, i) => 
+        `performance_field_${i}=performance_value_${i}`
+      );
+      
+      const startTime = Date.now();
+      await executeUpdate('1', assignments);
+      const endTime = Date.now();
+      
+      const duration = endTime - startTime;
+      
+      const task = await mockTaskStore.get(1);
+      
+      // Verify all 50 fields were preserved
+      for (let i = 0; i < 50; i++) {
+        expect((task as any)?.[`performance_field_${i}`]).toBe(`performance_value_${i}`);
+      }
+      
+      // Performance requirement: Should complete in under 100ms
+      expect(duration).toBeLessThan(100);
+      expect(mockedPrintSuccess).toHaveBeenCalledWith('Updated task 1');
+      
+      console.warn(`Update with 50 unknown fields completed in ${duration}ms`);
+    });
+
+    it('should handle rapid sequential unknown field updates', async () => {
+      const iterations = 10;
+      const startTime = Date.now();
+      
+      for (let i = 0; i < iterations; i++) {
+        await executeUpdate('1', [`rapid_field_${i}=rapid_value_${i}`]);
+      }
+      
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+      const avgPerUpdate = duration / iterations;
+      
+      const task = await mockTaskStore.get(1);
+      
+      // Verify all rapid updates were preserved
+      for (let i = 0; i < iterations; i++) {
+        expect((task as any)?.[`rapid_field_${i}`]).toBe(`rapid_value_${i}`);
+      }
+      
+      // Performance requirement: Average should be under 50ms per update
+      expect(avgPerUpdate).toBeLessThan(50);
+      
+      console.warn(`${iterations} rapid updates averaged ${avgPerUpdate.toFixed(2)}ms per update`);
+    });
+
+    it('should handle large values in unknown fields efficiently', async () => {
+      // Create large field values (1KB each)
+      const largeValue1 = 'A'.repeat(1024);
+      const largeValue2 = 'B'.repeat(1024);
+      const largeValue3 = 'C'.repeat(1024);
+      
+      const startTime = Date.now();
+      await executeUpdate('1', [
+        `large_field_1=${largeValue1}`,
+        `large_field_2=${largeValue2}`,
+        `large_field_3=${largeValue3}`
+      ]);
+      const endTime = Date.now();
+      
+      const duration = endTime - startTime;
+      
+      const task = await mockTaskStore.get(1);
+      expect((task as any)?.large_field_1).toBe(largeValue1);
+      expect((task as any)?.large_field_2).toBe(largeValue2);
+      expect((task as any)?.large_field_3).toBe(largeValue3);
+      
+      // Should handle large values reasonably quickly
+      expect(duration).toBeLessThan(200);
+      
+      console.warn(`Update with 3KB of unknown field data completed in ${duration}ms`);
     });
   });
 });
