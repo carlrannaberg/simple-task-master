@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2025-01-20
+
+### Added
+
+- **Unknown Field Support for External Tool Integration**
+  - Tasks now support arbitrary custom metadata fields beyond core STM fields
+  - External tools can add their own fields without modifying STM
+  - Full support through CLI, library API, and direct file manipulation
+  - Added comprehensive integration guide with examples for AutoAgent, GitHub Actions, JIRA
+  - Field count limit of 100 fields per task for performance protection
+
+### Changed
+
+- **Enhanced Schema Validation**
+  - Modified validation to preserve unknown fields while maintaining strict validation for core fields
+  - Core STM fields (id, title, status, etc.) remain strictly validated
+  - Unknown fields are preserved without type validation
+  - Config and LockFile validation remains unchanged (strict)
+
+- **Improved Update Command**
+  - Now accepts arbitrary field names in key=value assignments
+  - Unknown fields can be set to any value, including empty strings
+  - Array operations (+=, -=) remain limited to known array fields
+  - Better error messages for invalid field names
+
+### Fixed
+
+- **Code Quality Improvements**
+  - Resolved all ESLint errors (238 → 0)
+  - Replaced `any` types with proper type aliases for better type safety
+  - Fixed unused variables and imports
+  - Corrected line length violations
+  - Added missing newlines at end of files
+
+### Technical
+
+- Added `[key: string]: unknown` index signature to Task, TaskCreateInput, and TaskUpdateInput interfaces
+- Created 76 new tests covering unknown field functionality
+- Added performance benchmarks for tasks with many unknown fields
+- Documented field naming conventions and best practices
+
+## [0.1.1] - 2025-01-19
+
 ### Enhanced
 
 - **Enhanced Update Command (`stm update`)**
