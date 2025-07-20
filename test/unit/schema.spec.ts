@@ -4,12 +4,15 @@
  * Tests schema validation functionality for unknown field preservation
  * and core field validation. These tests validate that:
  * - Schema validation allows unknown fields in Tasks
- * - Core STM field types are validated strictly  
+ * - Core STM field types are validated strictly
  * - Unknown fields are preserved without validation
  * - Config and LockFile validation remains strict
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
+
+// Type alias for tasks with unknown fields
+type ValidatedTask = Record<string, unknown>;
 import {
   validateTask,
   validateConfig,
@@ -48,7 +51,7 @@ describe('Schema Validation Unit Tests', () => {
     it('should validate a basic task without unknown fields', () => {
       const task = createValidTask();
       const validated = validateTask(task);
-      
+
       expect(validated).toEqual(task);
       expect(validated.id).toBe(1);
       expect(validated.title).toBe('Test Task');
@@ -65,17 +68,17 @@ describe('Schema Validation Unit Tests', () => {
       };
 
       const validated = validateTask(taskWithUnknownFields);
-      
+
       // Core fields should be validated and preserved
       expect(validated.id).toBe(1);
       expect(validated.title).toBe('Test Task');
       expect(validated.status).toBe('pending');
-      
+
       // Unknown fields should be preserved without validation
-      expect((validated as any).priority).toBe('high');
-      expect((validated as any).external_id).toBe('JIRA-123');
-      expect((validated as any).custom_metadata).toEqual({ team: 'backend', sprint: 5 });
-      expect((validated as any).assignee).toBe('john.doe@example.com');
+      expect((validated as ValidatedTask).priority).toBe('high');
+      expect((validated as ValidatedTask).external_id).toBe('JIRA-123');
+      expect((validated as ValidatedTask).custom_metadata).toEqual({ team: 'backend', sprint: 5 });
+      expect((validated as ValidatedTask).assignee).toBe('john.doe@example.com');
     });
 
     it('should validate core field types strictly while preserving unknown fields', () => {
@@ -92,15 +95,15 @@ describe('Schema Validation Unit Tests', () => {
       };
 
       const validated = validateTask(taskWithMixedFields);
-      
+
       // All unknown fields should be preserved regardless of type
-      expect((validated as any).string_field).toBe('text value');
-      expect((validated as any).number_field).toBe(42);
-      expect((validated as any).boolean_field).toBe(true);
-      expect((validated as any).array_field).toEqual(['item1', 'item2']);
-      expect((validated as any).object_field).toEqual({ nested: 'value' });
-      expect((validated as any).null_field).toBe(null);
-      expect((validated as any).undefined_field).toBe(undefined);
+      expect((validated as ValidatedTask).string_field).toBe('text value');
+      expect((validated as ValidatedTask).number_field).toBe(42);
+      expect((validated as ValidatedTask).boolean_field).toBe(true);
+      expect((validated as ValidatedTask).array_field).toEqual(['item1', 'item2']);
+      expect((validated as ValidatedTask).object_field).toEqual({ nested: 'value' });
+      expect((validated as ValidatedTask).null_field).toBe(null);
+      expect((validated as ValidatedTask).undefined_field).toBe(undefined);
     });
 
     it('should reject invalid core field types', () => {
@@ -123,7 +126,7 @@ describe('Schema Validation Unit Tests', () => {
       };
 
       expect(() => validateTask(incompleteTask)).toThrow(SchemaValidationError);
-      expect(() => validateTask(incompleteTask)).toThrow("Missing required core field 'id' in Task");
+      expect(() => validateTask(incompleteTask)).toThrow('Missing required core field \'id\' in Task');
     });
 
     it('should validate required core field types with unknown fields present', () => {
@@ -161,25 +164,25 @@ describe('Schema Validation Unit Tests', () => {
       };
 
       const validated = validateTask(taskWithSpecialFields);
-      
+
       // All special field names and values should be preserved
-      expect((validated as any)['field-with-dashes']).toBe('dash value');
-      expect((validated as any)['field_with_underscores']).toBe('underscore value');
-      expect((validated as any)['field.with.dots']).toBe('dot value');
-      expect((validated as any)['FieldWithNumbers123']).toBe('mixed case value');
-      expect((validated as any)['UPPERCASE_FIELD']).toBe('uppercase value');
-      expect((validated as any)['field\tname']).toBe('tab value');
-      expect((validated as any)['unicode_field']).toBe('unicode value 🚀');
-      expect((validated as any).nested_object).toEqual({
+      expect((validated as ValidatedTask)['field-with-dashes']).toBe('dash value');
+      expect((validated as ValidatedTask)['field_with_underscores']).toBe('underscore value');
+      expect((validated as ValidatedTask)['field.with.dots']).toBe('dot value');
+      expect((validated as ValidatedTask)['FieldWithNumbers123']).toBe('mixed case value');
+      expect((validated as ValidatedTask)['UPPERCASE_FIELD']).toBe('uppercase value');
+      expect((validated as ValidatedTask)['field\tname']).toBe('tab value');
+      expect((validated as ValidatedTask)['unicode_field']).toBe('unicode value 🚀');
+      expect((validated as ValidatedTask).nested_object).toEqual({
         deep: {
           value: 'nested',
           array: [1, 2, 3],
           boolean: false
         }
       });
-      expect((validated as any).large_array).toHaveLength(100);
-      expect((validated as any).timestamp_field).toBe('2025-01-01T12:00:00Z');
-      expect((validated as any).numeric_string).toBe('12345');
+      expect((validated as ValidatedTask).large_array).toHaveLength(100);
+      expect((validated as ValidatedTask).timestamp_field).toBe('2025-01-01T12:00:00Z');
+      expect((validated as ValidatedTask).numeric_string).toBe('12345');
     });
 
     it('should validate ISO 8601 timestamps for core fields', () => {
@@ -226,12 +229,12 @@ describe('Schema Validation Unit Tests', () => {
       };
 
       const validated = validateTask(taskWithEmptyFields);
-      
-      expect((validated as any).empty_string).toBe('');
-      expect((validated as any).empty_array).toEqual([]);
-      expect((validated as any).empty_object).toEqual({});
-      expect((validated as any).zero_number).toBe(0);
-      expect((validated as any).false_boolean).toBe(false);
+
+      expect((validated as ValidatedTask).empty_string).toBe('');
+      expect((validated as ValidatedTask).empty_array).toEqual([]);
+      expect((validated as ValidatedTask).empty_object).toEqual({});
+      expect((validated as ValidatedTask).zero_number).toBe(0);
+      expect((validated as ValidatedTask).false_boolean).toBe(false);
     });
   });
 
@@ -239,7 +242,7 @@ describe('Schema Validation Unit Tests', () => {
     it('should validate a basic config without unknown fields', () => {
       const config = createValidConfig();
       const validated = validateConfig(config);
-      
+
       expect(validated).toEqual(config);
     });
 
@@ -250,7 +253,9 @@ describe('Schema Validation Unit Tests', () => {
       };
 
       expect(() => validateConfig(configWithUnknownFields)).toThrow(SchemaValidationError);
-      expect(() => validateConfig(configWithUnknownFields)).toThrow("Unknown field 'unknownField' in Config");
+      expect(() => validateConfig(configWithUnknownFields)).toThrow(
+        'Unknown field \'unknownField\' in Config'
+      );
     });
 
     it('should validate config field types strictly', () => {
@@ -278,7 +283,7 @@ describe('Schema Validation Unit Tests', () => {
     it('should validate a basic lock file without unknown fields', () => {
       const lockFile = createValidLockFile();
       const validated = validateLockFile(lockFile);
-      
+
       expect(validated).toEqual(lockFile);
     });
 
@@ -289,7 +294,9 @@ describe('Schema Validation Unit Tests', () => {
       };
 
       expect(() => validateLockFile(lockFileWithUnknownFields)).toThrow(SchemaValidationError);
-      expect(() => validateLockFile(lockFileWithUnknownFields)).toThrow("Unknown field 'unknownField' in LockFile");
+      expect(() => validateLockFile(lockFileWithUnknownFields)).toThrow(
+        'Unknown field \'unknownField\' in LockFile'
+      );
     });
 
     it('should validate lock file field types strictly', () => {
@@ -367,24 +374,28 @@ describe('Schema Validation Unit Tests', () => {
       };
 
       const validated = validateTask(taskWithDeepNesting);
-      expect((validated as any).level1.level2.level3.level4.value).toBe('deep nested value');
-      expect((validated as any).level1.level2.level3.level4.array[0].nested_array_obj).toBe('nested in array');
+      expect((validated as ValidatedTask).level1.level2.level3.level4.value).toBe('deep nested value');
+      expect(
+        (validated as ValidatedTask).level1.level2.level3.level4.array[0].nested_array_obj
+      ).toBe('nested in array');
     });
 
     it('should handle circular references in unknown fields gracefully', () => {
       const taskWithCircular = {
         ...createValidTask()
       };
-      
+
       // Create a circular reference in unknown field
-      const circularObj: any = { name: 'circular' };
+      const circularObj: Record<string, unknown> = { name: 'circular' };
       circularObj.self = circularObj;
-      (taskWithCircular as any).circular_field = circularObj;
+      (taskWithCircular as ValidatedTask).circular_field = circularObj;
 
       // Validation should not crash on circular references
       const validated = validateTask(taskWithCircular);
-      expect((validated as any).circular_field.name).toBe('circular');
-      expect((validated as any).circular_field.self).toBe((validated as any).circular_field);
+      expect((validated as ValidatedTask).circular_field.name).toBe('circular');
+      expect((validated as ValidatedTask).circular_field.self).toBe(
+        (validated as ValidatedTask).circular_field
+      );
     });
   });
 });

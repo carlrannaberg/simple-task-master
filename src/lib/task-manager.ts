@@ -90,7 +90,7 @@ export class TaskManager {
           dependencies: dependencies ?? [],
           ...unknownFields // Preserve any unknown fields from input
         };
-        
+
         // Validate the task object (including field count limit)
         try {
           schema.validateTask(task);
@@ -280,7 +280,7 @@ export class TaskManager {
 
       // Validate updated task
       this.validateTitle(updatedTask.title);
-      
+
       // Validate the updated task object (including field count limit)
       try {
         schema.validateTask(updatedTask);

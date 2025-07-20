@@ -4,7 +4,7 @@ import * as path from 'path';
 import { TestWorkspace } from '@test/helpers/test-workspace';
 import { TaskManager } from '@lib/task-manager';
 import { FrontmatterParser } from '@lib/frontmatter-parser';
-import type { Task } from '@lib/types';
+// import type { Task } from '@lib/types';
 
 describe('Task Unknown Fields Integration', () => {
   let workspace: TestWorkspace;
@@ -82,7 +82,7 @@ describe('Task Unknown Fields Integration', () => {
 
       // Load the task again to verify persistence
       const loadedTask = await taskManager.get(task.id);
-      
+
       // Verify all unknown fields persist after loading
       expect(loadedTask).toMatchObject({
         title: 'Task with Unknown Fields',
@@ -138,7 +138,7 @@ describe('Task Unknown Fields Integration', () => {
 
       // Load the task to verify type preservation
       const loadedTask = await taskManager.get(task.id);
-      
+
       expect(loadedTask.numberField).toBe(42);
       expect(loadedTask.booleanField).toBe(true);
       expect(loadedTask.arrayField).toEqual(['item1', 'item2', 'item3']);
@@ -155,7 +155,7 @@ describe('Task Unknown Fields Integration', () => {
 
     it('should handle unknown fields during task listing', async () => {
       // Create multiple tasks with unknown fields
-      const task1 = await taskManager.create({
+      await taskManager.create({
         title: 'Task 1',
         // @ts-expect-error - Testing unknown fields
         category: 'work',
@@ -163,7 +163,7 @@ describe('Task Unknown Fields Integration', () => {
         priority: 1
       });
 
-      const task2 = await taskManager.create({
+      await taskManager.create({
         title: 'Task 2',
         // @ts-expect-error - Testing unknown fields
         category: 'personal',
@@ -173,10 +173,10 @@ describe('Task Unknown Fields Integration', () => {
 
       // List all tasks
       const tasks = await taskManager.list();
-      
+
       // Sort by ID for consistent comparison
       const sortedTasks = tasks.sort((a, b) => a.id - b.id);
-      
+
       expect(sortedTasks).toHaveLength(2);
       expect(sortedTasks[0]).toMatchObject({
         title: 'Task 1',
@@ -513,7 +513,7 @@ Content with edge cases.`;
 
       // Verify extension fields are preserved
       const loaded = await taskManager.get(task.id);
-      
+
       expect(loaded._extensions).toEqual({
         'com.example.myplugin': {
           version: '1.0.0',
@@ -541,7 +541,7 @@ Content with edge cases.`;
   describe('Edge Cases and Error Handling', () => {
     it('should handle very large unknown field structures', async () => {
       // Create a large nested structure
-      const largeData: Record<string, any> = {};
+      const largeData: Record<string, unknown> = {};
       for (let i = 0; i < 50; i++) {
         largeData[`field_${i}`] = {
           id: i,
@@ -580,18 +580,18 @@ Content with edge cases.`;
 
       // Read the actual file to check YAML field order
       const files = await fs.readdir(workspace.tasksDirectory);
-      const taskFile = files.find(f => f.startsWith(`${task.id}-`));
+      const taskFile = files.find((f) => f.startsWith(`${task.id}-`));
       expect(taskFile).toBeDefined();
 
-      const filePath = path.join(workspace.tasksDirectory, taskFile!);
+      const filePath = path.join(workspace.tasksDirectory, taskFile || '');
       const fileContent = await fs.readFile(filePath, 'utf8');
 
       // Verify that core fields come first, then unknown fields
       const lines = fileContent.split('\n');
       const yamlSection = lines.slice(1, lines.indexOf('---', 1));
       const fieldOrder = yamlSection
-        .filter(line => line.includes(':'))
-        .map(line => line.split(':')[0].trim());
+        .filter((line) => line.includes(':'))
+        .map((line) => line.split(':')[0].trim());
 
       // Core fields should come first
       expect(fieldOrder.indexOf('id')).toBeLessThan(fieldOrder.indexOf('zField'));

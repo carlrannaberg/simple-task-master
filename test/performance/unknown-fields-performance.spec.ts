@@ -3,14 +3,18 @@
  *
  * These tests validate that unknown field support doesn't significantly
  * impact performance when handling many fields.
- * 
+ *
  * Run these tests with: `npm run test:performance`
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { PerformanceTestWorkspace } from '@test/helpers/performance-test-workspace';
-import { CLITestRunner } from '@test/helpers/cli-runner';
+// import { CLITestRunner } from '@test/helpers/cli-runner';
 import type { TaskManager } from '@lib/task-manager';
+import type { Task } from '@lib/types';
+
+// Type alias for tasks with unknown fields
+type TaskWithUnknown = Task & Record<string, unknown>;
 
 interface PerformanceMetrics {
   averageTime: number;
@@ -24,12 +28,12 @@ interface PerformanceMetrics {
 
 describe('Unknown Fields Performance Tests', () => {
   let workspace: PerformanceTestWorkspace;
-  let cliRunner: CLITestRunner;
+  // let cliRunner: CLITestRunner;
   let taskManager: TaskManager;
 
   beforeEach(async () => {
     workspace = await PerformanceTestWorkspace.create('unknown-fields-perf-');
-    cliRunner = new CLITestRunner({ cwd: workspace.directory });
+    // cliRunner = new CLITestRunner({ cwd: workspace.directory });
 
     // Clean up any stale locks before starting
     await workspace.cleanupLocks();
@@ -92,16 +96,16 @@ describe('Unknown Fields Performance Tests', () => {
       /**
        * Tests task creation performance with a large number of unknown fields.
        * Requirement: Should complete in under 100ms.
-       * 
+       *
        * Purpose: Validate that unknown field support doesn't significantly
        * impact task creation performance
        */
-      
+
       let taskCounter = 0;
 
       const createTaskWith50Fields = async (): Promise<void> => {
         const unknownFields: Record<string, string> = {};
-        
+
         // Create 50 unknown fields
         for (let i = 0; i < 50; i++) {
           unknownFields[`field_${i}`] = `value_${i}_for_task_${taskCounter}`;
@@ -121,11 +125,11 @@ describe('Unknown Fields Performance Tests', () => {
 
       // Performance requirement: Should complete in under 100ms
       expect(metrics.averageTime).toBeLessThan(100);
-      
+
       // Should maintain reasonable operations per second
       expect(metrics.operationsPerSecond).toBeGreaterThan(10);
 
-      console.warn(`\nTask Creation with 50 Unknown Fields Performance:`);
+      console.warn('\nTask Creation with 50 Unknown Fields Performance:');
       console.warn(`  Average Time: ${metrics.averageTime.toFixed(2)}ms`);
       console.warn(`  Min Time: ${metrics.minTime.toFixed(2)}ms`);
       console.warn(`  Max Time: ${metrics.maxTime.toFixed(2)}ms`);
@@ -134,15 +138,15 @@ describe('Unknown Fields Performance Tests', () => {
 
       // Verify that tasks were actually created with unknown fields
       const lastTask = await taskManager.get(taskCounter);
-      expect((lastTask as any).field_0).toBeDefined();
-      expect((lastTask as any).field_49).toBeDefined();
+      expect((lastTask as TaskWithUnknown).field_0).toBeDefined();
+      expect((lastTask as TaskWithUnknown).field_49).toBeDefined();
     });
 
     it('should efficiently update tasks with many unknown fields', async () => {
       /**
        * Tests task update performance with a large number of unknown fields.
        * Requirement: Should complete in under 100ms.
-       * 
+       *
        * Purpose: Validate that unknown field updates don't significantly
        * impact performance
        */
@@ -160,7 +164,7 @@ describe('Unknown Fields Performance Tests', () => {
 
       const updateTaskWith50Fields = async (): Promise<void> => {
         const unknownFields: Record<string, string> = {};
-        
+
         // Create 50 unknown fields
         for (let i = 0; i < 50; i++) {
           unknownFields[`update_field_${i}`] = `update_value_${i}_${++updateCounter}`;
@@ -173,11 +177,11 @@ describe('Unknown Fields Performance Tests', () => {
 
       // Performance requirement: Should complete in under 100ms
       expect(metrics.averageTime).toBeLessThan(100);
-      
+
       // Should maintain reasonable operations per second
       expect(metrics.operationsPerSecond).toBeGreaterThan(10);
 
-      console.warn(`\nTask Update with 50 Unknown Fields Performance:`);
+      console.warn('\nTask Update with 50 Unknown Fields Performance:');
       console.warn(`  Average Time: ${metrics.averageTime.toFixed(2)}ms`);
       console.warn(`  Min Time: ${metrics.minTime.toFixed(2)}ms`);
       console.warn(`  Max Time: ${metrics.maxTime.toFixed(2)}ms`);
@@ -186,8 +190,8 @@ describe('Unknown Fields Performance Tests', () => {
 
       // Verify that task was actually updated with unknown fields
       const updatedTask = await taskManager.get(baseTask.id);
-      expect((updatedTask as any).update_field_0).toBeDefined();
-      expect((updatedTask as any).update_field_49).toBeDefined();
+      expect((updatedTask as TaskWithUnknown).update_field_0).toBeDefined();
+      expect((updatedTask as TaskWithUnknown).update_field_49).toBeDefined();
     });
   });
 
@@ -196,7 +200,7 @@ describe('Unknown Fields Performance Tests', () => {
       /**
        * Tests schema validation performance with unknown fields.
        * Requirement: Should complete validation in under 50ms.
-       * 
+       *
        * Purpose: Validate that schema validation doesn't become a bottleneck
        * when dealing with many unknown fields
        */
@@ -205,7 +209,7 @@ describe('Unknown Fields Performance Tests', () => {
 
       const validateTaskWith50Fields = async (): Promise<void> => {
         const unknownFields: Record<string, string> = {};
-        
+
         // Create 50 unknown fields
         for (let i = 0; i < 50; i++) {
           unknownFields[`validation_field_${i}`] = `validation_value_${i}_${validationCounter}`;
@@ -226,11 +230,11 @@ describe('Unknown Fields Performance Tests', () => {
 
       // Performance requirement: Should complete validation in under 50ms
       expect(metrics.averageTime).toBeLessThan(50);
-      
+
       // Should maintain high operations per second for validation
       expect(metrics.operationsPerSecond).toBeGreaterThan(20);
 
-      console.warn(`\nSchema Validation with 50 Unknown Fields Performance:`);
+      console.warn('\nSchema Validation with 50 Unknown Fields Performance:');
       console.warn(`  Average Time: ${metrics.averageTime.toFixed(2)}ms`);
       console.warn(`  Min Time: ${metrics.minTime.toFixed(2)}ms`);
       console.warn(`  Max Time: ${metrics.maxTime.toFixed(2)}ms`);
@@ -243,19 +247,19 @@ describe('Unknown Fields Performance Tests', () => {
     it('should enforce maximum field count limit', async () => {
       /**
        * Tests that STM enforces the 100 field limit for performance.
-       * 
+       *
        * Purpose: Validate field count limit enforcement
        */
 
       // Create task with many fields but under the limit (should succeed)
-      const manyFields: Record<string, any> = {
+      const manyFields: Record<string, unknown> = {
         title: 'Many Fields Test Task',
         content: 'Testing with many fields',
         status: 'pending',
         tags: ['test'],
         dependencies: []
       };
-      
+
       // Add fields to reach 90 total input fields
       for (let i = 0; i < 85; i++) {
         manyFields[`field_${i}`] = `value_${i}`;
@@ -264,18 +268,18 @@ describe('Unknown Fields Performance Tests', () => {
       // This should succeed (90 input fields)
       const task = await taskManager.create(manyFields);
       expect(task).toBeDefined();
-      
+
       // The returned task will have additional fields added by STM
       // (id, created, updated, schema, etc.) but input was under limit
 
       // Try to create task with too many fields (should fail)
-      const tooManyFields: Record<string, any> = {
+      const tooManyFields: Record<string, unknown> = {
         title: 'Too Many Fields Test Task',
         status: 'pending',
         tags: ['test'],
         dependencies: []
       };
-      
+
       // Add fields to exceed limit
       // The task object will have these fields:
       // - Input fields: title, status, tags, dependencies (4)
@@ -296,15 +300,15 @@ describe('Unknown Fields Performance Tests', () => {
       /**
        * Tests performance with 90-100 fields (near the limit).
        * Requirement: Should still complete in reasonable time.
-       * 
+       *
        * Purpose: Validate performance doesn't degrade near limits
        */
-      
+
       let taskCounter = 0;
 
       const createTaskWithNearLimitFields = async (): Promise<void> => {
         const unknownFields: Record<string, string> = {};
-        
+
         // Create 90 unknown fields (95 total with core fields)
         for (let i = 0; i < 90; i++) {
           unknownFields[`near_limit_field_${i}`] = `value_${i}_for_task_${taskCounter}`;
@@ -324,11 +328,11 @@ describe('Unknown Fields Performance Tests', () => {
 
       // Performance requirement: Should complete in under 200ms even near limit
       expect(metrics.averageTime).toBeLessThan(200);
-      
+
       // Should maintain reasonable operations per second
       expect(metrics.operationsPerSecond).toBeGreaterThan(5);
 
-      console.warn(`\nTask Creation with 90 Unknown Fields (Near Limit) Performance:`);
+      console.warn('\nTask Creation with 90 Unknown Fields (Near Limit) Performance:');
       console.warn(`  Average Time: ${metrics.averageTime.toFixed(2)}ms`);
       console.warn(`  Min Time: ${metrics.minTime.toFixed(2)}ms`);
       console.warn(`  Max Time: ${metrics.maxTime.toFixed(2)}ms`);
@@ -342,7 +346,7 @@ describe('Unknown Fields Performance Tests', () => {
       /**
        * Tests performance with large string values in unknown fields.
        * Requirement: Should complete in under 200ms.
-       * 
+       *
        * Purpose: Validate that large unknown field values don't cause
        * performance degradation
        */
@@ -375,11 +379,11 @@ describe('Unknown Fields Performance Tests', () => {
 
       // Performance requirement: Should complete in under 200ms even with large values
       expect(metrics.averageTime).toBeLessThan(200);
-      
+
       // Should maintain reasonable operations per second
       expect(metrics.operationsPerSecond).toBeGreaterThan(5);
 
-      console.warn(`\nLarge Unknown Field Values Performance (5KB total):`);
+      console.warn('\nLarge Unknown Field Values Performance (5KB total):');
       console.warn(`  Average Time: ${metrics.averageTime.toFixed(2)}ms`);
       console.warn(`  Min Time: ${metrics.minTime.toFixed(2)}ms`);
       console.warn(`  Max Time: ${metrics.maxTime.toFixed(2)}ms`);
@@ -388,8 +392,8 @@ describe('Unknown Fields Performance Tests', () => {
 
       // Verify that task was created with large values
       const task = await taskManager.get(largeValueCounter);
-      expect((task as any).large_field_1).toHaveLength(1024);
-      expect((task as any).large_field_5).toHaveLength(1024);
+      expect((task as TaskWithUnknown).large_field_1).toHaveLength(1024);
+      expect((task as TaskWithUnknown).large_field_5).toHaveLength(1024);
     });
   });
 });

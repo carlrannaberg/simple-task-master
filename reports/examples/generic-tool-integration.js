@@ -8,9 +8,10 @@
 
 const { exec } = require('child_process');
 const { promisify } = require('util');
-const fs = require('fs').promises;
-const path = require('path');
-const yaml = require('js-yaml');
+// Example imports - uncomment as needed:
+// const fs = require('fs').promises;
+// const path = require('path');
+// const yaml = require('js-yaml');
 
 const execAsync = promisify(exec);
 
@@ -157,7 +158,7 @@ class STMToolIntegration {
     if (task[historyField]) {
       try {
         history = JSON.parse(task[historyField]);
-      } catch (e) {
+      } catch {
         this.log('Warning: Could not parse history, starting fresh');
       }
     }
@@ -206,7 +207,7 @@ class STMToolIntegration {
     // Try to parse as JSON
     try {
       return JSON.parse(value);
-    } catch (e) {
+    } catch {
       // Return as string if not valid JSON
       return value;
     }
@@ -367,7 +368,7 @@ class ProjectManagementIntegration extends STMToolIntegration {
     if (task[timeLogField]) {
       try {
         timeLog = JSON.parse(task[timeLogField]);
-      } catch (e) {
+      } catch {
         this.log('Warning: Could not parse time log, starting fresh');
       }
     }

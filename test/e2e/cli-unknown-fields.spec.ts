@@ -4,6 +4,9 @@ import * as fs from 'fs/promises';
 import { TestWorkspace } from '@test/helpers/test-workspace';
 import { CLITestRunner, runSTMSuccess, runSTMFailure, cliUtils } from '@test/helpers/cli-runner';
 
+// Type for JSON parsed tasks
+type ParsedTask = Record<string, unknown>;
+
 describe('CLI Unknown Fields E2E', () => {
   let workspace: TestWorkspace;
   let cli: CLITestRunner;
@@ -44,13 +47,13 @@ describe('CLI Unknown Fields E2E', () => {
       // Step 3: Show task with JSON format to verify all fields
       const showResult = await cli.showTask(taskId, 'json');
       const task = JSON.parse(showResult.stdout);
-      
+
       // Verify core fields
       expect(task.id).toBe(1);
       expect(task.title).toBe('Project Documentation');
       expect(task.status).toBe('pending');
       expect(task.tags).toEqual(['docs', 'priority']);
-      
+
       // Verify unknown fields are preserved
       expect(task.assignee).toBe('john.doe@example.com');
       expect(task.priority).toBe('high');
@@ -64,7 +67,7 @@ describe('CLI Unknown Fields E2E', () => {
       const listResult = await cli.listTasks({ format: 'json' });
       const tasks = JSON.parse(listResult.stdout);
       expect(tasks).toHaveLength(1);
-      
+
       const listedTask = tasks[0];
       expect(listedTask.assignee).toBe('john.doe@example.com');
       expect(listedTask.priority).toBe('high');
@@ -90,7 +93,7 @@ describe('CLI Unknown Fields E2E', () => {
       // Verify all fields
       const showResult = await cli.showTask(taskId, 'json');
       const task = JSON.parse(showResult.stdout);
-      
+
       expect(task.status).toBe('in-progress');
       expect(task.tags).toEqual(['feature', 'backend']);
       expect(task.component).toBe('authentication');
@@ -123,7 +126,7 @@ describe('CLI Unknown Fields E2E', () => {
       // Verify all fields were set
       const showResult = await cli.showTask(taskId, 'json');
       const task = JSON.parse(showResult.stdout);
-      
+
       expect(task.category).toBe('bug-fix');
       expect(task.severity).toBe('critical');
       expect(task.customer).toBe('ACME Corp');
@@ -141,17 +144,17 @@ describe('CLI Unknown Fields E2E', () => {
 
       // First update
       await cli.runSuccess(['update', taskId.toString(), 'phase=planning']);
-      
+
       // Second update
       await cli.runSuccess(['update', taskId.toString(), 'phase=development', 'developer=alice']);
-      
+
       // Third update
       await cli.runSuccess(['update', taskId.toString(), 'phase=testing', 'tester=bob']);
 
       // Verify final state
       const showResult = await cli.showTask(taskId, 'json');
       const task = JSON.parse(showResult.stdout);
-      
+
       expect(task.phase).toBe('testing'); // Last update wins
       expect(task.developer).toBe('alice'); // Preserved from second update
       expect(task.tester).toBe('bob'); // Added in third update
@@ -161,7 +164,7 @@ describe('CLI Unknown Fields E2E', () => {
   describe('JSON output preservation', () => {
     it('should preserve unknown fields in JSON show output', async () => {
       const { taskId } = await cli.addTask('JSON Test Task');
-      
+
       // Add various types of values
       await cli.runSuccess([
         'update',
@@ -178,7 +181,7 @@ describe('CLI Unknown Fields E2E', () => {
 
       const showResult = await cli.showTask(taskId, 'json');
       const task = JSON.parse(showResult.stdout);
-      
+
       // All values are stored as strings
       expect(task.string_field).toBe('simple text');
       expect(task.number_field).toBe('42');
@@ -204,19 +207,19 @@ describe('CLI Unknown Fields E2E', () => {
       // List with JSON format
       const listResult = await cli.listTasks({ format: 'json' });
       const tasks = JSON.parse(listResult.stdout);
-      
+
       expect(tasks).toHaveLength(3);
-      
+
       // Verify each task has its unknown fields
-      const taskOne = tasks.find((t: any) => t.id === taskId1);
+      const taskOne = tasks.find((t: ParsedTask) => t.id === taskId1);
       expect(taskOne.project).toBe('Alpha');
       expect(taskOne.status_code).toBe('ALPHA-001');
 
-      const taskTwo = tasks.find((t: any) => t.id === taskId2);
+      const taskTwo = tasks.find((t: ParsedTask) => t.id === taskId2);
       expect(taskTwo.project).toBe('Beta');
       expect(taskTwo.status_code).toBe('BETA-002');
 
-      const taskThree = tasks.find((t: any) => t.id === taskId3);
+      const taskThree = tasks.find((t: ParsedTask) => t.id === taskId3);
       expect(taskThree.project).toBe('Gamma');
       expect(taskThree.status_code).toBe('GAMMA-003');
     });
@@ -238,12 +241,12 @@ describe('CLI Unknown Fields E2E', () => {
       const exportedTasks = JSON.parse(exportContent);
 
       expect(exportedTasks).toHaveLength(2);
-      
-      const task1 = exportedTasks.find((t: any) => t.id === taskId1);
+
+      const task1 = exportedTasks.find((t: ParsedTask) => t.id === taskId1);
       expect(task1.client).toBe('ClientA');
       expect(task1.invoice_number).toBe('INV-2024-001');
 
-      const task2 = exportedTasks.find((t: any) => t.id === taskId2);
+      const task2 = exportedTasks.find((t: ParsedTask) => t.id === taskId2);
       expect(task2.client).toBe('ClientB');
       expect(task2.invoice_number).toBe('INV-2024-002');
     });
@@ -257,7 +260,7 @@ describe('CLI Unknown Fields E2E', () => {
         ['update', taskId.toString(), 'field\nwith\nnewlines=value'],
         { cwd: workspace.directory }
       );
-      
+
       expect(result.exitCode).not.toBe(0);
       expect(result.stderr).toContain('Field names cannot contain newlines');
     });
@@ -269,7 +272,7 @@ describe('CLI Unknown Fields E2E', () => {
         ['update', taskId.toString(), 'field\rwith\rreturns=value'],
         { cwd: workspace.directory }
       );
-      
+
       expect(result.exitCode).not.toBe(0);
       expect(result.stderr).toContain('Field names cannot contain newlines');
     });
@@ -373,7 +376,7 @@ describe('CLI Unknown Fields E2E', () => {
 
       const showResult = await cli.showTask(taskId, 'json');
       const task = JSON.parse(showResult.stdout);
-      
+
       expect(task.custom_field).toBe('value');
       expect(task.another_field).toBe('data');
       expect(task.tags).toContain('urgent');
@@ -401,7 +404,7 @@ describe('CLI Unknown Fields E2E', () => {
       // Verify unknown fields are preserved
       const showResult = await cli.showTask(taskId, 'json');
       const task = JSON.parse(showResult.stdout);
-      
+
       expect(task.title).toBe('Updated Title');
       expect(task.status).toBe('in-progress');
       expect(task.tags).toEqual(['updated']);
@@ -427,7 +430,7 @@ describe('CLI Unknown Fields E2E', () => {
 
       const showResult = await cli.showTask(taskId, 'json');
       const task = JSON.parse(showResult.stdout);
-      
+
       expect(task.query).toBe('SELECT * FROM tasks WHERE id = 1');
       expect(task.path).toBe('/usr/local/bin/app');
       expect(task.regex).toBe('^[a-zA-Z0-9]+$');
@@ -472,11 +475,11 @@ describe('CLI Unknown Fields E2E', () => {
 
       const showResult = await cli.showTask(taskId, 'json');
       const task = JSON.parse(showResult.stdout);
-      
+
       // Verify content sections
       expect(task.content).toContain('Task description content');
       expect(task.content).toContain('Implementation details here');
-      
+
       // Verify unknown fields
       expect(task.custom_status).toBe('awaiting_review');
       expect(task.assigned_team).toBe('backend');
@@ -500,7 +503,7 @@ describe('CLI Unknown Fields E2E', () => {
 
       const showResult = await cli.showTask(taskId, 'json');
       const task = JSON.parse(showResult.stdout);
-      
+
       expect(task['field-with-dashes']).toBe('value1');
       expect(task['field_with_underscores']).toBe('value2');
       expect(task['field.with.dots']).toBe('value3');
@@ -520,7 +523,7 @@ describe('CLI Unknown Fields E2E', () => {
 
       const showResult = await cli.showTask(taskId, 'json');
       const task = JSON.parse(showResult.stdout);
-      
+
       expect(task[longFieldName]).toBe(longValue);
     });
 
@@ -547,7 +550,7 @@ describe('CLI Unknown Fields E2E', () => {
 
       const showResult = await cli.showTask(taskId, 'json');
       const task = JSON.parse(showResult.stdout);
-      
+
       expect(task['field.with.dots']).toBe('value1');
       expect(task['field:with:colons']).toBe('value2');
       expect(task['field/with/slashes']).toBe('value3');
@@ -571,8 +574,8 @@ describe('CLI Unknown Fields E2E', () => {
         { cwd: workspace.directory }
       );
       expect(result1.exitCode).not.toBe(0);
-      expect(result1.stderr).toContain("Cannot add to field 'custom_field'");
-      expect(result1.stderr).toContain("The += operation is only supported for array fields");
+      expect(result1.stderr).toContain('Cannot add to field \'custom_field\'');
+      expect(result1.stderr).toContain('The += operation is only supported for array fields');
 
       // Try -= on unknown field
       const result2 = await runSTMFailure(
@@ -580,8 +583,8 @@ describe('CLI Unknown Fields E2E', () => {
         { cwd: workspace.directory }
       );
       expect(result2.exitCode).not.toBe(0);
-      expect(result2.stderr).toContain("Cannot remove from field 'custom_field'");
-      expect(result2.stderr).toContain("The -= operation is only supported for array fields");
+      expect(result2.stderr).toContain('Cannot remove from field \'custom_field\'');
+      expect(result2.stderr).toContain('The -= operation is only supported for array fields');
     });
   });
 
@@ -605,7 +608,7 @@ describe('CLI Unknown Fields E2E', () => {
       // Verify all fields were saved
       const showResult = await cli.showTask(taskId, 'json');
       const task = JSON.parse(showResult.stdout);
-      
+
       for (let i = 1; i <= 50; i++) {
         expect(task[`field_${i}`]).toBe(`value_${i}`);
       }
@@ -623,16 +626,16 @@ describe('CLI Unknown Fields E2E', () => {
 
       // List without format (defaults to NDJSON)
       const listResult = await cli.listTasks();
-      
+
       // Parse NDJSON output
       const tasks = cliUtils.parseNDJSON(listResult.stdout);
       expect(tasks).toHaveLength(2);
-      
+
       // Each line should be a valid JSON object with unknown fields
-      const task1 = tasks.find((t: any) => t.id === taskId1);
+      const task1 = tasks.find((t: ParsedTask) => t.id === taskId1);
       expect(task1.category).toBe('frontend');
 
-      const task2 = tasks.find((t: any) => t.id === taskId2);
+      const task2 = tasks.find((t: ParsedTask) => t.id === taskId2);
       expect(task2.category).toBe('backend');
     });
   });

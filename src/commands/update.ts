@@ -18,20 +18,21 @@ function validateFieldName(key: string): void {
   if (key.includes('\n') || key.includes('\r')) {
     throw new ValidationError('Field names cannot contain newlines');
   }
-  
+
   // Check for leading/trailing whitespace
   if (key.trim() !== key) {
     throw new ValidationError('Field names cannot have leading/trailing whitespace');
   }
-  
-  // Check for control characters (ASCII 0-31 except tab, newline, carriage return which are handled above)
+
+  // Check for control characters
+  // (ASCII 0-31 except tab, newline, carriage return which are handled above)
   for (let i = 0; i < key.length; i++) {
     const charCode = key.charCodeAt(i);
     if (charCode < 32 && charCode !== 9) { // Allow tab (9), block other control chars
       throw new ValidationError('Field names cannot contain control characters');
     }
   }
-  
+
   // All other field names are allowed
 }
 

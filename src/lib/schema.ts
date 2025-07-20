@@ -86,7 +86,7 @@ function validateFields(
     if (field in obj) {
       const value = obj[field];
       let isValidType = false;
-      
+
       switch (expectedType) {
         case 'number':
           isValidType = typeof value === 'number';
@@ -100,7 +100,7 @@ function validateFields(
         default:
           isValidType = true; // Unknown type, skip validation
       }
-      
+
       if (!isValidType) {
         throw new SchemaValidationError(
           `Core field '${field}' in ${schemaName} must be of type ${expectedType}, got ${Array.isArray(value) ? 'array' : typeof value}`,
@@ -200,7 +200,7 @@ export function validateConfig(obj: unknown): Config {
 
   // Validate required fields (Config validation unchanged - still strict)
   validateFields(config, REQUIRED_CONFIG_FIELDS, {}, 'Config');
-  
+
   // Additional validation for unknown fields in Config (maintain strict validation)
   const allowedConfigFields = new Set(REQUIRED_CONFIG_FIELDS as readonly string[]);
   for (const field of Object.keys(config)) {
@@ -259,7 +259,7 @@ export function validateLockFile(obj: unknown): LockFile {
 
   // Validate required fields (LockFile validation unchanged - still strict)
   validateFields(lock, REQUIRED_LOCK_FIELDS, {}, 'LockFile');
-  
+
   // Additional validation for unknown fields in LockFile (maintain strict validation)
   const allowedLockFields = new Set(REQUIRED_LOCK_FIELDS as readonly string[]);
   for (const field of Object.keys(lock)) {
