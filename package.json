@@ -21,6 +21,7 @@
     "test:performance": "vitest run test/performance --config vitest.performance.config.ts",
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage",
+    "test:ci": "npm run lint && npm run typecheck && npm run test",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
