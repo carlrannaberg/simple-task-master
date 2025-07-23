@@ -246,7 +246,10 @@ export class CLITestRunner {
     const taskId = parseInt(result.stdout.trim(), 10);
 
     if (isNaN(taskId) || taskId <= 0) {
-      throw new Error(`Invalid task ID in output: ${result.stdout}`);
+      // Include both stdout and stderr in error for better debugging
+      throw new Error(
+        `Invalid task ID in output: stdout="${result.stdout}", stderr="${result.stderr}", exitCode=${result.exitCode}`
+      );
     }
 
     return { result, taskId };

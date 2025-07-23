@@ -39,6 +39,7 @@ vi.mock('fs/promises', async (importOriginal) => {
     ...actual,
     writeFile: vi.fn(),
     readFile: vi.fn(),
+    readdir: vi.fn(),
     access: vi.fn(),
     mkdir: vi.fn(),
     stat: vi.fn(),
@@ -117,6 +118,12 @@ describe('Init Command', () => {
     // Mock utils
     vi.mocked(utils.ensureDirectory).mockImplementation(async (dirPath: string) => {
       directoryState.add(dirPath);
+      // Also add parent directories
+      let parent = path.dirname(dirPath);
+      while (parent !== '.' && parent !== '/' && parent !== tempDir && !directoryState.has(parent)) {
+        directoryState.add(parent);
+        parent = path.dirname(parent);
+      }
     });
 
     vi.mocked(utils.fileExists).mockImplementation(async (filePath: string) => {
@@ -195,6 +202,11 @@ describe('Init Command', () => {
     });
 
     vi.mocked(fs.chmod).mockImplementation(async () => {});
+
+    vi.mocked(fs.readdir).mockImplementation(async (_dirPath: string) => {
+      // Return empty array by default (empty directory)
+      return [] as string[];
+    });
 
     // Create a new program instance for each test
     program = new Command();
@@ -584,9 +596,13 @@ describe('Init Command', () => {
       expect(args).toHaveLength(0);
     });
 
-    it('should have no options', () => {
+    it('should have --tasks-dir option', () => {
       const options = initCommand.options;
-      expect(options).toHaveLength(0);
+      expect(options).toHaveLength(1);
+
+      const tasksDirOption = options.find((opt) => opt.long === '--tasks-dir');
+      expect(tasksDirOption).toBeDefined();
+      expect(tasksDirOption?.description).toContain('Custom directory for storing task files');
     });
   });
 
@@ -634,6 +650,174 @@ describe('Init Command', () => {
 
       expect(capturedOutput).toContain('Updated .gitignore');
       expect(capturedOutput).not.toContain('Created .gitignore');
+    });
+  });
+
+  describe('custom tasks directory', () => {
+    it('should not add tasksDir to config when using default', async () => {
+      // Clear the file system state to simulate a fresh init
+      fileSystemState.clear();
+      directoryState.clear();
+      capturedOutput.length = 0;
+      capturedErrors.length = 0;
+      capturedWarnings.length = 0;
+
+      await program.parseAsync(['node', 'stm', 'init']);
+
+      const configPath = path.join(tempDir, '.simple-task-master', 'config.json');
+      const configContent = fileSystemState.get(configPath) as string;
+      const config = JSON.parse(configContent);
+
+      expect(config.tasksDir).toBeUndefined();
+    });
+
+    it('should create custom tasks directory when specified', async () => {
+      await program.parseAsync(['node', 'stm', 'init', '--tasks-dir', './custom-tasks']);
+
+      const customTasksDir = path.join(tempDir, 'custom-tasks');
+      expect(directoryState.has(customTasksDir)).toBe(true);
+
+      // Config should include custom tasks directory
+      const configPath = path.join(tempDir, '.simple-task-master', 'config.json');
+      const configContent = fileSystemState.get(configPath) as string;
+      const config = JSON.parse(configContent);
+
+      expect(config.tasksDir).toBe('./custom-tasks');
+      expect(capturedOutput).toContain('Using custom tasks directory: ./custom-tasks');
+    });
+
+    it('should handle absolute paths within project', async () => {
+      const absolutePath = path.join(tempDir, 'my-tasks');
+      await program.parseAsync(['node', 'stm', 'init', '--tasks-dir', absolutePath]);
+
+      expect(directoryState.has(absolutePath)).toBe(true);
+
+      // Config should store relative path for portability
+      const configPath = path.join(tempDir, '.simple-task-master', 'config.json');
+      const configContent = fileSystemState.get(configPath) as string;
+      const config = JSON.parse(configContent);
+
+      expect(config.tasksDir).toBe('my-tasks');
+    });
+
+    it('should reject directory traversal attempts', async () => {
+      await expect(
+        program.parseAsync(['node', 'stm', 'init', '--tasks-dir', '../outside'])
+      ).rejects.toThrow('process.exit');
+
+      expect(capturedErrors).toContain('Tasks directory path cannot contain directory traversal sequences (..)');
+    });
+
+    it('should reject absolute paths outside project', async () => {
+      await expect(
+        program.parseAsync(['node', 'stm', 'init', '--tasks-dir', '/etc/tasks'])
+      ).rejects.toThrow('process.exit');
+
+      expect(capturedErrors).toContain('Cannot use system directories for task storage');
+    });
+
+    it('should reject system directories', async () => {
+      // Mock cwd to return root to test system directory protection
+      vi.mocked(process.cwd).mockReturnValue('/');
+
+      await expect(
+        program.parseAsync(['node', 'stm', 'init', '--tasks-dir', '/usr/tasks'])
+      ).rejects.toThrow('process.exit');
+
+      expect(capturedErrors).toContain('Cannot use system directories for task storage');
+    });
+
+    it('should reject file-like paths', async () => {
+      await expect(
+        program.parseAsync(['node', 'stm', 'init', '--tasks-dir', 'tasks.json'])
+      ).rejects.toThrow('process.exit');
+
+      expect(capturedErrors).toContain('Tasks directory path appears to be a file, not a directory');
+    });
+
+    it('should reject custom directory inside .simple-task-master', async () => {
+      await expect(
+        program.parseAsync(['node', 'stm', 'init', '--tasks-dir', '.simple-task-master/custom'])
+      ).rejects.toThrow('process.exit');
+
+      expect(capturedErrors).toContain('Custom tasks directory cannot be inside .simple-task-master directory');
+    });
+
+    it('should warn when custom directory already exists with files', async () => {
+      // Create existing directory with files
+      const customDir = path.join(tempDir, 'existing-tasks');
+      directoryState.add(customDir);
+      fileSystemState.set(path.join(customDir, 'file.md'), 'content');
+
+      // Mock fs.readdir to return files
+      vi.mocked(fs.readdir).mockResolvedValueOnce(['file.md'] as string[]);
+
+      await program.parseAsync(['node', 'stm', 'init', '--tasks-dir', './existing-tasks']);
+
+      expect(capturedWarnings).toContain('Directory ./existing-tasks already exists and contains files');
+      expect(capturedOutput).toContain('Initialized STM repository');
+    });
+
+    it('should update gitignore with custom tasks directory', async () => {
+      await program.parseAsync(['node', 'stm', 'init', '--tasks-dir', './my-custom-tasks']);
+
+      const gitignorePath = path.join(tempDir, '.gitignore');
+      const content = fileSystemState.get(gitignorePath) as string;
+
+      expect(content).toContain('./my-custom-tasks/');
+      expect(content).toContain('.simple-task-master/lock');
+    });
+
+    it('should handle nested custom directories', async () => {
+      await program.parseAsync(['node', 'stm', 'init', '--tasks-dir', './src/data/tasks']);
+
+      const customTasksDir = path.join(tempDir, 'src', 'data', 'tasks');
+      expect(directoryState.has(customTasksDir)).toBe(true);
+
+      const configPath = path.join(tempDir, '.simple-task-master', 'config.json');
+      const configContent = fileSystemState.get(configPath) as string;
+      const config = JSON.parse(configContent);
+
+      expect(config.tasksDir).toBe('./src/data/tasks');
+    });
+
+    it('should create parent directories for custom tasks path', async () => {
+      await program.parseAsync(['node', 'stm', 'init', '--tasks-dir', './deep/nested/tasks']);
+
+      const tasksDir = path.join(tempDir, 'deep', 'nested', 'tasks');
+      expect(directoryState.has(tasksDir)).toBe(true);
+
+      // Parent directories should also be created
+      expect(directoryState.has(path.join(tempDir, 'deep'))).toBe(true);
+      expect(directoryState.has(path.join(tempDir, 'deep', 'nested'))).toBe(true);
+    });
+
+    it('should handle trailing slashes in custom directory path', async () => {
+      await program.parseAsync(['node', 'stm', 'init', '--tasks-dir', './custom-tasks/']);
+
+      const configPath = path.join(tempDir, '.simple-task-master', 'config.json');
+      const configContent = fileSystemState.get(configPath) as string;
+      const config = JSON.parse(configContent);
+
+      // Should normalize path without trailing slash
+      expect(config.tasksDir).toBe('./custom-tasks');
+    });
+
+    it('should warn about absolute paths when updating gitignore', async () => {
+      const absolutePath = path.join(tempDir, 'my-tasks');
+      await program.parseAsync(['node', 'stm', 'init', '--tasks-dir', absolutePath]);
+
+      // Should have warned about absolute paths
+      expect(capturedWarnings).toContain('Absolute paths in .gitignore may not work as expected across different systems');
+
+      // Should still initialize successfully
+      expect(capturedOutput).toContain('Initialized STM repository');
+
+      // Gitignore should contain relative path
+      const gitignorePath = path.join(tempDir, '.gitignore');
+      const content = fileSystemState.get(gitignorePath) as string;
+      expect(content).toContain('my-tasks/');
+      expect(content).not.toContain(absolutePath);
     });
   });
 });

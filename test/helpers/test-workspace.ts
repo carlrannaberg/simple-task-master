@@ -33,6 +33,15 @@ export class TestWorkspace {
   }
 
   /**
+   * Create a new clean workspace without STM initialization
+   */
+  static async createClean(prefix = 'stm-test-'): Promise<TestWorkspace> {
+    const tempDir = await fs.mkdtemp(path.join(tmpdir(), prefix));
+    const workspace = new TestWorkspace(tempDir);
+    return workspace;
+  }
+
+  /**
    * Initialize the workspace (for backward compatibility)
    */
   async init(): Promise<void> {
