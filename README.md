@@ -143,15 +143,23 @@ status: 'pending'
 Initialize STM repository in the current directory.
 
 ```bash
+# Initialize with default settings
 stm init
+
+# Initialize with custom task directory
+stm init --tasks-dir ./my-tasks
 ```
 
 Creates:
 
 - `.simple-task-master/` directory
 - `config.json` configuration file
-- `tasks/` directory for task files
+- `tasks/` directory (or your custom directory)
 - Updates `.gitignore` to exclude task files but include config
+
+**Options:**
+
+- `--tasks-dir <path>`: Custom directory for storing task files (default: `.simple-task-master/tasks/`)
 
 ### `stm add <title>`
 
@@ -445,7 +453,8 @@ STM stores its configuration in `.simple-task-master/config.json`. You can custo
 {
   "schema": 1,
   "lockTimeoutMs": 30000,
-  "maxTaskSizeBytes": 1048576
+  "maxTaskSizeBytes": 1048576,
+  "tasksDir": "./my-tasks"
 }
 ```
 
@@ -454,19 +463,113 @@ STM stores its configuration in `.simple-task-master/config.json`. You can custo
 - `schema`: Configuration schema version
 - `lockTimeoutMs`: File lock timeout in milliseconds (default: 30000)
 - `maxTaskSizeBytes`: Maximum task file size in bytes (default: 1MB)
+- `tasksDir`: Custom directory for storing task files (optional)
+
+### Custom Task Directory
+
+By default, STM stores tasks in `.simple-task-master/tasks/`. However, you can configure a custom directory for task storage, which is useful for:
+
+- Organizing tasks in a project-specific location
+- Separating tasks from the STM configuration
+- Using existing directories for task management
+- Following your team's directory structure conventions
+
+#### Setting Up a Custom Task Directory
+
+**Option 1: Initialize with a custom directory**
+```bash
+# Use a relative path (recommended)
+stm init --tasks-dir ./project-tasks
+
+# Use a nested directory structure
+stm init --tasks-dir ./docs/tasks
+
+# Initialize in an existing directory
+stm init --tasks-dir ./existing-tasks-folder
+```
+
+**Option 2: Modify config.json after initialization**
+```json
+{
+  "schema": 1,
+  "lockTimeoutMs": 30000,
+  "maxTaskSizeBytes": 1048576,
+  "tasksDir": "./my-custom-tasks"
+}
+```
+
+#### Examples
+
+```bash
+# Initialize with tasks in a 'todo' directory
+stm init --tasks-dir ./todo
+
+# Initialize with tasks in a documentation folder
+stm init --tasks-dir ./docs/project-tasks
+
+# Initialize with deeply nested structure
+stm init --tasks-dir ./project/management/tasks
+```
+
+#### Important Considerations
+
+1. **Relative vs Absolute Paths**
+   - **Relative paths** (recommended): Portable across different systems and users
+   - **Absolute paths**: Must be within the project directory for security
+   
+2. **Git Integration**
+   - STM automatically updates `.gitignore` to exclude task files
+   - The pattern added depends on your custom directory
+   - Config file remains tracked for team synchronization
+
+3. **Migration Guide**
+
+   If you have an existing STM workspace and want to move tasks to a custom directory:
+
+   ```bash
+   # 1. Move existing tasks to the new location
+   mv .simple-task-master/tasks ./my-tasks
+   
+   # 2. Update config.json
+   # Add: "tasksDir": "./my-tasks"
+   
+   # 3. Update .gitignore
+   # Replace: .simple-task-master/tasks/
+   # With: my-tasks/
+   ```
+
+4. **Limitations**
+   - Custom directories cannot be inside `.simple-task-master/`
+   - System directories (`/etc`, `/usr`, etc.) are not allowed
+   - Directory traversal sequences (`..`) in paths are blocked
+   - Absolute paths must be within the current project
 
 ## 📁 File Structure
 
+**Default Structure:**
 ```
 project-root/
 ├── .simple-task-master/
 │   ├── config.json          # STM configuration
-│   ├── tasks/               # Task files directory
+│   ├── tasks/               # Default task files directory
 │   │   ├── 1-task-title.md  # Individual task files
 │   │   ├── 2-another-task.md
 │   │   └── ...
 │   └── lock                 # Lock file (temporary)
 └── .gitignore               # Updated to exclude tasks/
+```
+
+**With Custom Task Directory:**
+```
+project-root/
+├── .simple-task-master/
+│   ├── config.json          # Contains "tasksDir": "./my-tasks"
+│   └── lock                 # Lock file (temporary)
+├── my-tasks/                # Custom task directory
+│   ├── 1-task-title.md      # Individual task files
+│   ├── 2-another-task.md
+│   └── ...
+└── .gitignore               # Updated to exclude my-tasks/
 ```
 
 ### Task File Format

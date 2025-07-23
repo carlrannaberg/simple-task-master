@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Configurable Task Directory**
+  - Initialize STM with custom task directory using `stm init --tasks-dir <path>`
+  - Support for both relative and absolute paths (with security restrictions)
+  - Automatic `.gitignore` updates for custom directories
+  - Configuration stored in `config.json` with `tasksDir` field
+  - Path validation to prevent directory traversal and system directory usage
+  - Support for existing directories with warning for non-empty ones
+  - Migration guide for moving existing tasks to custom directories
+
 ## [0.2.0] - 2025-01-20
 
 ### Added
