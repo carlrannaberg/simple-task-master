@@ -1,6 +1,7 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { PATHS } from './constants';
+import { ConfigManager } from './config';
 
 /**
  * Find the STM workspace directory by searching up the directory tree
@@ -52,7 +53,11 @@ export async function getTasksDirectory(startDir?: string): Promise<string> {
   if (!workspaceRoot) {
     throw new Error('No STM workspace found. Run "stm init" to initialize a workspace.');
   }
-  return PATHS.getTasksDir(workspaceRoot);
+
+  // Use ConfigManager to get the configured tasks directory
+  const configManager = new ConfigManager(workspaceRoot);
+  await configManager.load();
+  return configManager.getTasksDir();
 }
 
 /**

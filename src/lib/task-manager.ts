@@ -4,9 +4,10 @@ import { FrontmatterParser } from './frontmatter-parser';
 import writeFileAtomic from 'write-file-atomic';
 import slugify from 'slugify';
 import { LockManager } from './lock-manager';
-import { getTasksDirectory, getWorkspaceRoot } from './workspace';
+import { getWorkspaceRoot } from './workspace';
 import { ValidationError, FileSystemError, NotFoundError } from './errors';
 import * as schema from './schema';
+import { ConfigManager } from './config';
 import type {
   Task,
   TaskCreateInput,
@@ -20,11 +21,19 @@ const DEFAULT_MAX_TASK_SIZE_BYTES = 1048576; // 1MB
 const DEFAULT_MAX_TITLE_LENGTH = 200;
 const DEFAULT_MAX_DESCRIPTION_LENGTH = 65536; // 64KB
 
+// Internal config type that excludes workspaceRoot
+type TaskManagerInternalConfig = {
+  tasksDir: string;
+  maxTaskSizeBytes: number;
+  maxTitleLength: number;
+  maxDescriptionLength: number;
+};
+
 export class TaskManager {
-  private readonly config: Required<TaskManagerConfig>;
+  private readonly config: TaskManagerInternalConfig;
   private readonly lockManager: LockManager;
 
-  constructor(config: Required<TaskManagerConfig>, lockManager: LockManager) {
+  constructor(config: TaskManagerInternalConfig, lockManager: LockManager) {
     this.config = config;
     this.lockManager = lockManager;
   }
@@ -33,12 +42,19 @@ export class TaskManager {
    * Create a new TaskManager instance with workspace discovery
    */
   static async create(config?: Partial<TaskManagerConfig>): Promise<TaskManager> {
-    const tasksDir = config?.tasksDir ?? (await getTasksDirectory());
-    const workspaceRoot = await getWorkspaceRoot();
+    const workspaceRoot = config?.workspaceRoot ?? await getWorkspaceRoot();
 
-    const fullConfig: Required<TaskManagerConfig> = {
+    // Create ConfigManager and load configuration
+    const configManager = new ConfigManager(workspaceRoot);
+    const loadedConfig = await configManager.load();
+
+    // Use ConfigManager to get the tasks directory
+    const tasksDir = config?.tasksDir ?? configManager.getTasksDir();
+
+    const fullConfig: TaskManagerInternalConfig = {
       tasksDir,
-      maxTaskSizeBytes: config?.maxTaskSizeBytes ?? DEFAULT_MAX_TASK_SIZE_BYTES,
+      maxTaskSizeBytes: config?.maxTaskSizeBytes ??
+        loadedConfig.maxTaskSizeBytes ?? DEFAULT_MAX_TASK_SIZE_BYTES,
       maxTitleLength: config?.maxTitleLength ?? DEFAULT_MAX_TITLE_LENGTH,
       maxDescriptionLength: config?.maxDescriptionLength ?? DEFAULT_MAX_DESCRIPTION_LENGTH
     };
@@ -239,7 +255,9 @@ export class TaskManager {
       } catch (error) {
         // Skip invalid files but log warning
         console.warn(
-          `Failed to read task file ${file}: ${error instanceof Error ? error.message : 'Unknown error'}`
+          `Failed to read task file ${file}: ${
+            error instanceof Error ? error.message : 'Unknown error'
+          }`
         );
       }
     }
@@ -388,7 +406,8 @@ export class TaskManager {
           if (task.id !== maxId) {
             // Frontmatter doesn't match filename - this is a data integrity issue
             console.warn(
-              `Data integrity warning: File ${maxIdFile} has ID ${task.id} in frontmatter but ${maxId} in filename`
+              `Data integrity warning: File ${maxIdFile} has ID ${task.id} ` +
+              `in frontmatter but ${maxId} in filename`
             );
 
             // Fall back to scanning all files to find the true maximum ID

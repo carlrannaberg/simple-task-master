@@ -55,7 +55,9 @@ export interface TaskListFilters {
 
 export interface TaskManagerConfig {
   /** Base directory for task storage */
-  tasksDir: string;
+  tasksDir?: string;
+  /** Workspace root directory (for testing) */
+  workspaceRoot?: string;
   /** Maximum task file size in bytes (default: 1MB) */
   maxTaskSizeBytes?: number;
   /** Maximum task title length (default: 200) */
@@ -70,6 +72,8 @@ export interface Config {
   schema: number;
   lockTimeoutMs: number;
   maxTaskSizeBytes: number;
+  /** Optional custom directory for storing task files (default: .stm/tasks) */
+  tasksDir?: string;
 }
 
 export interface LockFile {
@@ -107,7 +111,8 @@ export function isConfig(obj: unknown): obj is Config {
     config !== null &&
     typeof config.schema === 'number' &&
     typeof config.lockTimeoutMs === 'number' &&
-    typeof config.maxTaskSizeBytes === 'number'
+    typeof config.maxTaskSizeBytes === 'number' &&
+    (config.tasksDir === undefined || typeof config.tasksDir === 'string')
   );
 }
 

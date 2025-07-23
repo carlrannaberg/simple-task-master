@@ -13,9 +13,96 @@ import { PATHS, DEFAULT_CONFIG } from '../lib/constants';
 import type { Config } from '../lib/types';
 
 /**
+ * Options for the init command
+ */
+interface InitOptions {
+  tasksDir?: string;
+}
+
+/**
+ * Validates the custom tasks directory path
+ * @param tasksDir - The proposed tasks directory path
+ * @returns The normalized tasks directory path
+ * @throws ValidationError if the path is invalid
+ */
+function validateTasksDir(tasksDir: string): string {
+  // Normalize the path and remove trailing slashes
+  const normalized = path.normalize(tasksDir).replace(/\/+$/, '');
+
+  // Prevent directory traversal attacks
+  if (normalized.includes('..')) {
+    throw new ValidationError(
+      'Tasks directory path cannot contain directory traversal sequences (..)'
+    );
+  }
+
+  // Prevent absolute paths outside the project
+  if (path.isAbsolute(normalized)) {
+    // Allow absolute paths only if they're not system directories
+    // For shared directories, we'll be more permissive and allow sibling directories
+
+    // First, check if it's a system directory (but allow temp directories for testing)
+    const isTempDir = normalized.includes('/tmp/') ||
+                      normalized.includes('\\Temp\\') ||
+                      normalized.includes('\\TEMP\\') ||
+                      normalized.includes('/var/folders/') || // macOS temp directories
+                      normalized.includes('/private/var/folders/'); // macOS private temp
+
+    const systemPaths = ['/', '/etc', '/usr', '/bin', '/sbin', '/dev', '/proc', '/sys'];
+    const isSystemPath = systemPaths.some((sysPath) =>
+      normalized === sysPath || normalized.startsWith(sysPath + path.sep)
+    );
+
+    if (isSystemPath && !isTempDir) {
+      throw new ValidationError('Cannot use system directories for task storage');
+    }
+
+    // For non-system paths, allow more flexibility for shared directories
+    // Only reject if the path is clearly outside any reasonable project structure
+    const fs = require('fs');
+    const cwd = fs.realpathSync(process.cwd());
+
+    try {
+      // Try to find a common root between cwd and the target path
+      const normalizedDir = path.dirname(normalized);
+      let resolvedDir: string;
+      try {
+        resolvedDir = fs.realpathSync(normalizedDir);
+      } catch {
+        resolvedDir = path.resolve(normalizedDir);
+      }
+      const resolvedPath = path.join(resolvedDir, path.basename(normalized));
+
+      // Calculate relative path from cwd to target
+      const relative = path.relative(cwd, resolvedPath);
+
+      // Allow paths that go up but not too far (max 5 levels up for shared directories)
+      const upLevels = relative.split(path.sep).filter((part) => part === '..').length;
+      if (upLevels > 5) {
+        throw new ValidationError('Absolute paths too far outside the project directory');
+      }
+    } catch {
+      // If we can't resolve paths, be conservative and reject
+      throw new ValidationError('Invalid absolute path for task storage');
+    }
+  }
+
+  // Ensure the path doesn't point to a file
+  // We'll check this during actual creation, but validate obvious cases
+  if (
+    normalized.includes('.') &&
+    (normalized.endsWith('.json') || normalized.endsWith('.md') || normalized.endsWith('.txt'))
+  ) {
+    throw new ValidationError('Tasks directory path appears to be a file, not a directory');
+  }
+
+  return normalized;
+}
+
+/**
  * Initialize STM repository in the current directory
  */
-async function initializeRepository(): Promise<void> {
+async function initializeRepository(options: InitOptions): Promise<void> {
   const lockManager = new LockManager(process.cwd());
 
   try {
@@ -23,8 +110,14 @@ async function initializeRepository(): Promise<void> {
 
     const projectRoot = process.cwd();
     const baseDir = PATHS.getBaseDir(projectRoot);
-    const tasksDir = PATHS.getTasksDir(projectRoot);
     const configPath = PATHS.getConfigPath(projectRoot);
+
+    // Validate the custom tasks directory BEFORE checking if initialized
+    // This ensures validation errors are caught even on already-initialized workspaces
+    let validatedPath: string | undefined;
+    if (options.tasksDir) {
+      validatedPath = validateTasksDir(options.tasksDir);
+    }
 
     // Check if already initialized
     const isInitialized = await fileExists(configPath);
@@ -33,26 +126,98 @@ async function initializeRepository(): Promise<void> {
       return;
     }
 
+    // Determine tasks directory
+    let tasksDir: string;
+    let customTasksDir: string | undefined;
+
+    if (options.tasksDir && validatedPath) {
+      // Use the already validated path
+
+      // Convert to absolute path if relative
+      if (!path.isAbsolute(validatedPath)) {
+        tasksDir = path.join(projectRoot, validatedPath);
+        // Store relative path in config, preserving ./ prefix if it was provided
+        customTasksDir = options.tasksDir.startsWith('./') && !validatedPath.startsWith('./')
+          ? './' + validatedPath
+          : validatedPath;
+      } else {
+        tasksDir = validatedPath;
+        // Store as relative path in config for portability
+        // Use resolved real paths to handle symlinks properly
+        const fs = require('fs');
+        const realProjectRoot = fs.realpathSync(projectRoot);
+
+        // For the target path, resolve the parent directory since the path might not exist yet
+        const validatedDir = path.dirname(validatedPath);
+        let realValidatedDir: string;
+        try {
+          realValidatedDir = fs.realpathSync(validatedDir);
+        } catch {
+          // If parent doesn't exist, just use path.resolve
+          realValidatedDir = path.resolve(validatedDir);
+        }
+        const realValidatedPath = path.join(realValidatedDir, path.basename(validatedPath));
+
+        customTasksDir = path.relative(realProjectRoot, realValidatedPath);
+      }
+
+      // Additional validation - ensure it's not inside .simple-task-master
+      const relativeToBase = path.relative(baseDir, tasksDir);
+      if (!relativeToBase.startsWith('..') && relativeToBase !== '') {
+        throw new ValidationError(
+          'Custom tasks directory cannot be inside .simple-task-master directory'
+        );
+      }
+
+      // Check if the directory already exists and has files
+      try {
+        const stats = await fs.stat(tasksDir);
+        if (stats.isDirectory()) {
+          const files = await fs.readdir(tasksDir);
+          if (files.length > 0) {
+            printWarning(`Directory ${options.tasksDir} already exists and contains files`);
+          }
+        }
+      } catch {
+        // Directory doesn't exist, which is fine
+      }
+    } else {
+      // Use default tasks directory
+      tasksDir = PATHS.getTasksDir(projectRoot);
+    }
+
     // Create directories
     await ensureDirectory(baseDir);
     await ensureDirectory(tasksDir);
 
-    // Create default configuration
+    // Create configuration with optional custom tasks directory
     const config: Config = {
       schema: DEFAULT_CONFIG.SCHEMA_VERSION,
       lockTimeoutMs: DEFAULT_CONFIG.LOCK_TIMEOUT_MS,
       maxTaskSizeBytes: DEFAULT_CONFIG.MAX_TASK_SIZE_BYTES
     };
 
+    // Only add tasksDir to config if it's custom
+    if (customTasksDir) {
+      config.tasksDir = customTasksDir;
+    }
+
     await fs.writeFile(configPath, JSON.stringify(config, null, 2), 'utf8');
 
     // Update .gitignore if it exists
-    await updateGitignore(projectRoot);
+    const isAbsolutePath = options.tasksDir
+      ? path.isAbsolute(validateTasksDir(options.tasksDir))
+      : false;
+    await updateGitignore(projectRoot, customTasksDir, isAbsolutePath);
 
     printSuccess('Initialized STM repository');
     printSuccess(`Created ${path.relative(projectRoot, baseDir)}/`);
     printSuccess(`Created ${path.relative(projectRoot, tasksDir)}/`);
     printSuccess(`Created ${path.relative(projectRoot, configPath)}`);
+
+    if (customTasksDir) {
+      printSuccess(`Using custom tasks directory: ${customTasksDir}`);
+    }
   } catch (error) {
     if (
       error instanceof ValidationError ||
@@ -71,7 +236,11 @@ async function initializeRepository(): Promise<void> {
 /**
  * Updates .gitignore to ignore task files but track config
  */
-async function updateGitignore(projectRoot: string): Promise<void> {
+async function updateGitignore(
+  projectRoot: string,
+  customTasksDir?: string,
+  isAbsolutePath?: boolean
+): Promise<void> {
   const gitignorePath = path.join(projectRoot, '.gitignore');
 
   try {
@@ -83,8 +252,24 @@ async function updateGitignore(projectRoot: string): Promise<void> {
       gitignoreContent = await fs.readFile(gitignorePath, 'utf8');
     }
 
-    // Check if STM entries already exist
-    const stmTasksPattern = '.simple-task-master/tasks/';
+    // Determine patterns to check/add
+    let stmTasksPattern: string;
+
+    if (customTasksDir) {
+      // Warn if user provided an absolute path
+      if (isAbsolutePath) {
+        printWarning(
+          'Absolute paths in .gitignore may not work as expected across different systems'
+        );
+      }
+
+      // Use the relative path (customTasksDir is always relative at this point)
+      stmTasksPattern = customTasksDir.endsWith('/') ? customTasksDir : customTasksDir + '/';
+    } else {
+      // Default pattern
+      stmTasksPattern = '.simple-task-master/tasks/';
+    }
+
     const stmLockPattern = '.simple-task-master/lock';
 
     const hasTasksIgnore = gitignoreContent.includes(stmTasksPattern);
@@ -126,9 +311,10 @@ async function updateGitignore(projectRoot: string): Promise<void> {
  */
 export const initCommand = new Command('init')
   .description('Initialize STM repository in the current directory')
-  .action(async () => {
+  .option('--tasks-dir <path>', 'Custom directory for storing task files')
+  .action(async (options: InitOptions) => {
     try {
-      await initializeRepository();
+      await initializeRepository(options);
     } catch (error) {
       printError(error as Error);
       process.exit(1);

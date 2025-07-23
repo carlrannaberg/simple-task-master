@@ -7,6 +7,7 @@
 // Core classes
 export { TaskManager } from './lib/task-manager';
 export { LockManager } from './lib/lock-manager';
+export { ConfigManager } from './lib/config';
 
 // Workspace utilities
 export { findWorkspaceRoot, getTasksDirectory, getWorkspaceRoot } from './lib/workspace';
