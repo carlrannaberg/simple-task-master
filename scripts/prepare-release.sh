@@ -112,18 +112,11 @@ validate_environment() {
 
     # Check if aio-stream is available
     if ! command -v aio-stream &> /dev/null; then
-        # Check if we can run it from the local project
-        if [ -f "./packages/stream/dist/cli.js" ]; then
-            print_info "Using local aio-stream from project build"
-            AIO_STREAM_CMD="node ./packages/stream/dist/cli.js"
-        else
-            print_warning "aio-stream not found. Install it for better output formatting:"
-            echo "  npm install -g @agent-io/stream"
-            echo "  or run: npm run build:stream"
-            echo ""
-            echo "Continuing without formatted output..."
-            AIO_STREAM_CMD=""
-        fi
+        print_warning "aio-stream not found. Install it for better output formatting:"
+        echo "  npm install -g @agent-io/stream"
+        echo ""
+        echo "Continuing without formatted output..."
+        AIO_STREAM_CMD=""
     else
         AIO_STREAM_CMD="aio-stream"
     fi
