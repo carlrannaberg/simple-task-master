@@ -11,6 +11,53 @@ import { FileSystemError, ValidationError } from './errors';
 import { validateTasksDir } from './path-validation';
 
 /**
+ * Default configuration values for Simple Task Master
+ *
+ * These defaults are used when:
+ * - No config.json file exists (backward compatibility)
+ * - A configuration field is missing from config.json
+ * - Users want to reset specific fields to defaults
+ */
+export const CONFIG_DEFAULTS: Config = Object.freeze({
+  /**
+   * Schema version - REQUIRED, NON-RESETTABLE
+   * This field should never be manually changed by users.
+   * It's used for configuration migration and compatibility.
+   */
+  schema: CURRENT_SCHEMA_VERSION,
+
+  /**
+   * Lock acquisition timeout in milliseconds - REQUIRED, RESETTABLE
+   * Default: 30 seconds (30000ms)
+   * Valid range: 1 - 300000 (max 5 minutes)
+   *
+   * Controls how long STM will wait to acquire a lock before timing out.
+   * Can be increased on slower systems or decreased for faster failure detection.
+   */
+  lockTimeoutMs: DEFAULT_CONFIG.LOCK_TIMEOUT_MS,
+
+  /**
+   * Maximum task file size in bytes - REQUIRED, RESETTABLE
+   * Default: 1MB (1048576 bytes)
+   * Valid range: 1 - 10485760 (max 10MB)
+   *
+   * Prevents creation of oversized task files that could impact performance.
+   * Can be increased for tasks with extensive documentation or content.
+   */
+  maxTaskSizeBytes: DEFAULT_CONFIG.MAX_TASK_SIZE_BYTES
+
+  /**
+   * Custom tasks directory path - OPTIONAL, RESETTABLE
+   * Default: undefined (uses .simple-task-master/tasks)
+   *
+   * When undefined, tasks are stored in the default location.
+   * Can be set to any valid directory path (relative or absolute).
+   * Note: Changing this value does NOT migrate existing tasks.
+   */
+  // tasksDir is intentionally omitted as it's optional
+});
+
+/**
  * Manages loading and accessing configuration from config.json files
  */
 export class ConfigManager {
@@ -85,11 +132,7 @@ export class ConfigManager {
    * Get default configuration values
    */
   private getDefaults(): Config {
-    return {
-      schema: DEFAULT_CONFIG.SCHEMA_VERSION,
-      lockTimeoutMs: DEFAULT_CONFIG.LOCK_TIMEOUT_MS,
-      maxTaskSizeBytes: DEFAULT_CONFIG.MAX_TASK_SIZE_BYTES
-    };
+    return CONFIG_DEFAULTS;
   }
 
   /**
@@ -139,6 +182,63 @@ export class ConfigManager {
       const errorMessage = error instanceof Error ? error.message : String(error);
       throw new FileSystemError(`Failed to save config: ${errorMessage}`);
     }
+  }
+
+  /**
+   * Reset specific configuration fields to their default values
+   * - Optional fields (tasksDir) are deleted when reset
+   * - Required fields are set to their default values
+   * - Schema version cannot be reset
+   * @param keys Array of configuration field names to reset
+   * @throws ValidationError if trying to reset schema or unknown keys
+   */
+  async reset(keys: string[]): Promise<void> {
+    // Validate keys
+    const validKeys = ['lockTimeoutMs', 'maxTaskSizeBytes', 'tasksDir'];
+    const invalidKeys = keys.filter((key) => !validKeys.includes(key) && key !== 'schema');
+
+    if (invalidKeys.length > 0) {
+      throw new ValidationError(
+        `Unknown configuration keys: ${invalidKeys.join(', ')}. ` +
+        `Valid keys are: ${validKeys.join(', ')}`
+      );
+    }
+
+    // Prevent schema reset
+    if (keys.includes('schema')) {
+      throw new ValidationError('Schema version cannot be reset');
+    }
+
+    // Load current configuration
+    const currentConfig = await this.load();
+
+    // Create a new config object with resets applied
+    const newConfig = { ...currentConfig };
+
+    for (const key of keys) {
+      switch (key) {
+        case 'tasksDir':
+          // Optional field - delete it to reset to default
+          delete newConfig.tasksDir;
+          break;
+
+        case 'lockTimeoutMs':
+          // Required field - set to default value
+          newConfig.lockTimeoutMs = CONFIG_DEFAULTS.lockTimeoutMs;
+          break;
+
+        case 'maxTaskSizeBytes':
+          // Required field - set to default value
+          newConfig.maxTaskSizeBytes = CONFIG_DEFAULTS.maxTaskSizeBytes;
+          break;
+      }
+    }
+
+    // Save the updated configuration atomically
+    await this.save(newConfig);
+
+    // Update cached config
+    this.config = newConfig;
   }
 
   /**

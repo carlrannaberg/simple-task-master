@@ -5,7 +5,7 @@
 import { Command } from 'commander';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { ConfigManager } from '../lib/config';
+import { ConfigManager, CONFIG_DEFAULTS } from '../lib/config';
 import { LockManager } from '../lib/lock-manager';
 import { getWorkspaceRoot } from '../lib/workspace';
 import { printOutput, printError, printWarning, printSuccess } from '../lib/output';
@@ -16,6 +16,8 @@ interface ConfigOptions {
   get?: string;
   set?: string;
   list?: boolean;
+  reset?: string;
+  resetAll?: boolean;
 }
 
 /**
@@ -135,6 +137,62 @@ async function configAction(options: ConfigOptions): Promise<void> {
       return;
     }
 
+    // Handle --reset (requires lock)
+    if (options.reset) {
+      await lockManager.acquire();
+      try {
+        const key = options.reset;
+        const validKeys = ['tasksDir', 'lockTimeoutMs', 'maxTaskSizeBytes'];
+
+        if (!validKeys.includes(key)) {
+          throw new ValidationError(
+            `Unknown configuration key: ${key}. Valid keys: ${validKeys.join(', ')}`
+          );
+        }
+
+        // Reset the specific key
+        await configManager.reset([key]);
+
+        // Get the default value for the success message
+        let defaultValue: string;
+        if (key === 'tasksDir') {
+          defaultValue = '.simple-task-master/tasks (default location)';
+        } else if (key === 'lockTimeoutMs') {
+          defaultValue = `${CONFIG_DEFAULTS.lockTimeoutMs} (${CONFIG_DEFAULTS.lockTimeoutMs / 1000} seconds)`;
+        } else if (key === 'maxTaskSizeBytes') {
+          const mb = CONFIG_DEFAULTS.maxTaskSizeBytes / 1048576;
+          defaultValue = `${CONFIG_DEFAULTS.maxTaskSizeBytes} (${mb} MB)`;
+        } else {
+          // This case should never happen due to validation above
+          defaultValue = 'unknown';
+        }
+
+        printSuccess(`Configuration key '${key}' reset to default value: ${defaultValue}`);
+      } finally {
+        await lockManager.release();
+      }
+      return;
+    }
+
+    // Handle --reset-all (requires lock)
+    if (options.resetAll) {
+      await lockManager.acquire();
+      try {
+        // Reset all resettable keys
+        const resettableKeys = ['tasksDir', 'lockTimeoutMs', 'maxTaskSizeBytes'];
+        await configManager.reset(resettableKeys);
+
+        printSuccess('All configuration values reset to defaults:');
+        printOutput('  tasksDir: .simple-task-master/tasks (default location)');
+        printOutput(`  lockTimeoutMs: ${CONFIG_DEFAULTS.lockTimeoutMs} (${CONFIG_DEFAULTS.lockTimeoutMs / 1000} seconds)`);
+        const mb = CONFIG_DEFAULTS.maxTaskSizeBytes / 1048576;
+        printOutput(`  maxTaskSizeBytes: ${CONFIG_DEFAULTS.maxTaskSizeBytes} (${mb} MB)`);
+      } finally {
+        await lockManager.release();
+      }
+      return;
+    }
+
     // No options provided - show help
     printOutput('Usage: stm config [options]');
     printOutput('Use "stm config --help" for more information');
@@ -152,6 +210,8 @@ export const configCommand = new Command('config')
   .option('--get <key>', 'Get a configuration value (tasksDir, lockTimeoutMs, maxTaskSizeBytes)')
   .option('--set <key=value>', 'Set a configuration value')
   .option('--list', 'List all configuration values as JSON')
+  .option('--reset <key>', 'Reset a configuration value to its default')
+  .option('--reset-all', 'Reset all configuration values to defaults')
   .addHelpText('after', `
 Configuration Keys:
   tasksDir         - Directory where task files are stored
@@ -193,13 +253,16 @@ Examples:
   stm config --set maxTaskSizeBytes=5242880   # 5 MB
 
 Restoring Defaults:
-  To restore a configuration value to its default, delete the config.json
-  file from .simple-task-master/ directory and STM will use built-in defaults.
+  # Reset individual configuration values to defaults
+  stm config --reset tasksDir       # Reset to .simple-task-master/tasks
+  stm config --reset lockTimeoutMs  # Reset to 30000 (30 seconds)
+  stm config --reset maxTaskSizeBytes # Reset to 1048576 (1 MB)
   
-  Alternatively, manually set values to defaults:
-  stm config --set tasksDir=.simple-task-master/tasks
-  stm config --set lockTimeoutMs=30000
-  stm config --set maxTaskSizeBytes=1048576
+  # Reset all configuration values at once
+  stm config --reset-all
+  
+  # Alternative: Delete config.json to use all defaults
+  rm .simple-task-master/config.json
 
 Configuration Storage:
   Settings are stored in: .simple-task-master/config.json

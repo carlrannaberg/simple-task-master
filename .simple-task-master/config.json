@@ -1,6 +1,5 @@
 {
   "schema": 1,
-  "lockTimeoutMs": 60000,
-  "maxTaskSizeBytes": 2097152,
-  "tasksDir": "tasks"
+  "lockTimeoutMs": 30000,
+  "maxTaskSizeBytes": 1048576
 }

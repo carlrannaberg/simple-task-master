@@ -4,7 +4,7 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as path from 'path';
-import { ConfigManager } from '@lib/config';
+import { ConfigManager, CONFIG_DEFAULTS } from '@lib/config';
 import { ValidationError, FileSystemError } from '@lib/errors';
 import { TestWorkspace } from '../helpers/test-workspace';
 import type { Config } from '@lib/types';
@@ -531,6 +531,71 @@ describe('ConfigManager', () => {
       await expect(manager.update({ tasksDir: 123 as unknown as string })).rejects.toThrow(
         'tasksDir must be a string'
       );
+    });
+  });
+
+  describe('CONFIG_DEFAULTS', () => {
+    it('should export CONFIG_DEFAULTS with correct values', () => {
+      // Purpose: Verify CONFIG_DEFAULTS matches expected default values
+      expect(CONFIG_DEFAULTS).toBeDefined();
+      expect(CONFIG_DEFAULTS.schema).toBe(CURRENT_SCHEMA_VERSION);
+      expect(CONFIG_DEFAULTS.lockTimeoutMs).toBe(DEFAULT_CONFIG.LOCK_TIMEOUT_MS);
+      expect(CONFIG_DEFAULTS.maxTaskSizeBytes).toBe(DEFAULT_CONFIG.MAX_TASK_SIZE_BYTES);
+      expect(CONFIG_DEFAULTS.tasksDir).toBeUndefined(); // Optional field
+    });
+
+    it('should have all required Config fields', () => {
+      // Purpose: Verify CONFIG_DEFAULTS implements Config interface
+      const requiredFields: (keyof Config)[] = ['schema', 'lockTimeoutMs', 'maxTaskSizeBytes'];
+
+      for (const field of requiredFields) {
+        expect(CONFIG_DEFAULTS).toHaveProperty(field);
+        expect(CONFIG_DEFAULTS[field]).toBeDefined();
+      }
+    });
+
+    it('should match defaults returned by getDefaults()', async () => {
+      // Purpose: Verify internal getDefaults() returns CONFIG_DEFAULTS
+      const manager = new ConfigManager(workspace.directory);
+      await manager.load();
+
+      // When no config file exists, should match CONFIG_DEFAULTS
+      const fs = await import('fs/promises');
+      const configPath = path.join(workspace.directory, '.simple-task-master', 'config.json');
+      await fs.unlink(configPath);
+
+      const manager2 = new ConfigManager(workspace.directory);
+      const defaults = await manager2.load();
+
+      expect(defaults).toEqual(CONFIG_DEFAULTS);
+    });
+
+    it('should not include tasksDir in defaults', () => {
+      // Purpose: Verify optional fields are properly omitted
+      expect('tasksDir' in CONFIG_DEFAULTS).toBe(false);
+      expect(CONFIG_DEFAULTS.tasksDir).toBeUndefined();
+    });
+
+    it('should be immutable', () => {
+      // Purpose: Verify CONFIG_DEFAULTS cannot be modified
+      const original = { ...CONFIG_DEFAULTS };
+
+      // Attempt to modify (TypeScript would prevent this, but test runtime behavior)
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (CONFIG_DEFAULTS as any).schema = 999;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (CONFIG_DEFAULTS as any).lockTimeoutMs = 999;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (CONFIG_DEFAULTS as any).maxTaskSizeBytes = 999;
+      } catch {
+        // Object might be frozen, which is good
+      }
+
+      // Values should remain unchanged
+      expect(CONFIG_DEFAULTS.schema).toBe(original.schema);
+      expect(CONFIG_DEFAULTS.lockTimeoutMs).toBe(original.lockTimeoutMs);
+      expect(CONFIG_DEFAULTS.maxTaskSizeBytes).toBe(original.maxTaskSizeBytes);
     });
   });
 
