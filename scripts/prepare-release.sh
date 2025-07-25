@@ -375,9 +375,9 @@ generate_ai_updates() {
 
     # Check if timeout command is available
     if command -v gtimeout >/dev/null 2>&1; then
-        TIMEOUT_CMD="gtimeout 180"
+        TIMEOUT_CMD="gtimeout 600"
     elif command -v timeout >/dev/null 2>&1; then
-        TIMEOUT_CMD="timeout 180"
+        TIMEOUT_CMD="timeout 600"
     else
         print_warning "No timeout command available. Install coreutils on macOS: brew install coreutils"
         TIMEOUT_CMD=""
