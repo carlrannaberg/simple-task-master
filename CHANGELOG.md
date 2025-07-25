@@ -7,31 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2025-07-25
+
 ### Added
 
 - **Configuration Management Command (`stm config`)**
-  - View and modify configuration settings after initialization
+  - Post-initialization configuration management with `stm config` command
   - Get individual config values with `stm config --get <key>`
   - Set configuration values with `stm config --set <key=value>`
   - List all configuration as JSON with `stm config --list`
+  - Reset individual configuration keys with `stm config --reset <key>`
+  - Reset all configuration to defaults with `stm config --reset-all`
   - Supports all configuration keys: `tasksDir`, `lockTimeoutMs`, `maxTaskSizeBytes`
-  - Full validation for all configuration values:
-    - `lockTimeoutMs`: Must be a positive integer
-    - `maxTaskSizeBytes`: Must be a positive integer
-    - `tasksDir`: Path validation prevents directory traversal and system directory usage
-  - Atomic file operations prevent configuration corruption
-  - Concurrent access safety with file locking
-  - Backward compatibility with missing configuration files
-  - Warning displayed when changing `tasksDir` with existing tasks
+  - Comprehensive validation for all configuration values with security restrictions
+  - Atomic file operations prevent configuration corruption during updates
+  - Concurrent access safety with file locking system
+  - Backward compatibility with existing installations missing config files
+  - Warning displayed when changing `tasksDir` with existing tasks to prevent data loss
 
-- **Configurable Task Directory**
+- **Configurable Task Directory Support**
   - Initialize STM with custom task directory using `stm init --tasks-dir <path>`
-  - Support for both relative and absolute paths (with security restrictions)
-  - Automatic `.gitignore` updates for custom directories
-  - Configuration stored in `config.json` with `tasksDir` field
-  - Path validation to prevent directory traversal and system directory usage
-  - Support for existing directories with warning for non-empty ones
-  - Migration guide for moving existing tasks to custom directories
+  - Support for both relative and absolute paths with comprehensive security validation
+  - Automatic `.gitignore` updates for custom task directories to maintain git hygiene
+  - Optional `tasksDir` field in `config.json` for persistent custom directory configuration
+  - Path validation system prevents directory traversal attacks and system directory usage
+  - Support for existing directories with non-empty directory warnings
+  - Flexible path handling supporting both absolute and relative paths
+
+- **Enhanced Path Security**
+  - New `path-validation.ts` module with comprehensive path security checks
+  - Prevents directory traversal attacks (`../` sequences blocked)
+  - Blocks usage of system directories (`/etc`, `/usr`, `/bin`, etc.)
+  - Smart handling of temporary directories for testing environments
+  - Validates against file paths being used as directory paths
+  - Supports reasonable project-relative paths while maintaining security
+
+### Changed
+
+- **Configuration System Architecture**
+  - `Config` type now includes optional `tasksDir` field for custom directories
+  - `TaskManagerConfig` updated to support optional `tasksDir` and `workspaceRoot` fields
+  - Enhanced `isConfig()` type guard to validate optional `tasksDir` field
+  - ConfigManager now handles missing configuration files gracefully with defaults
+
+- **Initialization Process**
+  - `stm init` command now accepts `--tasks-dir` option for custom task directories
+  - Enhanced `.gitignore` management supports custom directory patterns
+  - Improved directory creation logic with better error handling and validation
+  - Added warnings for absolute paths in `.gitignore` for cross-system compatibility
+
+### Fixed
+
+- **Release Process Improvements**
+  - Updated `prepare-release.sh` to use master branch and improve AI timeout handling
+  - Removed dependency on `aio-stream` package for better compatibility
+  - Enhanced release script with better error handling and validation
+  - Fixed script quoting issues for AI tool name handling
 
 ## [0.2.0] - 2025-01-20
 

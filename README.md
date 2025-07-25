@@ -17,6 +17,7 @@ A powerful, lightweight command-line task management tool built for developers w
 - **🎯 Simple workflow**: Initialize, add, list, update - that's it!
 - **🔄 Export capabilities**: Export tasks to various formats for reporting
 - **🔧 Custom metadata fields**: Add any custom fields for external tool integration
+- **⚙️ Flexible configuration**: Configurable task directories and runtime settings with reset capabilities
 
 ## 🚀 Quick Start
 
@@ -466,6 +467,13 @@ stm config --set lockTimeoutMs=60000
 
 # Change max task size to 2MB
 stm config --set maxTaskSizeBytes=2097152
+
+# Reset individual configuration values to defaults
+stm config --reset tasksDir
+stm config --reset lockTimeoutMs
+
+# Reset all configuration values to defaults
+stm config --reset-all
 ```
 
 **Options:**
@@ -473,6 +481,8 @@ stm config --set maxTaskSizeBytes=2097152
 - `--get <key>`: Get a specific configuration value
 - `--set <key=value>`: Set a configuration value
 - `--list`: List all configuration values as JSON
+- `--reset <key>`: Reset a specific configuration value to its default
+- `--reset-all`: Reset all configuration values to defaults
 
 **Configuration Keys:**
 
@@ -498,6 +508,11 @@ stm config --list
 # Use in scripts
 TASKS_DIR=$(stm config --get tasksDir)
 echo "Tasks are stored in: $TASKS_DIR"
+
+# Reset to defaults when switching projects
+stm config --reset tasksDir        # Back to .simple-task-master/tasks
+stm config --reset lockTimeoutMs   # Back to 30 seconds
+stm config --reset-all             # Reset everything to defaults
 ```
 
 ## ⚙️ Configuration
@@ -517,6 +532,10 @@ stm config --get tasksDir
 
 # Change a setting
 stm config --set lockTimeoutMs=45000
+
+# Reset settings to defaults
+stm config --reset tasksDir
+stm config --reset-all
 ```
 
 ### Configuration File Format
