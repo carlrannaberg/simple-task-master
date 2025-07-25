@@ -12,6 +12,7 @@ import { showCommand } from './commands/show';
 import { updateCommand } from './commands/update';
 import { grepCommand } from './commands/grep';
 import { exportCommand } from './commands/export';
+import { configCommand } from './commands/config';
 
 // Set up process error handlers only if not in test environment
 if (process.env.NODE_ENV !== 'test') {
@@ -70,6 +71,7 @@ program.addCommand(showCommand);
 program.addCommand(updateCommand);
 program.addCommand(grepCommand);
 program.addCommand(exportCommand);
+program.addCommand(configCommand);
 
 // Parse command line arguments
 async function main(): Promise<void> {

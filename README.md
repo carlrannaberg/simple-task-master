@@ -445,9 +445,81 @@ stm delete 123 --force
 
 - `--force, -f`: Force deletion even if other tasks depend on this task
 
+### `stm config`
+
+View and modify Simple Task Master configuration settings.
+
+```bash
+# View all configuration
+stm config --list
+
+# Get specific configuration value
+stm config --get tasksDir
+stm config --get lockTimeoutMs
+stm config --get maxTaskSizeBytes
+
+# Change tasks directory
+stm config --set tasksDir=docs/tasks
+
+# Change lock timeout to 60 seconds
+stm config --set lockTimeoutMs=60000
+
+# Change max task size to 2MB
+stm config --set maxTaskSizeBytes=2097152
+```
+
+**Options:**
+
+- `--get <key>`: Get a specific configuration value
+- `--set <key=value>`: Set a configuration value
+- `--list`: List all configuration values as JSON
+
+**Configuration Keys:**
+
+- `tasksDir`: Directory where task files are stored (relative or absolute path)
+- `lockTimeoutMs`: Lock acquisition timeout in milliseconds (default: 30000)
+- `maxTaskSizeBytes`: Maximum task file size in bytes (default: 1048576)
+
+**Common Use Cases:**
+
+```bash
+# Move tasks to a project-specific directory
+stm config --set tasksDir=./project/tasks
+
+# Increase timeout for slower systems
+stm config --set lockTimeoutMs=60000
+
+# Allow larger task files (e.g., 5MB)
+stm config --set maxTaskSizeBytes=5242880
+
+# Check current configuration
+stm config --list
+
+# Use in scripts
+TASKS_DIR=$(stm config --get tasksDir)
+echo "Tasks are stored in: $TASKS_DIR"
+```
+
 ## ⚙️ Configuration
 
-STM stores its configuration in `.simple-task-master/config.json`. You can customize:
+STM stores its configuration in `.simple-task-master/config.json`. You can view and modify these settings using the `config` command or by editing the JSON file directly.
+
+### Using the Config Command
+
+The `config` command provides a safe way to view and modify configuration without manually editing JSON:
+
+```bash
+# View current configuration
+stm config --list
+
+# Get a specific value
+stm config --get tasksDir
+
+# Change a setting
+stm config --set lockTimeoutMs=45000
+```
+
+### Configuration File Format
 
 ```json
 {
@@ -458,12 +530,88 @@ STM stores its configuration in `.simple-task-master/config.json`. You can custo
 }
 ```
 
-**Configuration Options:**
+### Configuration Options
 
-- `schema`: Configuration schema version
-- `lockTimeoutMs`: File lock timeout in milliseconds (default: 30000)
-- `maxTaskSizeBytes`: Maximum task file size in bytes (default: 1MB)
-- `tasksDir`: Custom directory for storing task files (optional)
+#### `tasksDir` (string)
+Directory where task files are stored. Can be relative or absolute path.
+
+- **Default**: `.simple-task-master/tasks/`
+- **Valid values**: Any valid directory path within the project
+- **Restrictions**: 
+  - Cannot use system directories (`/etc`, `/usr`, etc.)
+  - Cannot contain path traversal sequences (`..`)
+  - Must be within the project directory if absolute
+
+**Examples:**
+```bash
+# Use a project-specific directory
+stm config --set tasksDir=./todos
+
+# Use a nested structure
+stm config --set tasksDir=./docs/project-tasks
+
+# Check current value
+stm config --get tasksDir
+```
+
+#### `lockTimeoutMs` (number)
+Maximum time in milliseconds to wait for acquiring a file lock. Prevents indefinite waiting when another process is accessing task files.
+
+- **Default**: `30000` (30 seconds)
+- **Valid values**: Positive integer
+- **Recommended range**: 5000-120000 (5-120 seconds)
+
+**Examples:**
+```bash
+# Increase for slower systems or network drives
+stm config --set lockTimeoutMs=60000
+
+# Decrease for faster failure detection
+stm config --set lockTimeoutMs=10000
+```
+
+#### `maxTaskSizeBytes` (number)
+Maximum allowed size for a single task file in bytes. Prevents excessive memory usage and ensures reasonable performance.
+
+- **Default**: `1048576` (1 MB)
+- **Valid values**: Positive integer
+- **Recommended range**: 10240-10485760 (10 KB - 10 MB)
+
+**Examples:**
+```bash
+# Allow larger tasks (2 MB)
+stm config --set maxTaskSizeBytes=2097152
+
+# Allow very large tasks (5 MB)
+stm config --set maxTaskSizeBytes=5242880
+
+# Common sizes:
+# 512 KB = 524288
+# 1 MB   = 1048576 (default)
+# 2 MB   = 2097152
+# 5 MB   = 5242880
+# 10 MB  = 10485760
+```
+
+### Validation Rules
+
+The config command validates all settings before saving:
+
+- **`tasksDir`**: 
+  - Must be a valid path format
+  - Cannot contain system directory paths
+  - Cannot use path traversal (`../`)
+  - Shows warning if changing with existing tasks
+
+- **`lockTimeoutMs`**: 
+  - Must be a positive integer
+  - Values below 1000 (1 second) are not recommended
+  - Very high values may cause long waits
+
+- **`maxTaskSizeBytes`**: 
+  - Must be a positive integer
+  - Values below 1024 (1 KB) are not practical
+  - Consider system memory when setting high values
 
 ### Custom Task Directory
 
@@ -730,6 +878,29 @@ stm grep "authentication" --format=table
 echo "Pending: $(stm list --status=pending --format=json | jq length)"
 echo "In Progress: $(stm list --status=in-progress --format=json | jq length)"
 echo "Done: $(stm list --status=done --format=json | jq length)"
+```
+
+### Configuration Management
+
+```bash
+# Check current configuration
+stm config --list
+
+# Adjust settings for your workflow
+stm config --set tasksDir=./project-tasks
+stm config --set maxTaskSizeBytes=2097152  # 2MB for detailed tasks
+
+# Use configuration in scripts
+TASK_DIR=$(stm config --get tasksDir)
+MAX_SIZE=$(stm config --get maxTaskSizeBytes)
+echo "Tasks stored in: $TASK_DIR (max size: $MAX_SIZE bytes)"
+
+# Backup configuration before changes
+stm config --list > config-backup.json
+
+# Verify changes took effect
+stm config --get tasksDir
+ls -la $(stm config --get tasksDir)
 ```
 
 ### Custom Metadata Fields

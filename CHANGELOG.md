@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Configuration Management Command (`stm config`)**
+  - View and modify configuration settings after initialization
+  - Get individual config values with `stm config --get <key>`
+  - Set configuration values with `stm config --set <key=value>`
+  - List all configuration as JSON with `stm config --list`
+  - Supports all configuration keys: `tasksDir`, `lockTimeoutMs`, `maxTaskSizeBytes`
+  - Full validation for all configuration values:
+    - `lockTimeoutMs`: Must be a positive integer
+    - `maxTaskSizeBytes`: Must be a positive integer
+    - `tasksDir`: Path validation prevents directory traversal and system directory usage
+  - Atomic file operations prevent configuration corruption
+  - Concurrent access safety with file locking
+  - Backward compatibility with missing configuration files
+  - Warning displayed when changing `tasksDir` with existing tasks
+
 - **Configurable Task Directory**
   - Initialize STM with custom task directory using `stm init --tasks-dir <path>`
   - Support for both relative and absolute paths (with security restrictions)

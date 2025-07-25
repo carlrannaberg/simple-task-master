@@ -125,6 +125,26 @@ npm run dev -- --help
 node bin/stm --help
 ```
 
+### STM Commands
+
+```bash
+# Configuration management
+stm config --get tasksDir               # Get current tasks directory
+stm config --set lockTimeoutMs=60000    # Set lock timeout to 60 seconds
+stm config --set maxTaskSizeBytes=2097152  # Set max task size to 2MB
+stm config --list                       # Show all configuration as JSON
+
+# Task management
+stm init                                # Initialize STM repository
+stm add "New task"                      # Create a new task
+stm list                                # List all tasks
+stm show <id>                           # Show task details
+stm update <id> --status done           # Update task status
+stm delete <id>                         # Delete a task
+stm grep "pattern"                      # Search tasks
+stm export --format json                # Export tasks
+```
+
 ## Code Style
 
 ### TypeScript Configuration
@@ -298,11 +318,14 @@ src/
 ├── index.ts               # Library API exports
 ├── commands/              # Command implementations
 │   ├── add.ts            # Task creation
+│   ├── config.ts         # Configuration management
+│   ├── delete.ts         # Task deletion
+│   ├── export.ts         # Data export
+│   ├── grep.ts           # Task searching
+│   ├── init.ts           # Repository initialization
 │   ├── list.ts           # Task listing and filtering
 │   ├── show.ts           # Task display
-│   ├── update.ts         # Task modification
-│   ├── grep.ts           # Task searching
-│   └── export.ts         # Data export
+│   └── update.ts         # Task modification
 ├── lib/                   # Core library code
 │   ├── task-manager.ts   # Central task operations
 │   ├── lock-manager.ts   # File locking for concurrency
@@ -397,6 +420,73 @@ All temporary files, debugging scripts, and test artifacts should be organized i
 - Include `/temp/` in `.gitignore` to prevent accidental commits
 
 ## Configuration
+
+### STM Configuration Management
+
+STM stores its configuration in `.simple-task-master/config.json`. Users can view and modify settings using the `config` command:
+
+#### Available Configuration Options
+
+- **`tasksDir`** (string): Directory where task files are stored
+  - Default: `.simple-task-master/tasks`
+  - Can be relative or absolute path
+  - Validation: No directory traversal (`../`), no system directories
+  
+- **`lockTimeoutMs`** (number): Timeout for acquiring file locks in milliseconds
+  - Default: 30000 (30 seconds)
+  - Must be a positive integer
+  - Affects concurrent access behavior
+  
+- **`maxTaskSizeBytes`** (number): Maximum size for task files in bytes
+  - Default: 1048576 (1MB)
+  - Must be a positive integer
+  - Prevents oversized task files
+
+#### Configuration Validation Rules
+
+The config command enforces strict validation to ensure system stability:
+
+1. **Path Validation** (for `tasksDir`):
+   - No parent directory references (`../`)
+   - No absolute system paths (e.g., `/usr`, `/etc`, `/var`)
+   - Valid filesystem characters only
+   - Cannot be empty or contain only whitespace
+
+2. **Numeric Validation** (for timeouts and sizes):
+   - Must be positive integers
+   - Cannot be zero or negative
+   - Must be parseable as valid numbers
+
+3. **Type Safety**:
+   - String values for paths
+   - Number values for timeouts and sizes
+   - No arbitrary types allowed
+
+#### Usage Examples
+
+```bash
+# View specific configuration value
+stm config --get tasksDir
+
+# Change tasks directory
+stm config --set tasksDir=./my-tasks
+
+# Increase lock timeout for slow systems
+stm config --set lockTimeoutMs=60000
+
+# Allow larger task files (2MB)
+stm config --set maxTaskSizeBytes=2097152
+
+# View all configuration
+stm config --list
+```
+
+#### Important Notes
+
+- Changes take effect immediately
+- Warning displayed when changing `tasksDir` with existing tasks
+- Configuration persisted atomically to prevent corruption
+- Missing config files are created with defaults automatically
 
 ### Claude Code Settings (.claude Directory)
 

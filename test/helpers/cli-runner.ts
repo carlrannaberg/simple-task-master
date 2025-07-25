@@ -371,6 +371,27 @@ export class CLITestRunner {
   }
 
   /**
+   * Get a configuration value
+   */
+  async configGet(key: string): Promise<CLIResult> {
+    return this.run(['config', '--get', key]);
+  }
+
+  /**
+   * Set a configuration value
+   */
+  async configSet(key: string, value: string): Promise<CLIResult> {
+    return this.run(['config', '--set', `${key}=${value}`]);
+  }
+
+  /**
+   * List all configuration values
+   */
+  async configList(): Promise<CLIResult> {
+    return this.run(['config', '--list']);
+  }
+
+  /**
    * Run multiple commands in sequence
    */
   async runSequence(
