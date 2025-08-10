@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2025-08-10
+
+### Fixed
+
+- **Task Content Duplication Prevention**
+  - Fixed issue where task content was duplicated in both YAML frontmatter and markdown body when updating tasks
+  - Task content is now properly excluded from frontmatter during serialization to prevent redundancy
+  - Affects both task creation and update operations in `TaskManager`
+
+### Changed
+
+- **Claude Code Integration Updates**
+  - Migrated from custom shell scripts to `claudekit-hooks` for development automation
+  - Updated hook configurations to use standardized `claudekit-hooks run` commands
+  - Removed deprecated custom hook scripts: `eslint.sh`, `typecheck.sh`, `project-validation.sh`, `run-related-tests.sh`, `auto-checkpoint.sh`, `validate-todo-completion.sh`
+  - Improved hook matchers to trigger on `Write|Edit|MultiEdit` operations
+  - Enhanced development workflow with more reliable automated checks
+
 ## [0.3.0] - 2025-07-25
 
 ### Added
