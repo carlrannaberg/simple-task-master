@@ -121,8 +121,9 @@ export class TaskManager {
         const filename = this.generateFilename(id, task.title);
         const filepath = path.join(this.config.tasksDir, filename);
 
-        // Serialize to markdown with front-matter
-        const fileContent = FrontmatterParser.stringify(content, task);
+        // Serialize to markdown - exclude content from frontmatter to avoid duplication
+        const { content: _, ...frontmatterData } = task;
+        const fileContent = FrontmatterParser.stringify(content, frontmatterData);
 
         // Validate file size
         await this.validateTaskSize(fileContent);
@@ -317,8 +318,9 @@ export class TaskManager {
       const oldFilepath = path.join(this.config.tasksDir, currentFile);
       const newFilepath = path.join(this.config.tasksDir, newFilename);
 
-      // Serialize to markdown
-      const fileContent = FrontmatterParser.stringify(updatedContent, updatedTask);
+      // Serialize to markdown - exclude content from frontmatter to avoid duplication
+      const { content: _, ...frontmatterData } = updatedTask;
+      const fileContent = FrontmatterParser.stringify(updatedContent, frontmatterData);
 
       // Validate file size
       await this.validateTaskSize(fileContent);
